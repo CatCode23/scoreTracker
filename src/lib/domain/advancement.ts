@@ -112,7 +112,7 @@ export function describeAutoAdvance(
     } else {
       notes.push({
         tone: 'warn',
-        text: `${role} ${team(who)} was not moved to ${codeOf(to)}: slot ${slot} is already taken or that match already has a result. Use ${role === 'Winner' ? 'Advance winner' : 'Route loser'} in Match Management.`,
+        text: `${role} ${team(who)} was not moved to ${codeOf(to)}: slot ${slot} is already taken or that match already has a result. Use More → ${role === 'Winner' ? 'Advance winner' : 'Route loser'} on this match.`,
       });
     }
   };

@@ -132,7 +132,7 @@ describe('describeAutoAdvance', () => {
       team,
     );
     expect(notes[0].tone).toBe('warn');
-    expect(notes[0].text).toMatch(/not moved to SOC-F.*Advance winner/);
+    expect(notes[0].text).toMatch(/not moved to SOC-F.*More → Advance winner/);
     expect(notes[1].text).toMatch(/Route loser/);
   });
 

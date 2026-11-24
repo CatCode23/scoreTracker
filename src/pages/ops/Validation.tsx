@@ -64,7 +64,8 @@ export function Validation() {
         actions={<SyncButton />}
       />
       <Notice tone="info">
-        To fix an Official result, use <strong>Edit result</strong> in Match Management.
+        To fix an Official result, open the match on <strong>Matches</strong> and tap{' '}
+        <strong>Edit result</strong>.
       </Notice>
       <Select
         aria-label="Filter by event"

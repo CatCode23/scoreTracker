@@ -19,9 +19,9 @@ You stay signed in on that phone, so avoid tapping **Sign out**.
 
 **1. Select match. 2. Enter result. 3. Save.**
 
-1. Open the menu (☰) and tap **Score Entry**.
-2. Pick your **event**, then tap the **match**. You only see matches at your assigned
-   venue.
+1. Open the menu (☰) and tap **Matches**.
+2. Pick your **event**, then tap the **match** (the **To play** tab lists what's left).
+   You only see matches at your assigned venue.
 3. Enter the result for each team. Team names are read-only.
    - **Games:** the score for each team, then tap the **winner**.
    - **Heats:** the time (`12:34.5` or seconds), any penalty seconds, and the place.
@@ -33,7 +33,7 @@ result shows **Awaiting Approval** until an event administrator approves it.
 
 ## Made a mistake?
 
-Event administrators: open **Match Management**, find the match and tap **Edit result**.
+Event administrators: open **Matches**, tap the match (**Finished** tab) and tap **Edit result**.
 Correct it, give a short reason, and save.
 
 Scorer accounts: tell an event administrator; they will fix it.

@@ -103,3 +103,7 @@ These assumptions were made where the specification left room for interpretation
     removed. Teams handles creating/editing/deleting teams and their events; choosing an
     event in its filter shows that event's seeds, check-in, points eligibility and
     target-count warning.
+30. **One Matches page.** Score Entry and Match Management were combined: pick an event,
+    tap a match, then enter, approve or edit its result there. Rarely used bracket tools
+    (status, manual advance/route, move, eliminate) are under **More** on the match.
+    The old /ops/score link redirects to /ops/matches.

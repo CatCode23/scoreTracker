@@ -210,7 +210,7 @@ export function Dashboard() {
           <p className="mt-3 text-sm text-slate-700">
             Pool standings are on each sport's public page and in{' '}
             <Link className="underline" to="/ops/matches">
-              Match Management
+              Matches
             </Link>
             .
           </p>

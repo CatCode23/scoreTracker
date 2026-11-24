@@ -228,8 +228,7 @@ export function ScoreEntryForm({
   if (done && !editing) {
     return submitsOfficial ? (
       <Notice tone="success" title="Result saved: Official">
-        It is live on the public site now. If you made a mistake, use Edit result in Match
-        Management.
+        It is live on the public site now. If you made a mistake, tap Edit result on the match.
       </Notice>
     ) : (
       <Notice tone="success" title="Result submitted: Awaiting Approval">

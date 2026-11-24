@@ -23,15 +23,10 @@ const Dashboard = lazy(() =>
 const MyAssignments = lazy(() =>
   import('./pages/ops/MyAssignments').then((m) => ({ default: m.MyAssignments })),
 );
-const ScoreEntry = lazy(() =>
-  import('./pages/ops/ScoreEntry').then((m) => ({ default: m.ScoreEntry })),
-);
 const Validation = lazy(() =>
   import('./pages/ops/Validation').then((m) => ({ default: m.Validation })),
 );
-const MatchManagement = lazy(() =>
-  import('./pages/ops/MatchManagement').then((m) => ({ default: m.MatchManagement })),
-);
+const Matches = lazy(() => import('./pages/ops/Matches').then((m) => ({ default: m.Matches })));
 const MatchSetup = lazy(() =>
   import('./pages/ops/MatchSetup').then((m) => ({ default: m.MatchSetup })),
 );
@@ -73,14 +68,17 @@ export function AppRoutes() {
             }
           />
           <Route path="assignments" element={guard(<MyAssignments />)} />
-          <Route path="score" element={guard(<ScoreEntry />, canSubmitAnything)} />
+          <Route path="score" element={<Navigate to="/ops/matches" replace />} />
           <Route
             path="validate"
             element={guard(<Validation />, (a) => canValidateAnything(a) || hasGlobalRead(a))}
           />
           <Route
             path="matches"
-            element={guard(<MatchManagement />, (a) => canManageAnything(a) || hasGlobalRead(a))}
+            element={guard(
+              <Matches />,
+              (a) => canSubmitAnything(a) || canManageAnything(a) || hasGlobalRead(a),
+            )}
           />
           <Route path="setup" element={guard(<MatchSetup />, canManageAnything)} />
           <Route
