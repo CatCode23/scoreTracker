@@ -6,7 +6,7 @@
 |---|---|---|
 | Unit | `npm test` | Points matrix and unit leaderboard totals/tiebreaks; team save (registrations added/removed); typed confirmation for event delete; result validation (negatives, winner not in match, winner = loser, duplicate placements, lower-score winner); warnings (target count, fewer than 2 teams, overlapping matches); advancement slot checks (empty / occupied / same / already in match); bracket grouping; duration parsing; CSV; UI permission mirror |
 | Component | `npm test` | **Score form**: 2–1 submit payload, Official save for admins, edit mode (prefilled, reason required), negative rejected, server error shown, timed-heat fields. **Result Validation**: Official confirm, required reasons for return/dispute/void, actions hidden without authority, error shown in the dialog |
-| Database | `npm run test:db` | Migrations and seed (seed run twice to check it is idempotent). Then 118 assertions covering the manual E2E script below plus RLS negatives: anon cannot read raw tables, scorer at the wrong venue, inactive user, self-elevation, audit-log writes, sport manager publishing, points override, writes through public views, unit list enforcement, unit leaderboard, team and event deletes, and so on |
+| Database | `npm run test:db` | Migrations and seed (seed run twice to check it is idempotent). Then 132 assertions covering the manual E2E script below plus RLS negatives: anon cannot read raw tables, scorer at the wrong venue, inactive user, self-elevation, audit-log writes, sport manager publishing, points override, writes through public views, unit list enforcement, unit leaderboard, team and event deletes, and so on |
 
 All three suites run in CI before every deploy.
 

@@ -74,12 +74,16 @@ export function Placements() {
   const allApproved = list.length > 0 && list.every((p) => p.approved_at);
   const allPublic = list.length > 0 && list.every((p) => p.public_visible);
   const preview = place ? pointsForPlace(Number(place), matrix.data) : null;
+  // Places that earn points (from the matrix) that are not filled yet.
+  const pointPlaces = (matrix.data ?? []).map((m) => m.place).sort((a, b) => a - b);
+  const filled = new Set(list.map((p) => p.final_place));
+  const missing = pointPlaces.filter((n) => !filled.has(n));
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Event Placements"
-        subtitle="Record 1st–8th. Points come from the scoring matrix. Admin approval publishes them."
+        subtitle='Places fill in automatically from matches marked "Decides places" (Final, 3rd place…). Enter any others by hand, then Approve & Publish.'
       />
       <Card>
         <Field label="Event" htmlFor="pl-event">
@@ -115,10 +119,18 @@ export function Placements() {
               </span>
             }
           >
+            {!placements.isLoading && missing.length > 0 && (
+              <Notice tone="info" className="mb-3">
+                Still to fill: {missing.map((n) => ordinal(n)).join(', ')}. They fill in when the
+                matches that decide them are saved, or add them below.
+              </Notice>
+            )}
             {placements.isLoading ? (
               <Loading />
             ) : list.length === 0 ? (
-              <Empty title="No placements entered" />
+              <Empty title="No placements yet">
+                They appear here when a match marked &quot;Decides places&quot; is saved.
+              </Empty>
             ) : (
               <ol className="space-y-2">
                 {list.map((p) => (
@@ -131,6 +143,9 @@ export function Placements() {
                       <span className="block font-bold">{team(p.participant_id)}</span>
                       <span className="text-sm text-slate-700">
                         {Number(p.overall_points)} pts{p.points_override && ' (admin override)'} ·{' '}
+                        {p.source_match_id
+                          ? `${p.ranking_method ?? 'From a match'} · `
+                          : 'Entered by hand · '}
                         {p.public_visible
                           ? 'Public'
                           : p.approved_at

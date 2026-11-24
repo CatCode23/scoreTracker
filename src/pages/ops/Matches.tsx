@@ -24,7 +24,7 @@ import {
   type AdvanceNote,
 } from '../../lib/domain/advancement';
 import { groupBracket } from '../../lib/domain/bracket';
-import { formatDate, formatSeconds, formatTime, humanize } from '../../lib/domain/format';
+import { formatDate, formatSeconds, formatTime, humanize, ordinal } from '../../lib/domain/format';
 import { isHeadToHead } from '../../lib/domain/validation';
 import {
   MATCH_STATUSES,
@@ -317,20 +317,35 @@ function MatchDetail({
 
   // After an Official save or edit, report where teams went.
   const reportAdvance = async (w: string | null, l: string | null) => {
-    const { data } = await supabase
-      .from('match_participants')
-      .select('match_id, participant_id, slot')
-      .eq('source_match_id', match.id);
-    setNotes(
-      describeAutoAdvance(
-        match,
-        w,
-        l,
-        (data ?? []) as { match_id: string; participant_id: string | null; slot: string }[],
-        (id) => codeOf(id),
-        (id) => L.team(id),
-      ),
+    const [moved, placed] = await Promise.all([
+      supabase
+        .from('match_participants')
+        .select('match_id, participant_id, slot')
+        .eq('source_match_id', match.id),
+      match.decides_place != null
+        ? supabase
+            .from('event_placements')
+            .select('participant_id, final_place')
+            .eq('source_match_id', match.id)
+            .order('final_place')
+        : Promise.resolve({ data: [] as { participant_id: string; final_place: number }[] }),
+    ]);
+    const out = describeAutoAdvance(
+      match,
+      w,
+      l,
+      (moved.data ?? []) as { match_id: string; participant_id: string | null; slot: string }[],
+      (id) => codeOf(id),
+      (id) => L.team(id),
     );
+    const places = (placed.data ?? []) as { participant_id: string; final_place: number }[];
+    if (places.length > 0) {
+      out.push({
+        tone: 'success',
+        text: `Placements filled in: ${places.map((p) => `${ordinal(p.final_place)} ${L.team(p.participant_id)}`).join(', ')}. Publish them on the Placements page.`,
+      });
+    }
+    setNotes(out);
   };
 
   const submit = useOpsMutation(async (p: ResultPayload) => {
