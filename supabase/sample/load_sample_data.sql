@@ -54,7 +54,8 @@ create or replace function pg_temp.sample_advance(p_from uuid, p_participant uui
 returns void language plpgsql as $$
 begin
   insert into public.match_participants (match_id, participant_id, slot, source_type, source_match_id)
-  values (p_to, p_participant, p_slot, p_kind, p_from);
+  values (p_to, p_participant, p_slot, p_kind, p_from)
+  on conflict do nothing; -- already placed by automatic advancement (migration 9)
   if p_kind = 'winner_of_match' then
     update public.match_participants set advanced = true
     where match_id = p_from and participant_id = p_participant;

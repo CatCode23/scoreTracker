@@ -201,6 +201,8 @@ export interface Match {
   next_winner_slot: string | null;
   next_loser_match_id: string | null;
   next_loser_slot: string | null;
+  /** Move the winner/loser on automatically when a result becomes Official. */
+  auto_advance: boolean;
   public_visible: boolean;
   notes: string | null;
   updated_at: string;

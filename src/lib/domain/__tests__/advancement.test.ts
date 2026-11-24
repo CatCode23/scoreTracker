@@ -1,5 +1,6 @@
 import {
   checkDestinationSlot,
+  describeAutoAdvance,
   inferWinnerFromScores,
   suggestSlot,
   winnerAndLoser,
@@ -89,5 +90,65 @@ describe('suggestSlot / inferWinnerFromScores', () => {
         { participant_id: 'b', score: 1 },
       ]).winner,
     ).toBeNull();
+  });
+});
+
+describe('describeAutoAdvance', () => {
+  const routing = {
+    auto_advance: true,
+    next_winner_match_id: 'F',
+    next_winner_slot: 'A',
+    next_loser_match_id: 'T',
+    next_loser_slot: 'A',
+  };
+  const code = (id: string) => ({ F: 'SOC-F', T: 'SOC-3RD' })[id] ?? id;
+  const team = (id: string) => ({ w: 'Raptors', l: 'Lancers' })[id] ?? id;
+
+  it('reports where the winner and loser went', () => {
+    const notes = describeAutoAdvance(
+      routing,
+      'w',
+      'l',
+      [
+        { match_id: 'F', participant_id: 'w', slot: 'A' },
+        { match_id: 'T', participant_id: 'l', slot: 'A' },
+      ],
+      code,
+      team,
+    );
+    expect(notes).toEqual([
+      { tone: 'success', text: 'Winner Raptors moved to SOC-F (slot A).' },
+      { tone: 'success', text: 'Loser Lancers moved to SOC-3RD (slot A).' },
+    ]);
+  });
+
+  it('warns when a move was skipped', () => {
+    const notes = describeAutoAdvance(
+      routing,
+      'w',
+      'l',
+      [{ match_id: 'F', participant_id: 'x', slot: 'A' }],
+      code,
+      team,
+    );
+    expect(notes[0].tone).toBe('warn');
+    expect(notes[0].text).toMatch(/not moved to SOC-F.*Advance winner/);
+    expect(notes[1].text).toMatch(/Route loser/);
+  });
+
+  it('says nothing when the match has no routing or auto-advance is off', () => {
+    expect(
+      describeAutoAdvance(
+        { ...routing, next_winner_match_id: null, next_loser_match_id: null },
+        'w',
+        'l',
+        [],
+        code,
+        team,
+      ),
+    ).toEqual([]);
+    expect(
+      describeAutoAdvance({ ...routing, auto_advance: false }, 'w', 'l', [], code, team),
+    ).toEqual([]);
   });
 });

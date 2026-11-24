@@ -235,9 +235,12 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select pg_temp.fails($$select public.advance_participant('40000000-0000-0000-0000-000000000001',
   '20000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', 'B', 'winner_of_match')$$,
   'advancement refuses to overwrite an occupied slot without confirmation');
+select pg_temp.ok((select participant_id = '20000000-0000-0000-0000-000000000001' and source_type = 'winner_of_match'
+  from public.match_participants where match_id = '40000000-0000-0000-0000-000000000002' and slot = 'A'),
+  'winner was auto-advanced to semifinal slot A when the result became Official');
 select pg_temp.ok(public.advance_participant('40000000-0000-0000-0000-000000000001',
-  '20000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', 'A', 'winner_of_match') = 'placed',
-  'winner advanced to semifinal slot A');
+  '20000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', 'A', 'winner_of_match') = 'unchanged',
+  'manual advance of an auto-advanced team is a no-op');
 select pg_temp.ok((select advanced from public.match_participants where match_id = '40000000-0000-0000-0000-000000000001'
   and participant_id = '20000000-0000-0000-0000-000000000001'), 'source marked advanced');
 -- Placements: manager records, cannot publish
@@ -312,7 +315,7 @@ select pg_temp.ok((select count(*) > 0 from public.audit_log where action = 'app
 select pg_temp.ok((select count(*) > 0 from public.audit_log where action = 'void'), 'audit: void');
 select pg_temp.ok((select count(*) > 0 from public.audit_log where action = 'publish'), 'audit: publish');
 select pg_temp.ok((select count(*) = 2 from public.audit_log
-  where table_name = 'match_participants' and reason = 'Manual advancement'), 'audit: advancement insert + source update with reason');
+  where table_name = 'match_participants' and reason = 'Auto-advanced (winner_of_match)'), 'audit: auto-advancement insert + source update with reason');
 select pg_temp.fails($$insert into public.audit_log (table_name, record_id, action) values ('x', gen_random_uuid(), 'insert')$$,
   'admin cannot write audit log directly');
 select pg_temp.fails($$delete from public.audit_log$$, 'admin cannot delete audit log');
