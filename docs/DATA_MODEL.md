@@ -44,8 +44,8 @@ erDiagram
 | `pools` / `pool_assignments` | Pool membership and standings: W/L/T, PF/PA, differential, rank, advancement. |
 | `matches` | A game, bout, heat or station. Holds next-winner and next-loser routing pointers and slots. |
 | `match_participants` | Slots (A/B/Lane n) with source, values (score, time, penalty, technical, placement) and flags. Values are written **only** when a result becomes Official. |
-| `match_results` | The submission and approval record: method, status, winner/loser, `participant_values` JSON, referee confirmation, submitter, validator, reason. |
-| `corrections` | Correction requests and their decisions. |
+| `match_results` | The result record: method, status, winner/loser, `participant_values` JSON, submitter, validator, reason. |
+| `corrections` | Correction requests (no longer used by the app; kept for history). |
 | `event_placements` | Final places. `overall_points` comes from `points_matrix` unless an admin overrides it. A placement can be public only after approval. |
 | `points_matrix` | Place → points. Seeded 1→8 … 8→1. |
 | `scoring_settings` | `no_show_penalty` (−6), `overall_scoring_enabled`, `tournament_year`. |
@@ -70,7 +70,8 @@ erDiagram
 ## Result lifecycle
 
 ```
-draft ─► submitted ─┬─► official ──(sport manager, via correction)──► void
+(admin / sport manager / venue lead) ─────────────► official ─(Edit result)─► void + new official
+draft ─► submitted ─┬─► official      (Scorer accounts: approval needed)
                     ├─► returned   (reason required)
                     ├─► disputed ──► official | returned | void
                     └─► void       (reason required)
@@ -80,10 +81,13 @@ Triggers enforce the following:
 
 - The winner and loser must be in the match, and must be different teams.
 - Values cannot be negative. Placement must be 1 or more.
-- Official requires `referee_confirmed`.
-- New rows must be draft or submitted, and `submitted_by` is forced to the caller.
+- New rows may be Official only when entered by staff with validation authority (venue lead,
+  sport manager, operations admin); Scorer accounts' rows must be draft or submitted.
+  `submitted_by` is forced to the caller. `referee_confirmed` is no longer used.
 - Validators can change only the workflow fields.
-- An Official result cannot be edited. A sport manager can only void it.
+- An Official result cannot be edited in place. `correct_match_result()` (sport manager /
+  operations admin) voids it with the reason and inserts the corrected Official result in
+  one transaction, optionally swapping the corrected winner/loser into the next matches.
 - Match status follows the result: submitted, then official, then back to ready if the
   result is returned or voided.
 - Official values are copied onto `match_participants`. They are cleared if that result is
@@ -95,10 +99,10 @@ Triggers enforce the following:
 |---|---|---|---|---|---|
 | See matches | assigned event + venue | assigned event + venue | assigned event | all | all (or assigned event) |
 | Submit result | ✓ (event + venue) | ✓ | ✓ | ✓ | – |
-| Validate / return / dispute / void pending | – | ✓ (event + venue) | ✓ | ✓ | – |
+| Results Official on entry | – | ✓ (event + venue) | ✓ | ✓ | – |
+| Approve / return / void Scorer results | – | ✓ (event + venue) | ✓ | ✓ | – |
 | Void Official result | – | – | ✓ | ✓ | – |
-| Request correction | own results | ✓ | ✓ | ✓ | – |
-| Decide correction | – | – | ✓ | ✓ | – |
+| Edit an Official result | – | – | ✓ | ✓ | – |
 | Stages / pools / sessions / matches / advancement | – | – | ✓ (event) | ✓ | – |
 | Create / edit teams, register participants | – | – | ✓ | ✓ | – |
 | Delete teams, manage units, create / delete events | – | – | – | ✓ | – |

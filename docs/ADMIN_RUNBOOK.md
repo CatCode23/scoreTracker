@@ -103,46 +103,47 @@ the user in Supabase and set a new one.
 Guidance by role:
 
 - **Scorer:** event + venue.
-- **Venue lead:** event + venue. Can validate results at that venue.
-- **Sport manager:** event, all venues. Manages setup, advancement, corrections and
-  placements.
+- **Venue lead:** event + venue. Results they enter are Official; they can approve Scorer results at that venue.
+- **Sport manager:** event, all venues. Manages setup, results (including Edit result),
+  advancement and placements.
 - **Read only:** set it as the primary role for a view of everything, or as an event
   assignment for one event.
 
 ## 6. Test result submission (dry run, T-1)
 
 1. Create test teams with an obvious name, e.g. `TEST A`, in a test stage.
-2. Have each scorer sign in on their own phone and submit a result.
-3. The venue lead returns one result and marks another Official.
+2. Have each person who enters scores sign in on their own phone and save a result.
+3. Fix one of the results with **Edit result** (Match Management).
 4. Check the public page.
 5. **Delete the test data** afterwards. Delete matches first, then the registrations, then
    the teams. The audit log keeps the history.
 
-## 7. Validate and publish results
+## 7. Enter results
 
-**Ops → Validation → Awaiting Validation.** Compare each card with the paper or referee
-sheet, then choose:
+**Ops → Score Entry:** pick the event and match, enter the scores (or times/places), pick
+the winner and tap **Save Official Result**. It is live on the public site straight away.
 
-- **Mark Official:** publishes immediately to the public pages.
-- **Return for Correction** (reason required): the scorer submits again.
-- **Mark Disputed** (reason required): stays unofficial until resolved.
-- **Void** (reason required).
+Results from **Scorer** accounts (if you use them) are not public until approved. When any
+are waiting, an **Approvals (n)** item appears in the menu: open it and **Approve**, or
+**Return**, **Dispute** or **Void** with a reason.
 
-A result can only become Official if the referee confirmation box was checked.
+## 8. Fix a mistake (Edit result)
 
-## 8. Correct a result
+**Ops → Match Management →** find the match → **Edit result**.
 
-A scorer or venue lead requests a correction from the result card (Score Entry → *My
-recent submissions → Request correction*).
+1. Correct the scores, times, places or winner.
+2. Give a short reason, e.g. "typo, was 3-1".
+3. Tap **Save corrected result**.
 
-The sport manager then goes to **Validation → Correction requests**:
+The public site updates immediately. The old result and the reason stay in the **Audit
+Log**.
 
-- **Approve** (notes required). An Official result is **voided** and removed from the
-  public pages. A pending result is returned. The match reopens, and a corrected result
-  is submitted and validated as usual.
-- **Deny** (notes required).
+If the winner changes and teams have already been advanced from that match, the dialog
+lists them. Leave **swap the corrected teams into those matches** ticked to fix the next
+matches automatically. This is refused if a next match already has a result: edit that
+one first, or untick the box and move teams by hand.
 
-Sport managers can also void an Official result directly from **Recently decided**.
+Operations admins and the event's sport managers can edit results.
 
 ## 9. Advance winners and losers
 
@@ -178,8 +179,7 @@ the configured points and marks the team No show. It can be deactivated later.
 ## 11. Close out an event
 
 - [ ] All matches are Official, Complete or Void. Check the Dashboard's completion bar.
-- [ ] No results are left Awaiting Validation, Disputed or Returned.
-- [ ] No pending corrections.
+- [ ] No results are left Awaiting Approval (the Approvals menu item is gone).
 - [ ] Placements are entered, approved and published.
 - [ ] Penalties are reviewed.
 - [ ] **Settings → Events**: set the status to **Complete**.

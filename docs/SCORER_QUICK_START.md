@@ -17,7 +17,7 @@ You stay signed in on that phone, so avoid tapping **Sign out**.
 
 ## Enter a result
 
-**1. Select Match. 2. Enter result. 3. Confirm referee approval. 4. Submit.**
+**1. Select match. 2. Enter result. 3. Save.**
 
 1. Open the menu (☰) and tap **Score Entry**.
 2. Pick your **event**, then tap the **match**. You only see matches at your assigned
@@ -26,28 +26,25 @@ You stay signed in on that phone, so avoid tapping **Sign out**.
    - **Games:** the score for each team, then tap the **winner**.
    - **Heats:** the time (`12:34.5` or seconds), any penalty seconds, and the place.
    - **Stations:** the place or technical score.
-4. Tick **Referee / official has approved this result**.
-5. Tap **Submit Result**. You will see **Awaiting Validation**.
+4. Tap **Save Official Result**. It is live on the public site straight away.
 
-Your result is **not public** until the venue lead marks it **Official**.
+If your account is a **Scorer** account, the button says **Submit Result** instead and the
+result shows **Awaiting Approval** until an event administrator approves it.
 
 ## Made a mistake?
 
-You cannot edit a result after you submit it. Instead:
+Event administrators: open **Match Management**, find the match and tap **Edit result**.
+Correct it, give a short reason, and save.
 
-1. Go to **Score Entry → My recent submissions**.
-2. Tap **Request correction**.
-3. Explain what is wrong and what the result should be.
-
-If a result shows **Returned for Correction**, submit the match again.
+Scorer accounts: tell an event administrator; they will fix it.
 
 ## Statuses
 
 | Status | Meaning |
 |---|---|
-| Awaiting Validation | Submitted, waiting for the venue lead |
-| Official | Validated and public |
-| Returned for Correction | Re-submit it |
+| Awaiting Approval | From a Scorer account, waiting for an administrator |
+| Official | Public |
+| Returned for Correction | Enter it again |
 | Disputed | Being reviewed by the sport manager |
 | Void | Not counted |
 

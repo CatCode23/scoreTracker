@@ -22,18 +22,12 @@ const base = {
     { participant_id: A, score: 2 },
     { participant_id: B, score: 1 },
   ],
-  referee_confirmed: true,
   notes: null,
 };
 
 describe('validateResult', () => {
   it('accepts a valid 2-1 head-to-head result', () => {
     expect(validateResult(base, 'head_to_head', [A, B])).toEqual([]);
-  });
-  it('requires referee confirmation', () => {
-    expect(validateResult({ ...base, referee_confirmed: false }, 'head_to_head', [A, B])).toContain(
-      'Referee confirmation is required before submitting.',
-    );
   });
   it('rejects a winner who is not assigned to the match', () => {
     expect(validateResult({ ...base, winner_participant_id: C }, 'head_to_head', [A, B])).toContain(

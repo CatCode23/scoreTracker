@@ -11,7 +11,7 @@ const teams: EntryParticipant[] = [
 ];
 
 describe('ScoreEntryForm', () => {
-  it('submits a 2-1 result with the inferred winner after referee confirmation', async () => {
+  it('submits a 2-1 result with the inferred winner (no referee step)', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ScoreEntryForm matchType="head_to_head" participants={teams} onSubmit={onSubmit} />);
@@ -22,7 +22,6 @@ describe('ScoreEntryForm', () => {
 
     await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '2');
     await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '1');
-    await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -34,23 +33,9 @@ describe('ScoreEntryForm', () => {
         { participant_id: A, score: 2 },
         { participant_id: B, score: 1 },
       ],
-      referee_confirmed: true,
       notes: null,
     });
-    expect(await screen.findByText(/Awaiting Validation/)).toBeInTheDocument();
-  });
-
-  it('blocks submission without referee confirmation', async () => {
-    const user = userEvent.setup();
-    const onSubmit = vi.fn();
-    render(<ScoreEntryForm matchType="head_to_head" participants={teams} onSubmit={onSubmit} />);
-    await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '2');
-    await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '1');
-    await user.click(screen.getByRole('button', { name: /Submit Result/ }));
-    expect(onSubmit).not.toHaveBeenCalled();
-    expect(
-      screen.getByText('Referee confirmation is required before submitting.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Awaiting Approval/)).toBeInTheDocument();
   });
 
   it('rejects negative scores', async () => {
@@ -62,7 +47,6 @@ describe('ScoreEntryForm', () => {
     await user.click(
       screen.getByLabelText('Raptors (1-2 SBCT)', { selector: 'input[type=radio]' }),
     );
-    await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText('Scores, times and penalties cannot be negative.')).toBeInTheDocument();
@@ -76,7 +60,6 @@ describe('ScoreEntryForm', () => {
     render(<ScoreEntryForm matchType="head_to_head" participants={teams} onSubmit={onSubmit} />);
     await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '3');
     await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '0');
-    await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     expect(await screen.findByText(/not authorized/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Submit Result/ })).toBeInTheDocument();
@@ -102,7 +85,6 @@ describe('ScoreEntryForm', () => {
       '13:00',
     );
     await user.type(screen.getByLabelText('Place (1 = first) for Lancers (2-2 SBCT)'), '2');
-    await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     const payload = onSubmit.mock.calls[0][0];
     expect(payload.result_method).toBe('time');
@@ -118,5 +100,67 @@ describe('ScoreEntryForm', () => {
   it('warns when no teams are assigned', () => {
     render(<ScoreEntryForm matchType="head_to_head" participants={[]} onSubmit={vi.fn()} />);
     expect(screen.getByText(/No teams are assigned/)).toBeInTheDocument();
+  });
+
+  it('admins save results as Official and see that it is live', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ScoreEntryForm
+        matchType="head_to_head"
+        participants={teams}
+        onSubmit={onSubmit}
+        submitsOfficial
+      />,
+    );
+    expect(screen.queryByLabelText(/Referee/)).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '2');
+    await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '0');
+    await user.click(screen.getByRole('button', { name: /Save Official Result/ }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(/Result saved: Official/)).toBeInTheDocument();
+  });
+
+  it('edit mode is prefilled and requires a reason', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ScoreEntryForm
+        matchType="head_to_head"
+        participants={teams}
+        onSubmit={onSubmit}
+        initial={{
+          result_method: 'score',
+          winner_participant_id: A,
+          loser_participant_id: B,
+          participant_values: [
+            { participant_id: A, score: 3 },
+            { participant_id: B, score: 1 },
+          ],
+          notes: null,
+        }}
+      />,
+    );
+    expect(screen.getByLabelText('Score for Raptors (1-2 SBCT)')).toHaveValue('3');
+    // The scores were entered the wrong way round: B won 3-1.
+    await user.clear(screen.getByLabelText('Score for Raptors (1-2 SBCT)'));
+    await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '1');
+    await user.clear(screen.getByLabelText('Score for Lancers (2-2 SBCT)'));
+    await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '3');
+    await user.click(
+      screen.getByLabelText('Lancers (2-2 SBCT)', { selector: 'input[type=radio]' }),
+    );
+    await user.click(screen.getByRole('button', { name: /Save corrected result/ }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText(/Give a short reason/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/Reason for the change/), 'entered the wrong way round');
+    await user.click(screen.getByRole('button', { name: /Save corrected result/ }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        winner_participant_id: B,
+        loser_participant_id: A,
+        reason: 'entered the wrong way round',
+      }),
+    );
   });
 });

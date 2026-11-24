@@ -3,7 +3,7 @@ import { formatDateTime, formatSeconds, humanize } from '../lib/domain/format';
 import type { MatchResult } from '../lib/types';
 import { useConfirm } from './ConfirmDialog';
 import { ResultStatusBadge, UnofficialBadge } from './status';
-import { Button, Notice } from './ui';
+import { Button } from './ui';
 
 export type ValidationAction = 'official' | 'returned' | 'disputed' | 'void';
 
@@ -31,8 +31,8 @@ export function ResultValidationCard({
     const reasonNeeded = action !== 'official';
     const cfg = {
       official: {
-        title: 'Mark result Official?',
-        confirmLabel: 'Mark Official',
+        title: 'Approve this result?',
+        confirmLabel: 'Approve',
         danger: false,
         body: 'This publishes the result to the public site immediately.',
       },
@@ -108,27 +108,16 @@ export function ResultValidationCard({
           </li>
         )}
       </ul>
-      <p className="mt-2 text-sm">
-        Referee confirmed: <strong>{result.referee_confirmed ? 'Yes' : 'No'}</strong>
-      </p>
+
       {result.notes && <p className="mt-1 text-sm text-slate-800">Notes: {result.notes}</p>}
       {result.status_reason && (
         <p className="mt-1 text-sm text-slate-800">Reason: {result.status_reason}</p>
       )}
-      {!result.referee_confirmed && pending && (
-        <Notice tone="warn" className="mt-2">
-          Referee confirmation is missing; this result cannot be marked Official.
-        </Notice>
-      )}
 
       {canValidate && pending && (
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button
-            variant="success"
-            onClick={() => ask('official')}
-            disabled={!result.referee_confirmed}
-          >
-            <CheckCircle2 className="h-5 w-5" aria-hidden /> Mark Official
+          <Button variant="success" onClick={() => ask('official')}>
+            <CheckCircle2 className="h-5 w-5" aria-hidden /> Approve
           </Button>
           <Button variant="secondary" onClick={() => ask('returned')}>
             <CornerUpLeft className="h-5 w-5" aria-hidden /> Return for Correction

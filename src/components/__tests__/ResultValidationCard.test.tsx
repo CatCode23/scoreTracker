@@ -14,7 +14,7 @@ const result: MatchResult = {
     { participant_id: 'a', score: 2 },
     { participant_id: 'b', score: 1 },
   ],
-  referee_confirmed: true,
+  referee_confirmed: false,
   submitted_by: 'u1',
   submitted_at: '2026-12-08T15:00:00Z',
   validated_by: null,
@@ -49,16 +49,16 @@ describe('ResultValidationCard', () => {
     expect(screen.getByText(/Raptors — Winner/)).toBeInTheDocument();
     expect(screen.getByText('Score 2')).toBeInTheDocument();
     expect(screen.getByText('Notes: Clean game')).toBeInTheDocument();
-    expect(screen.getByText('Awaiting Validation')).toBeInTheDocument();
+    expect(screen.getByText('Awaiting Approval')).toBeInTheDocument();
     expect(screen.getByText('Unofficial')).toBeInTheDocument();
   });
 
-  it('marks Official after confirmation (no reason needed)', async () => {
+  it('approves after confirmation (no reason needed)', async () => {
     const { onAction, user } = setup();
-    await user.click(screen.getByRole('button', { name: /Mark Official/ }));
+    await user.click(screen.getByRole('button', { name: /Approve/ }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText(/publishes the result/)).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('button', { name: 'Mark Official' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Approve' }));
     expect(onAction).toHaveBeenCalledWith('official', null);
   });
 
@@ -95,15 +95,9 @@ describe('ResultValidationCard', () => {
     expect(onAction).toHaveBeenLastCalledWith('void', 'Duplicate entry');
   });
 
-  it('cannot mark Official without referee confirmation', () => {
-    setup({ result: { ...result, referee_confirmed: false } });
-    expect(screen.getByRole('button', { name: /Mark Official/ })).toBeDisabled();
-    expect(screen.getByText(/cannot be marked Official/)).toBeInTheDocument();
-  });
-
   it('hides actions from users without validation authority', () => {
     setup({ canValidate: false });
-    expect(screen.queryByRole('button', { name: /Mark Official/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
   });
 
   it('shows the server error inside the dialog', async () => {
@@ -111,10 +105,8 @@ describe('ResultValidationCard', () => {
       .fn()
       .mockRejectedValue(new Error('Cannot change a result from official to official'));
     const { user } = setup({ onAction });
-    await user.click(screen.getByRole('button', { name: /Mark Official/ }));
-    await user.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark Official' }),
-    );
+    await user.click(screen.getByRole('button', { name: /Approve/ }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Approve' }));
     expect(
       await within(screen.getByRole('dialog')).findByText(/Cannot change a result/),
     ).toBeInTheDocument();

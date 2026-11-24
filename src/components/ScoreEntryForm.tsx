@@ -16,7 +16,7 @@ import {
   type ParticipantValue,
   type ResultMethod,
 } from '../lib/types';
-import { Button, Checkbox, Field, Input, Notice, Select, TextArea } from './ui';
+import { Button, Field, Input, Notice, Select, TextArea } from './ui';
 
 export interface EntryParticipant {
   participant_id: string;
@@ -29,8 +29,9 @@ export interface ResultPayload {
   winner_participant_id: string | null;
   loser_participant_id: string | null;
   participant_values: ParticipantValue[];
-  referee_confirmed: boolean;
   notes: string | null;
+  /** Only set when the form is used to edit an existing result. */
+  reason?: string;
 }
 
 interface RowValues {
@@ -45,8 +46,8 @@ interface FormValues {
   result_method: ResultMethod;
   rows: RowValues[];
   winner: string;
-  referee_confirmed: boolean;
   notes: string;
+  reason: string;
 }
 
 const FIELD_LABEL: Record<string, string> = {
@@ -102,8 +103,34 @@ export function buildPayload(
     winner_participant_id: winner,
     loser_participant_id: loser,
     participant_values,
-    referee_confirmed: values.referee_confirmed,
     notes: values.notes.trim() || null,
+  };
+}
+
+const str = (n: number | null | undefined) => (n == null ? '' : String(n));
+
+/** Form values for a new result, or prefilled from an existing one (edit). */
+function startValues(
+  matchType: MatchType,
+  participants: EntryParticipant[],
+  initial?: ResultPayload,
+): FormValues {
+  return {
+    result_method: initial?.result_method ?? defaultResultMethod(matchType),
+    rows: participants.map((p) => {
+      const v = initial?.participant_values.find((x) => x.participant_id === p.participant_id);
+      return {
+        participant_id: p.participant_id,
+        score: str(v?.score),
+        time: str(v?.time_seconds),
+        penalty: v?.penalty_seconds ? String(v.penalty_seconds) : '',
+        technical: str(v?.technical_score),
+        placement: str(v?.placement),
+      };
+    }),
+    winner: initial?.winner_participant_id ?? '',
+    notes: initial?.notes ?? '',
+    reason: '',
   };
 }
 
@@ -111,50 +138,31 @@ export function ScoreEntryForm({
   matchType,
   participants,
   onSubmit,
+  submitsOfficial = false,
+  initial,
 }: {
   matchType: MatchType;
   participants: EntryParticipant[];
   onSubmit: (payload: ResultPayload) => Promise<void>;
+  /** True when the user's results are Official immediately (admins, sport managers, venue leads). */
+  submitsOfficial?: boolean;
+  /** Prefill from an existing result; switches the form to "edit" mode (reason required). */
+  initial?: ResultPayload;
 }) {
+  const editing = Boolean(initial);
   const h2h = isHeadToHead(matchType);
   const [errors, setErrors] = useState<string[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const { register, handleSubmit, control, setValue, reset, formState } = useForm<FormValues>({
-    defaultValues: {
-      result_method: defaultResultMethod(matchType),
-      rows: participants.map((p) => ({
-        participant_id: p.participant_id,
-        score: '',
-        time: '',
-        penalty: '',
-        technical: '',
-        placement: '',
-      })),
-      winner: '',
-      referee_confirmed: false,
-      notes: '',
-    },
+    defaultValues: startValues(matchType, participants, initial),
   });
 
   // Reset when the selected match changes.
   const key = participants.map((p) => p.participant_id).join('|');
   useEffect(() => {
-    reset({
-      result_method: defaultResultMethod(matchType),
-      rows: participants.map((p) => ({
-        participant_id: p.participant_id,
-        score: '',
-        time: '',
-        penalty: '',
-        technical: '',
-        placement: '',
-      })),
-      winner: '',
-      referee_confirmed: false,
-      notes: '',
-    });
+    reset(startValues(matchType, participants, initial));
     setErrors([]);
     setServerError(null);
     setDone(false);
@@ -164,12 +172,11 @@ export function ScoreEntryForm({
   const method = useWatch({ control, name: 'result_method' });
   const rows = useWatch({ control, name: 'rows' });
   const winner = useWatch({ control, name: 'winner' });
-  const referee = useWatch({ control, name: 'referee_confirmed' });
   const fields = fieldsForMethod(method);
 
   // Convenience: suggest the winner from scores (scorer can still change it).
   useEffect(() => {
-    if (!h2h || method !== 'score' || !rows) return;
+    if (!h2h || method !== 'score' || !rows || editing) return;
     const inferred = inferWinnerFromScores(
       rows.map((r) => ({ participant_id: r.participant_id, score: toNumber(r.score) })),
     );
@@ -198,10 +205,13 @@ export function ScoreEntryForm({
     ) {
       problems.unshift('One of the values is not a valid number.');
     }
+    if (editing && values.reason.trim().length < 3) {
+      problems.push('Give a short reason for the change (for example "typo, was 3-1").');
+    }
     setErrors([...new Set(problems)]);
     if (problems.length) return;
     try {
-      await onSubmit(payload);
+      await onSubmit(editing ? { ...payload, reason: values.reason.trim() } : payload);
       setDone(true);
     } catch (e) {
       setServerError(friendlyError(e));
@@ -215,10 +225,15 @@ export function ScoreEntryForm({
       </Notice>
     );
   }
-  if (done) {
-    return (
-      <Notice tone="success" title="Result submitted — Awaiting Validation">
-        The venue lead or sport manager will validate it. It is not public until marked Official.
+  if (done && !editing) {
+    return submitsOfficial ? (
+      <Notice tone="success" title="Result saved: Official">
+        It is live on the public site now. If you made a mistake, use Edit result in Match
+        Management.
+      </Notice>
+    ) : (
+      <Notice tone="success" title="Result submitted: Awaiting Approval">
+        An event administrator will approve it. It is not public until then.
       </Notice>
     );
   }
@@ -316,13 +331,16 @@ export function ScoreEntryForm({
         <TextArea id="notes" maxLength={500} {...register('notes')} />
       </Field>
 
-      <Checkbox
-        id="referee_confirmed"
-        label="Referee / official has approved this result"
-        description="Required. Do not submit until the referee confirms the result."
-        checked={referee}
-        onChange={(v) => setValue('referee_confirmed', v, { shouldDirty: true })}
-      />
+      {editing && (
+        <Field label="Reason for the change (required)" htmlFor="edit-reason">
+          <TextArea
+            id="edit-reason"
+            maxLength={300}
+            {...register('reason')}
+            placeholder="e.g. typo, was 3-1"
+          />
+        </Field>
+      )}
 
       {errors.length > 0 && (
         <Notice tone="error" title="Please fix the following">
@@ -337,7 +355,13 @@ export function ScoreEntryForm({
 
       <Button type="submit" block variant="success" disabled={formState.isSubmitting}>
         <Send className="h-5 w-5" aria-hidden />{' '}
-        {formState.isSubmitting ? 'Submitting…' : 'Submit Result'}
+        {formState.isSubmitting
+          ? 'Saving…'
+          : editing
+            ? 'Save corrected result'
+            : submitsOfficial
+              ? 'Save Official Result'
+              : 'Submit Result'}
       </Button>
     </form>
   );

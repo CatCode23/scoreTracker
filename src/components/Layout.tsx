@@ -15,6 +15,7 @@ import {
 import { OfflineBanner } from './states';
 import { cx } from './ui';
 import { useOpsRealtime } from '../lib/realtime';
+import { usePendingApprovalCount } from '../lib/api/ops';
 
 interface NavItem {
   to: string;
@@ -29,6 +30,9 @@ export function Layout() {
   useEffect(() => setOpen(false), [loc.pathname]);
   const active = isActive(auth);
   useOpsRealtime(active);
+  // The Approvals page only appears when Scorer-account results are waiting.
+  const pending = usePendingApprovalCount(canValidateAnything(auth));
+  const pendingCount = pending.data ?? 0;
 
   const ops: NavItem[] = [
     { to: '/ops', label: 'Dashboard', show: active },
@@ -36,8 +40,8 @@ export function Layout() {
     { to: '/ops/score', label: 'Score Entry', show: canSubmitAnything(auth) },
     {
       to: '/ops/validate',
-      label: 'Validation',
-      show: canValidateAnything(auth) || hasGlobalRead(auth),
+      label: `Approvals (${pendingCount})`,
+      show: canValidateAnything(auth) && pendingCount > 0,
     },
     {
       to: '/ops/matches',

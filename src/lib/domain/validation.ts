@@ -42,9 +42,6 @@ export const resultSubmissionSchema = z.object({
   winner_participant_id: z.string().uuid().nullable(),
   loser_participant_id: z.string().uuid().nullable(),
   participant_values: z.array(participantValueSchema),
-  referee_confirmed: z.literal(true, {
-    errorMap: () => ({ message: 'Referee confirmation is required before submitting' }),
-  }),
   notes: z.string().max(500).nullable(),
 });
 export type ResultSubmission = z.infer<typeof resultSubmissionSchema>;
@@ -86,13 +83,12 @@ export function fieldsForMethod(
  * errors (empty = OK). The DB is the source of truth; this gives fast feedback.
  */
 export function validateResult(
-  input: Omit<ResultSubmission, 'referee_confirmed'> & { referee_confirmed: boolean },
+  input: ResultSubmission,
   matchType: MatchType,
   matchParticipantIds: string[],
 ): string[] {
   const errors: string[] = [];
   const inMatch = new Set(matchParticipantIds);
-  if (!input.referee_confirmed) errors.push('Referee confirmation is required before submitting.');
   if (input.winner_participant_id && !inMatch.has(input.winner_participant_id)) {
     errors.push('The winner must be a team assigned to this match.');
   }

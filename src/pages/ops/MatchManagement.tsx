@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Pencil } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import {
   db,
@@ -36,6 +36,8 @@ import { Empty, ErrorState, Loading, Unauthorized } from '../../components/state
 import { MatchStatusBadge, UnofficialBadge } from '../../components/status';
 import { SyncButton } from '../../components/SyncButton';
 import { useConfirm } from '../../components/ConfirmDialog';
+import { ScoreEntryForm, type ResultPayload } from '../../components/ScoreEntryForm';
+import type { MatchResult } from '../../lib/types';
 
 interface AdvanceTarget {
   from: Match;
@@ -53,6 +55,7 @@ export function MatchManagement() {
   const participants = useParticipants(eventId || undefined);
   const results = useResults({ eventId: eventId || undefined, statuses: ['official'] });
   const [advance, setAdvance] = useState<AdvanceTarget | null>(null);
+  const [editing, setEditing] = useState<{ match: Match; result: MatchResult } | null>(null);
   const confirm = useConfirm();
   const setStatus = useOpsMutation(({ id, status }: { id: string; status: MatchStatus }) =>
     db.update('matches', id, { status }),
@@ -228,6 +231,14 @@ export function MatchManagement() {
                           )}
                           {canManage && (
                             <div className="mt-3 flex flex-wrap gap-2">
+                              {result && (
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setEditing({ match: m, result })}
+                                >
+                                  <Pencil className="h-4 w-4" aria-hidden /> Edit result
+                                </Button>
+                              )}
                               {winner && (
                                 <Button
                                   onClick={() =>
@@ -305,7 +316,125 @@ export function MatchManagement() {
           onClose={() => setAdvance(null)}
         />
       )}
+      {editing && (
+        <EditResultDialog
+          match={editing.match}
+          result={editing.result}
+          slots={mps.data ?? []}
+          matches={matches.data ?? []}
+          team={team}
+          onClose={() => setEditing(null)}
+        />
+      )}
       {confirm.dialog}
+    </div>
+  );
+}
+
+/** Fix an Official result. The old result is kept (void, with the reason) in the audit log. */
+export function EditResultDialog({
+  match,
+  result,
+  slots,
+  matches,
+  team,
+  onClose,
+}: {
+  match: Match;
+  result: MatchResult;
+  slots: MatchParticipant[];
+  matches: Match[];
+  team: (id: string | null) => string;
+  onClose: () => void;
+}) {
+  const participants = slots
+    .filter((s) => s.match_id === match.id && s.participant_id)
+    .sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }))
+    .map((s) => ({
+      participant_id: s.participant_id!,
+      slot: s.slot,
+      label: team(s.participant_id),
+    }));
+  // Teams already moved on from this match (winner -> next match, loser -> 3rd/consolation).
+  const downstream = slots.filter(
+    (s) =>
+      s.source_match_id === match.id &&
+      (s.source_type === 'winner_of_match' || s.source_type === 'loser_of_match'),
+  );
+  const [updateNext, setUpdateNext] = useState(true);
+  const save = useOpsMutation((p: ResultPayload) =>
+    db.rpc('correct_match_result', {
+      p_result_id: result.id,
+      p_result_method: p.result_method,
+      p_winner: p.winner_participant_id,
+      p_loser: p.loser_participant_id,
+      p_values: p.participant_values,
+      p_reason: p.reason,
+      p_update_advancement: updateNext,
+    }),
+  );
+  const codeOf = (id: string) => matches.find((m) => m.id === id)?.match_code ?? 'next match';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/60 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-title"
+        className="max-h-[95vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="edit-title" className="text-xl font-bold">
+          Edit result: {match.match_code}
+        </h2>
+        <p className="mt-1 text-sm text-slate-700">
+          The corrected result replaces the current one on the public site straight away. The old
+          result and your reason are kept in the audit log.
+        </p>
+        {downstream.length > 0 && (
+          <div className="mt-3">
+            <Notice tone="warn" title="Teams have already moved on from this match">
+              {downstream.map((d) => (
+                <span key={d.id} className="block">
+                  {team(d.participant_id)} → {codeOf(d.match_id)} (slot {d.slot})
+                </span>
+              ))}
+            </Notice>
+            <div className="mt-2">
+              <Checkbox
+                id="edit-update-next"
+                label="If the winner changes, swap the corrected teams into those matches"
+                description="Refused if one of those matches already has a result; edit that one first."
+                checked={updateNext}
+                onChange={setUpdateNext}
+              />
+            </div>
+          </div>
+        )}
+        <div className="mt-4">
+          <ScoreEntryForm
+            matchType={match.match_type}
+            participants={participants}
+            initial={{
+              result_method: result.result_method,
+              winner_participant_id: result.winner_participant_id,
+              loser_participant_id: result.loser_participant_id,
+              participant_values: result.participant_values,
+              notes: result.notes,
+            }}
+            onSubmit={async (p) => {
+              await save.mutateAsync(p);
+              onClose();
+            }}
+          />
+        </div>
+        <Button variant="ghost" block className="mt-2" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 }

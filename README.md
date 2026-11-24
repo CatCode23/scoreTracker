@@ -1,7 +1,7 @@
 # WOTB Tournament Tracker
 
 A mobile-first tournament tracker for the WOTB sports tournament. It handles the
-schedule, brackets, score entry, result validation, placements, and the Commander's
+schedule, brackets, score entry, result editing, placements, and the Commander's
 Cup overall leaderboard.
 
 **How scoring works:** each competing **unit** enters **teams** in the individual sports.
@@ -72,9 +72,11 @@ How it works:
   columns. The anon role has no access to any raw table.
 - Staff pages read and write the raw tables. RLS decides what each user can do, based on
   their profile role plus their event and venue assignments.
-- A result goes Draft/Submitted → Official through triggers. The triggers enforce
-  referee confirmation, check that the winner is in the match, and make an Official
-  result immutable. They also write `audit_log` and bump `public_updates`.
+- Results entered by event administrators (operations admins, sport managers, venue
+  leads) are Official immediately. Results from Scorer accounts wait for approval.
+  Triggers check that the winner is in the match and that values aren't negative. An
+  Official result is changed only through **Edit result**, which keeps the old version
+  and the reason in `audit_log`. Every change also bumps `public_updates`.
 - Public clients subscribe to `public_updates` through Realtime and refetch when an
   official change lands. They fall back to polling every 60 seconds.
 
@@ -85,8 +87,8 @@ src/                     React app
   lib/domain/            Pure logic (points, validation, advancement, bracket) + tests
   lib/api/               React Query hooks (public views / ops tables)
   pages/public/          Public dashboard + sport detail
-  pages/ops/             Staff pages (score entry, validation, setup, ...)
-  components/            UI kit, Bracket Board, Score Entry form, Validation card
+  pages/ops/             Staff pages (score entry, approvals, setup, ...)
+  components/            UI kit, Bracket Board, Score Entry form, Approval card
 supabase/migrations/     Schema, triggers, RLS, public views (run in order)
 supabase/seed.sql        Events, points matrix, scoring settings (no people / teams)
 supabase/tests/          Local Postgres harness + workflow/RLS test
@@ -149,7 +151,8 @@ Use one of these two options.
 **Updating an existing project:** run only the migration files you haven't run yet, in
 order. Each new migration is a new file; earlier files are never changed. For example, a
 project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql`,
-`…0006_units_and_deletes.sql` and `…0007_fix_cascade_checks.sql`, in that order.
+`…0006_units_and_deletes.sql`, `…0007_fix_cascade_checks.sql` and
+`…0008_direct_results_and_edits.sql`, in that order.
 
 ### Sample data (optional, for trying the app)
 
