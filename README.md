@@ -129,6 +129,7 @@ npm run test:db              # migrations + RLS/workflow tests on a temp Postgre
 | `VITE_SUPABASE_ANON_KEY` | Supabase **anon / publishable** key (public by design) |
 | `VITE_APP_NAME` | Display name, default `WOTB Tournament Tracker` |
 | `VITE_GITHUB_PAGES_BASE` | `/<REPOSITORY_NAME>/`, default `/scoreTracker/` |
+| `VITE_USERNAME_DOMAIN` | Optional. Domain added to plain usernames at sign-in, default `wotb.local` |
 
 `SUPABASE_SERVICE_ROLE_KEY` is **never** used anywhere in this project.
 
@@ -204,6 +205,10 @@ app never stores them. Admins create every account, so no emails are needed to s
   **enabled**. Password sign-in is part of it.
 - On the same page, **disable "Allow new users to sign up"**. Even if sign-ups are left
   on, new accounts start **inactive** with no access.
+- **Turn off "Confirm email"** (same Email provider page). Accounts are created by
+  admins with Auto Confirm anyway; with it on, a forgotten Auto Confirm tick sends a
+  confirmation email that bounces for username accounts, and repeated bounces can get
+  Supabase's built-in email sender restricted.
 - Set a **minimum password length** of at least 10 (in the Email provider or password
   settings). The app's Change Password page also requires 10 characters.
 - Optional backup sign-in by email link: the sign-in page also offers "Sign in with an
@@ -246,9 +251,16 @@ app never stores them. Admins create every account, so no emails are needed to s
 
 For each person:
 
-1. Supabase: *Authentication → Users → Add user → Create new user*, with their email, a
-   temporary password, and **Auto Confirm User** ticked. Don't use **Invite user**: the
+1. Supabase: *Authentication → Users → Add user → Create new user*. For the email, use
+   either their real address or a **username** in the form `jsmith@wotb.local`. Set a
+   temporary password and tick **Auto Confirm User**. Don't use **Invite user**: the
    invite link doesn't work with this app's page routing, and it sends an email.
+
+   **Usernames:** people with a `@wotb.local` account sign in by typing just `jsmith`; the
+   app adds `@wotb.local` for them. No email is ever sent to these addresses, so they
+   can't use the email-link backup, and you reset their passwords in Supabase. To use a
+   different made-up domain, set `VITE_USERNAME_DOMAIN` (repository variable) and create
+   accounts with that domain instead.
 2. App: **Ops → Users** → activate them and add their event/venue assignment.
 3. Give them the temporary password directly (in person or by phone, not in a group
    chat). They change it under **Change Password** after signing in.

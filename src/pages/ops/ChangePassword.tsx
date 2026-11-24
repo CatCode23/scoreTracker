@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { supabase, friendlyError } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { Button, Card, Field, Input, Notice, PageHeader } from '../../components/ui';
+import { displayLogin } from '../../lib/username';
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -47,7 +48,7 @@ export function ChangePassword() {
 
   return (
     <div className="mx-auto max-w-md space-y-4">
-      <PageHeader title="Change password" subtitle={auth.session?.user.email} />
+      <PageHeader title="Change password" subtitle={displayLogin(auth.session?.user.email)} />
       <Notice tone="info">
         Replace the temporary password you were given. Do not share your account; every result you
         submit is recorded under your name.
@@ -56,9 +57,9 @@ export function ChangePassword() {
         <form onSubmit={submit} className="space-y-4" noValidate aria-label="Change password">
           {/* Hidden username field helps password managers save the right account. */}
           <input
-            type="email"
+            type="text"
             autoComplete="username"
-            value={auth.session?.user.email ?? ''}
+            value={displayLogin(auth.session?.user.email)}
             readOnly
             hidden
           />

@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth';
 import type { Access } from '../../lib/domain/permissions';
 import { ErrorState, Loading, Unauthorized } from '../../components/states';
 import { Card, Notice } from '../../components/ui';
+import { displayLogin } from '../../lib/username';
 
 /** Route guard for operations pages. UI only: the database enforces access via RLS. */
 export function RequireAccess({
@@ -33,8 +34,9 @@ export function RequireAccess({
     return (
       <Card>
         <Notice tone="warn" title="Account pending activation">
-          You are signed in as <strong>{auth.session.user.email}</strong>, but an operations admin
-          has not activated your account or assigned you a role yet. Give them this email address.
+          You are signed in as <strong>{displayLogin(auth.session.user.email)}</strong>, but an
+          operations admin has not activated your account or assigned you a role yet. Give them this
+          username.
         </Notice>
       </Card>
     );

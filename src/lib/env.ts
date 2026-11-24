@@ -2,6 +2,10 @@ export const env = {
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL ?? '',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
   appName: import.meta.env.VITE_APP_NAME || 'WOTB Tournament Tracker',
+  /** Domain added to plain usernames at sign-in ("jsmith" -> "jsmith@wotb.local"). */
+  usernameDomain: (import.meta.env.VITE_USERNAME_DOMAIN || 'wotb.local')
+    .replace(/^@/, '')
+    .toLowerCase(),
 };
 
 export const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);

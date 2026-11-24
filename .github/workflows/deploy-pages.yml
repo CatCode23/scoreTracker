@@ -24,6 +24,7 @@ jobs:
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       VITE_APP_NAME: ${{ vars.VITE_APP_NAME || 'WOTB Tournament Tracker' }}
+      VITE_USERNAME_DOMAIN: ${{ vars.VITE_USERNAME_DOMAIN || 'wotb.local' }}
       # Must be "/<REPOSITORY_NAME>/". Defaults to this repository's name.
       VITE_GITHUB_PAGES_BASE: ${{ vars.VITE_GITHUB_PAGES_BASE || format('/{0}/', github.event.repository.name) }}
     steps:
