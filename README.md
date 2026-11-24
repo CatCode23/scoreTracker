@@ -148,8 +148,17 @@ Use one of these two options.
 
 **Updating an existing project:** run only the migration files you haven't run yet, in
 order. Each new migration is a new file; earlier files are never changed. For example, a
-project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql` and then
-`…0006_units_and_deletes.sql`.
+project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql`,
+`…0006_units_and_deletes.sql` and `…0007_fix_cascade_checks.sql`, in that order.
+
+### Sample data (optional, for trying the app)
+
+- `supabase/sample/load_sample_data.sql` adds 4 sample units with Soccer and Basketball
+  teams, a finished Soccer bracket with published placements (so the unit leaderboard
+  shows points), and a Basketball bracket in progress. Everything is named `SAMPLE …`.
+- `supabase/sample/remove_sample_data.sql` deletes exactly that and nothing else.
+
+Run either in the SQL Editor. Remove the sample data before the event.
 
 **Option B, Supabase CLI:**
 
