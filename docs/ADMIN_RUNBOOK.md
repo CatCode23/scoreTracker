@@ -49,13 +49,18 @@ site" instead.
 
 ## 3. Seeds and check-in
 
-**Ops → Event Registration**:
+**Ops → Teams**, then choose the event in the **All events** filter. The page switches to
+that event's teams:
 
-1. Pick the event. Teams registered on the Teams page are listed here.
-2. Set seeds, or add more teams.
+1. Set each team's **seed**.
+2. Set **check-in**: Registered, Checked in, No show, or Withdrawn. Setting "No show"
+   does **not** apply a penalty (see Placements).
 3. Watch for the **target count warning**.
-4. Check-in status can be Registered, Checked in, No show, or Withdrawn. Setting
-   "No show" does **not** apply a penalty (see section 9).
+4. **Exclude pts** stops a team's placing from counting toward its unit's points.
+5. **Remove** takes a team out of that event; the team itself is kept. This is refused
+   once the team is in matches; mark it Withdrawn instead.
+
+To add a team to an event, edit the team (pencil) and tick the event.
 
 ## 4. Load schedules and brackets
 

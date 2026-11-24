@@ -17,7 +17,7 @@ Prerequisites: test accounts (see below) and the schedule loaded.
 | # | Actor | Steps | Expected |
 |---|---|---|---|
 | 1 | Admin | Ops → Settings → Units: add `TEST Unit A` and `TEST Unit B`. Ops → Teams: create `TEST Raptors` (TEST Unit A) and `TEST Lancers` (TEST Unit B), both ticked for Soccer | Both appear under their unit with a Soccer badge; a duplicate name+unit is rejected; a team with no event ticked is rejected |
-| 2 | Admin | Ops → Event Registration → Soccer: set seeds 1 and 2 | Both listed; the target-count warning is shown |
+| 2 | Admin | Ops → Teams → filter **Soccer**: set seeds 1 and 2 | Both listed with seed and check-in controls; the target-count warning is shown |
 | 3 | Admin | Match Setup → Soccer: create stage `Championship`, matches `SOC-T1` (Round 1) and `SOC-T2` (Final). Set SOC-T1 to winner → SOC-T2 slot A. Assign Raptors=A and Lancers=B to SOC-T1 | Matches visible on the public Soccer Bracket Board with no scores |
 | 4 | Admin | Score Entry → Soccer → SOC-T1: Raptors 2, Lancers 1, winner Raptors, **Save Official Result** | "Result saved: Official"; no referee step |
 | 5 | Admin | Match Management → SOC-T1 → **Edit result**: change to 3–1, reason "typo" | Saved; the audit log shows the old result voided with "Edited: typo" |

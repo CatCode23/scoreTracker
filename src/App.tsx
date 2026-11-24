@@ -39,10 +39,6 @@ const Placements = lazy(() =>
   import('./pages/ops/Placements').then((m) => ({ default: m.Placements })),
 );
 const Teams = lazy(() => import('./pages/ops/Teams').then((m) => ({ default: m.Teams })));
-const EventRegistration = lazy(() =>
-  import('./pages/ops/EventRegistration').then((m) => ({ default: m.EventRegistration })),
-);
-const Roster = lazy(() => import('./pages/ops/Roster').then((m) => ({ default: m.Roster })));
 const Users = lazy(() => import('./pages/ops/Users').then((m) => ({ default: m.Users })));
 const Settings = lazy(() => import('./pages/ops/Settings').then((m) => ({ default: m.Settings })));
 const ChangePassword = lazy(() =>
@@ -92,8 +88,6 @@ export function AppRoutes() {
             element={guard(<Placements />, (a) => canManageAnything(a) || hasGlobalRead(a))}
           />
           <Route path="teams" element={guard(<Teams />, canRegisterTeams)} />
-          <Route path="registration" element={guard(<EventRegistration />, canManageAnything)} />
-          <Route path="roster" element={guard(<Roster />)} />
           <Route path="users" element={guard(<Users />, isOpsAdmin)} />
           <Route path="settings" element={guard(<Settings />, isOpsAdmin)} />
           <Route path="audit" element={guard(<AuditLog />, isOpsAdmin)} />

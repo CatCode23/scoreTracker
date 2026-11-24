@@ -14,7 +14,9 @@ import {
 } from '../../lib/api/ops';
 import { canManageEvent, isOpsAdmin } from '../../lib/domain/permissions';
 import { teamSchema, type TeamInput } from '../../lib/domain/validation';
-import type { EventParticipant, EventRow, Team } from '../../lib/types';
+import type { CheckInStatus, EventParticipant, EventRow, Team } from '../../lib/types';
+import { participantCountWarning } from '../../lib/domain/validation';
+import { humanize } from '../../lib/domain/format';
 import { friendlyError, supabase } from '../../lib/supabase';
 import {
   Badge,
@@ -203,6 +205,169 @@ function TeamForm({
   );
 }
 
+const CHECK_IN: CheckInStatus[] = ['registered', 'checked_in', 'no_show', 'withdrawn'];
+
+/** One event's teams: seeds, check-in, points eligibility, remove from event. */
+export function EventRoster({
+  event,
+  regs,
+  teamsById,
+  canEdit,
+  onEditTeam,
+}: {
+  event: EventRow;
+  regs: EventParticipant[];
+  teamsById: Map<string, Team>;
+  canEdit: boolean;
+  onEditTeam: (t: Team) => void;
+}) {
+  const confirm = useConfirm();
+  const update = useOpsMutation(
+    ({ id, values }: { id: string; values: Partial<EventParticipant> }) =>
+      db.update('event_participants', id, values),
+  );
+  const remove = useOpsMutation((id: string) => db.remove('event_participants', id));
+  const active = regs.filter((r) => r.active && r.check_in_status !== 'withdrawn').length;
+  const warning = participantCountWarning(active, event.target_team_count);
+  const sorted = [...regs].sort(
+    (a, b) =>
+      (a.seed ?? 999) - (b.seed ?? 999) ||
+      (teamsById.get(a.team_id)?.team_name ?? '').localeCompare(
+        teamsById.get(b.team_id)?.team_name ?? '',
+      ),
+  );
+
+  return (
+    <Card
+      title={`${event.event_name}: ${active} team${active === 1 ? '' : 's'}${event.target_team_count != null ? ` (target ${event.target_team_count})` : ''}`}
+    >
+      {warning && (
+        <Notice tone="warn" className="mb-3">
+          {warning}
+        </Notice>
+      )}
+      {sorted.length === 0 ? (
+        <Empty title="No teams in this event yet">
+          Add one with New team, or tick this event on an existing team.
+        </Empty>
+      ) : (
+        <ul className="space-y-2">
+          {sorted.map((r) => {
+            const t = teamsById.get(r.team_id);
+            return (
+              <li
+                key={r.id}
+                className="grid gap-2 rounded-lg border border-slate-300 bg-white p-3 sm:grid-cols-[1fr_90px_170px_auto] sm:items-center"
+              >
+                <span className="min-w-0">
+                  <span className="block font-bold">
+                    {t?.team_name ?? 'Team'}{' '}
+                    {t && !t.active && <span className="text-sm text-red-700">(inactive)</span>}
+                  </span>
+                  <span className="text-sm text-slate-700">
+                    {t?.unit}
+                    {t?.player_count != null && ` · ${t.player_count} players`}
+                    {!r.eligible_for_points && ' · not counting for points'}
+                  </span>
+                </span>
+                {canEdit ? (
+                  <>
+                    <Input
+                      aria-label={`Seed for ${t?.team_name}`}
+                      placeholder="Seed"
+                      inputMode="numeric"
+                      defaultValue={r.seed ?? ''}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        const n = v === '' ? null : Number(v);
+                        if (n !== r.seed && (n === null || (Number.isInteger(n) && n >= 1))) {
+                          update.mutate({ id: r.id, values: { seed: n } });
+                        }
+                      }}
+                    />
+                    <Select
+                      aria-label={`Check-in status for ${t?.team_name}`}
+                      value={r.check_in_status}
+                      onChange={(e) =>
+                        update.mutate({
+                          id: r.id,
+                          values: { check_in_status: e.target.value as CheckInStatus },
+                        })
+                      }
+                    >
+                      {CHECK_IN.map((c) => (
+                        <option key={c} value={c}>
+                          {humanize(c)}
+                        </option>
+                      ))}
+                    </Select>
+                    <span className="flex flex-wrap gap-1">
+                      {t && (
+                        <Button
+                          variant="ghost"
+                          aria-label={`Edit ${t.team_name}`}
+                          onClick={() => onEditTeam(t)}
+                        >
+                          <Pencil className="h-5 w-5" aria-hidden />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        onClick={() =>
+                          update.mutate({
+                            id: r.id,
+                            values: { eligible_for_points: !r.eligible_for_points },
+                          })
+                        }
+                      >
+                        {r.eligible_for_points ? 'Exclude pts' : 'Include pts'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-red-700"
+                        onClick={() =>
+                          confirm.ask(
+                            {
+                              title: `Remove ${t?.team_name} from ${event.event_name}?`,
+                              body: 'The team itself is kept. This is refused if the team is already in matches; mark it Withdrawn instead.',
+                              danger: true,
+                              confirmLabel: 'Remove from event',
+                            },
+                            () => remove.mutateAsync(r.id),
+                          )
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm sm:col-span-3">
+                    {r.seed != null ? `Seed ${r.seed} · ` : ''}
+                    {humanize(r.check_in_status)}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {update.error && (
+        <Notice tone="error" className="mt-2">
+          {friendlyError(update.error)}
+        </Notice>
+      )}
+      {canEdit && (
+        <p className="mt-3 text-sm text-slate-700">
+          Marking a team &quot;No show&quot; does not apply a penalty. Penalties are applied only on
+          the Placements page.
+        </p>
+      )}
+      {confirm.dialog}
+    </Card>
+  );
+}
+
 export function Teams() {
   const auth = useAuth();
   const teams = useTeams();
@@ -236,6 +401,8 @@ export function Teams() {
       (!unitFilter || t.unit === unitFilter) &&
       (!eventFilter || (regsByTeam.get(t.id) ?? []).some((r) => r.event_id === eventFilter)),
   );
+  const selectedEvent = (events.data ?? []).find((e) => e.id === eventFilter);
+  const teamsById = new Map((teams.data ?? []).map((t) => [t.id, t]));
   const byUnit = new Map<string, Team[]>();
   for (const t of list) byUnit.set(t.unit, [...(byUnit.get(t.unit) ?? []), t]);
 
@@ -243,7 +410,7 @@ export function Teams() {
     <div className="space-y-4">
       <PageHeader
         title="Teams"
-        subtitle="Each team belongs to a unit and plays in one or more events. Placements earn points for the unit."
+        subtitle="Each team belongs to a unit and plays in one or more events. Placements earn points for the unit. Pick an event to set seeds and check-in."
         actions={
           <Button onClick={() => setEditing('new')} disabled={unitNames.length === 0}>
             <Plus className="h-5 w-5" aria-hidden /> New team
@@ -315,7 +482,25 @@ export function Teams() {
         </Select>
       </div>
       {remove.error && <Notice tone="error">{friendlyError(remove.error)}</Notice>}
-      {list.length === 0 ? (
+      {!eventFilter && (
+        <p className="text-sm text-slate-700">
+          Choose an event above to set seeds and check-in for that event.
+        </p>
+      )}
+      {eventFilter && selectedEvent ? (
+        <EventRoster
+          event={selectedEvent}
+          regs={(participants.data ?? []).filter(
+            (p) => p.event_id === eventFilter && list.some((t) => t.id === p.team_id),
+          )}
+          teamsById={teamsById}
+          canEdit={canManageEvent(auth, eventFilter)}
+          onEditTeam={(t) => {
+            setEditing(t);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      ) : list.length === 0 ? (
         <Empty title="No teams match" />
       ) : (
         [...byUnit.entries()]

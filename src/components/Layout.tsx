@@ -55,8 +55,6 @@ export function Layout() {
       show: canManageAnything(auth) || hasGlobalRead(auth),
     },
     { to: '/ops/teams', label: 'Teams', show: canRegisterTeams(auth) },
-    { to: '/ops/registration', label: 'Event Registration', show: canManageAnything(auth) },
-    { to: '/ops/roster', label: 'Roster Review', show: active },
     { to: '/ops/users', label: 'Users', show: isOpsAdmin(auth) },
     { to: '/ops/settings', label: 'Settings', show: isOpsAdmin(auth) },
     { to: '/ops/audit', label: 'Audit Log', show: isOpsAdmin(auth) },
