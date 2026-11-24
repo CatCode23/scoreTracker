@@ -79,8 +79,10 @@ To add a team to an event, edit the team (pencil) and tick the event.
    session takes that session's **venue**. Venue controls which venue-scoped scorers can
    see the match.
 3. **Matches.** Add each game, bout or heat. Fill in:
-   - code (unique, e.g. `BSK-QF1`), stage, round name and order, match number, type,
-     date, time, area;
+   - stage and round name (pick from the list or type one). **Round order, match number
+     and match code fill in automatically**, e.g. Basketball → Quarterfinal → match 3 →
+     `BSK-QF3`, Final → `BSK-F`. Type in any of them to use your own;
+   - type, date, time, area;
    - **winner goes to** / **loser goes to**, with slots. When a result is saved, the
      winner (and loser) are moved into those slots automatically. Untick **Move teams on:
      Automatically** for a match if you want to place teams by hand.

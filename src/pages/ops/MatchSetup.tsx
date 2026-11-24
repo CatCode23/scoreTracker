@@ -39,6 +39,7 @@ import {
 import { Empty, ErrorState, Loading, Unauthorized } from '../../components/states';
 import { MatchStatusBadge } from '../../components/status';
 import { useConfirm } from '../../components/ConfirmDialog';
+import { nextMatchNumber, suggestMatchCode, suggestRoundOrder } from '../../lib/domain/matchCode';
 import { parseCsv } from '../../lib/domain/csv';
 
 type Tab = 'stages' | 'sessions' | 'matches' | 'import';
@@ -574,6 +575,148 @@ function SessionsTab({ event }: { event: EventRow }) {
   );
 }
 
+const COMMON_ROUNDS = [
+  'Opening Round',
+  'Round of 16',
+  'Quarterfinal',
+  'Semifinal',
+  'Final',
+  '3rd Place',
+  'Consolation Semifinal',
+  '5th Place',
+  '7th Place',
+  'Pool A',
+  'Pool B',
+  'Heat 1',
+  'Heat 2',
+];
+
+/**
+ * Stage, round, round order, match number and match code. For a new match the order,
+ * number and code are filled in automatically from the stage and round, until you type
+ * in one of them yourself.
+ */
+function MatchIdentityFields({
+  eventCode,
+  stages,
+  matches,
+  editing,
+  start,
+  onPick,
+}: {
+  eventCode: string;
+  stages: { id: string; stage_name: string }[];
+  matches: Match[];
+  editing: Match | null;
+  start: { stageId: string; roundName: string };
+  onPick: (pick: { stageId: string; roundName: string }) => void;
+}) {
+  const isNew = !editing;
+  const [stageId, setStageId] = useState(
+    editing?.stage_id ?? (start.stageId || stages[0]?.id || ''),
+  );
+  const [roundName, setRoundName] = useState(editing?.round_name ?? start.roundName);
+  const [order, setOrder] = useState(editing ? String(editing.round_order) : '');
+  const [num, setNum] = useState(editing?.match_number != null ? String(editing.match_number) : '');
+  const [code, setCode] = useState(editing?.match_code ?? '');
+  const [touched, setTouched] = useState({ order: !isNew, num: !isNew, code: !isNew });
+
+  const others = matches.filter((m) => m.id !== editing?.id);
+  const effOrder = touched.order ? order : String(suggestRoundOrder(others, stageId, roundName));
+  const effNum = touched.num ? num : String(nextMatchNumber(others, stageId, roundName));
+  const effCode = touched.code
+    ? code
+    : suggestMatchCode(
+        eventCode,
+        roundName,
+        Number(effOrder) || 1,
+        effNum.trim() === '' ? null : Number(effNum),
+        others.map((m) => m.match_code),
+      );
+  const roundNames = [
+    ...new Set([
+      ...others.filter((m) => m.stage_id === stageId && m.round_name).map((m) => m.round_name!),
+      ...COMMON_ROUNDS,
+    ]),
+  ];
+  const auto = (typed: boolean) => (typed ? undefined : 'Filled in automatically; type to change');
+
+  return (
+    <>
+      <Field label="Stage" htmlFor="m-stage">
+        <Select
+          id="m-stage"
+          name="stage_id"
+          value={stageId}
+          onChange={(e) => {
+            setStageId(e.target.value);
+            onPick({ stageId: e.target.value, roundName });
+          }}
+        >
+          {stages.map((st) => (
+            <option key={st.id} value={st.id}>
+              {st.stage_name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Round name" htmlFor="m-round">
+        <Input
+          id="m-round"
+          name="round_name"
+          list="m-round-names"
+          value={roundName}
+          onChange={(e) => {
+            setRoundName(e.target.value);
+            onPick({ stageId, roundName: e.target.value });
+          }}
+          placeholder="Quarterfinal, Final, Heat 1, 185 lb…"
+        />
+        <datalist id="m-round-names">
+          {roundNames.map((r) => (
+            <option key={r} value={r} />
+          ))}
+        </datalist>
+      </Field>
+      <Field label="Round order" htmlFor="m-ro" hint={auto(touched.order)}>
+        <Input
+          id="m-ro"
+          name="round_order"
+          inputMode="numeric"
+          value={effOrder}
+          onChange={(e) => {
+            setOrder(e.target.value);
+            setTouched((t) => ({ ...t, order: true }));
+          }}
+        />
+      </Field>
+      <Field label="Match number" htmlFor="m-no" hint={auto(touched.num)}>
+        <Input
+          id="m-no"
+          name="match_number"
+          inputMode="numeric"
+          value={effNum}
+          onChange={(e) => {
+            setNum(e.target.value);
+            setTouched((t) => ({ ...t, num: true }));
+          }}
+        />
+      </Field>
+      <Field label="Match code" htmlFor="m-code" hint={auto(touched.code)}>
+        <Input
+          id="m-code"
+          name="match_code"
+          value={effCode}
+          onChange={(e) => {
+            setCode(e.target.value);
+            setTouched((t) => ({ ...t, code: true }));
+          }}
+        />
+      </Field>
+    </>
+  );
+}
+
 // ---------------------------------------------------------------------------
 function MatchesTab({ event }: { event: EventRow }) {
   const stages = useStages(event.id);
@@ -594,6 +737,8 @@ function MatchesTab({ event }: { event: EventRow }) {
   const confirm = useConfirm();
   const e = useErr();
   const [editing, setEditing] = useState<Match | null>(null);
+  const [newFormKey, setNewFormKey] = useState(0);
+  const [lastPick, setLastPick] = useState({ stageId: '', roundName: '' });
 
   const team = (pid: string | null) => {
     const p = participants.data?.find((x) => x.id === pid);
@@ -624,7 +769,7 @@ function MatchesTab({ event }: { event: EventRow }) {
 
   const matchForm = (m: Match | null) => (
     <form
-      key={m?.id ?? 'new'}
+      key={m?.id ?? `new-${newFormKey}`}
       className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
       onSubmit={async (ev) => {
         const v = formValues(ev);
@@ -658,26 +803,21 @@ function MatchesTab({ event }: { event: EventRow }) {
         )();
         if (ok) {
           if (m) setEditing(null);
-          else form.reset();
+          else {
+            form.reset();
+            setNewFormKey((k) => k + 1); // fresh form: next number and code fill in
+          }
         }
       }}
     >
-      <Field label="Match code" htmlFor="m-code" hint="Unique, e.g. SOC-R1-M1">
-        <Input
-          id="m-code"
-          name="match_code"
-          defaultValue={m?.match_code ?? `${event.event_code}-`}
-        />
-      </Field>
-      <Field label="Stage" htmlFor="m-stage">
-        <Select id="m-stage" name="stage_id" defaultValue={m?.stage_id}>
-          {(stages.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.stage_name}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      <MatchIdentityFields
+        eventCode={event.event_code}
+        stages={stages.data ?? []}
+        matches={list}
+        editing={m}
+        start={lastPick}
+        onPick={setLastPick}
+      />
       <Field label="Pool (pool games)" htmlFor="m-pool">
         <Select id="m-pool" name="pool_id" defaultValue={m?.pool_id ?? ''}>
           <option value="">None</option>
@@ -709,30 +849,6 @@ function MatchesTab({ event }: { event: EventRow }) {
             </option>
           ))}
         </Select>
-      </Field>
-      <Field label="Round name" htmlFor="m-round">
-        <Input
-          id="m-round"
-          name="round_name"
-          defaultValue={m?.round_name ?? ''}
-          placeholder="Quarterfinal, 3rd Place, Heat 1, 185 lb…"
-        />
-      </Field>
-      <Field label="Round order" htmlFor="m-ro">
-        <Input
-          id="m-ro"
-          name="round_order"
-          inputMode="numeric"
-          defaultValue={m?.round_order ?? 1}
-        />
-      </Field>
-      <Field label="Match number" htmlFor="m-no">
-        <Input
-          id="m-no"
-          name="match_number"
-          inputMode="numeric"
-          defaultValue={m?.match_number ?? ''}
-        />
       </Field>
       <Field label="Session" htmlFor="m-session" hint="Sets the venue used for scorer access">
         <Select id="m-session" name="session_id" defaultValue={m?.session_id ?? ''}>
@@ -1043,12 +1159,22 @@ function ImportTab({ event }: { event: EventRow }) {
     const created = new Map<string, string>((matches.data ?? []).map((m) => [m.match_code, m.id]));
     const pending: { code: string; nw?: string; nws?: string; nl?: string; nls?: string }[] = [];
     for (const r of rowsIn) {
-      const code = (r.match_code ?? '').toUpperCase();
       const stageId = stageByOrder.get(r.stage_order ?? '');
-      if (!code || !stageId) {
+      // A blank match_code is generated from the round and number, like the form does.
+      const code = (
+        r.match_code ||
+        suggestMatchCode(
+          event.event_code,
+          r.round_name,
+          Number(r.round_order || 1),
+          r.match_number ? Number(r.match_number) : null,
+          [...created.keys()],
+        )
+      ).toUpperCase();
+      if (!stageId) {
         out.push({
           tone: 'error',
-          text: `Skipped row "${code || '?'}": missing match_code or unknown stage_order "${r.stage_order}".`,
+          text: `Skipped row "${code}": unknown stage_order "${r.stage_order}".`,
         });
         continue;
       }
@@ -1151,7 +1277,8 @@ function ImportTab({ event }: { event: EventRow }) {
     <div className="space-y-4">
       <Notice tone="info">
         Import never overwrites existing matches. Stages must exist first (referenced by stage
-        order). Times use 24-hour HH:MM. Teams are placed by their event seed.
+        order). Times use 24-hour HH:MM. Teams are placed by their event seed. Leave match_code
+        blank to generate it from the round and match number.
       </Notice>
       <Card title="1. Matches CSV">
         <TextArea
