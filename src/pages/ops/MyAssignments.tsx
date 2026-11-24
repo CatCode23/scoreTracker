@@ -4,6 +4,7 @@ import { ROLE_LABELS } from '../../lib/types';
 import { Card, PageHeader } from '../../components/ui';
 import { Empty, Loading } from '../../components/states';
 import { isOpsAdmin } from '../../lib/domain/permissions';
+import { displayLogin } from '../../lib/username';
 
 export function MyAssignments() {
   const auth = useAuth();
@@ -14,7 +15,7 @@ export function MyAssignments() {
     <div className="space-y-4">
       <PageHeader
         title="My Assignments"
-        subtitle={`${auth.profile?.display_name ?? ''} · ${auth.profile?.email ?? ''}`}
+        subtitle={`${auth.profile?.display_name ?? ''} · ${displayLogin(auth.profile?.email)}`}
       />
       <Card title="Account">
         <p>

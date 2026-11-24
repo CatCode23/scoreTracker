@@ -7,11 +7,15 @@ import { KeyRound, LogIn, Mail } from 'lucide-react';
 import { supabase, isConfigured, friendlyError } from '../../lib/supabase';
 import { appRootUrl } from '../../lib/env';
 import { useAuth } from '../../lib/auth';
+import { isValidLogin, toLoginEmail } from '../../lib/username';
 import { Button, Card, Field, Input, Notice, PageHeader } from '../../components/ui';
 import { NotConfigured } from '../../components/states';
 
 const passwordSchema = z.object({
-  email: z.string().trim().email('Enter a valid email address'),
+  email: z
+    .string()
+    .trim()
+    .refine(isValidLogin, 'Enter your username (for example jsmith) or email address'),
   password: z.string().min(1, 'Enter your password'),
 });
 const emailSchema = z.object({ email: z.string().trim().email('Enter a valid email address') });
@@ -24,7 +28,7 @@ const codeSchema = z.object({
 
 /** Plain-language message for Supabase sign-in errors. */
 export function signInErrorMessage(message: string): string {
-  if (/invalid login credentials/i.test(message)) return 'Email or password is incorrect.';
+  if (/invalid login credentials/i.test(message)) return 'Username or password is incorrect.';
   if (/email not confirmed/i.test(message)) {
     return 'This account has not been confirmed. Ask the operations cell to confirm it in Supabase.';
   }
@@ -52,7 +56,10 @@ export function SignIn() {
 
   const signInWithPassword = pwForm.handleSubmit(async ({ email, password }) => {
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email: toLoginEmail(email),
+      password,
+    });
     if (err) setError(signInErrorMessage(err.message));
   });
 
@@ -98,14 +105,16 @@ export function SignIn() {
           aria-label="Sign in with password"
         >
           <Field
-            label="Email address"
+            label="Username or email"
             htmlFor="email"
             error={pwForm.formState.errors.email?.message}
           >
             <Input
               id="email"
-              type="email"
-              inputMode="email"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               autoComplete="username"
               {...pwForm.register('email')}
             />
@@ -138,6 +147,10 @@ export function SignIn() {
         </Button>
       ) : !sentTo ? (
         <Card title="Email sign-in link (backup)">
+          <p className="mb-3 text-sm text-slate-700">
+            Only for accounts with a real email address. Username accounts sign in with their
+            password.
+          </p>
           <form onSubmit={sendLink} className="space-y-4" noValidate>
             <Field
               label="Email address"

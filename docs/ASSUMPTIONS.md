@@ -107,3 +107,7 @@ These assumptions were made where the specification left room for interpretation
     tap a match, then enter, approve or edit its result there. Rarely used bracket tools
     (status, manual advance/route, move, eliminate) are under **More** on the match.
     The old /ops/score link redirects to /ops/matches.
+31. **Username sign-in.** Supabase identifies accounts by email, so a username account is
+    created as `jsmith@wotb.local` (domain configurable with `VITE_USERNAME_DOMAIN`). The
+    sign-in box accepts `jsmith` and adds the domain; real email addresses still work. No
+    email is ever sent to these addresses. "Confirm email" should be turned off in Supabase.

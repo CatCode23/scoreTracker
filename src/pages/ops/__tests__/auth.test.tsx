@@ -34,7 +34,7 @@ describe('SignIn', () => {
     signInWithPassword.mockResolvedValue({ error: null });
     const user = userEvent.setup();
     renderSignIn();
-    await user.type(screen.getByLabelText('Email address'), 'scorer@example.test');
+    await user.type(screen.getByLabelText('Username or email'), 'scorer@example.test');
     await user.type(screen.getByLabelText('Password'), 'correct horse');
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(signInWithPassword).toHaveBeenCalledWith({
@@ -44,14 +44,37 @@ describe('SignIn', () => {
     expect(signInWithOtp).not.toHaveBeenCalled();
   });
 
+  it('signs in with a plain username by adding the username domain', async () => {
+    signInWithPassword.mockResolvedValue({ error: null });
+    const user = userEvent.setup();
+    renderSignIn();
+    await user.type(screen.getByLabelText('Username or email'), ' JSmith ');
+    await user.type(screen.getByLabelText('Password'), 'correct horse');
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'jsmith@wotb.local',
+      password: 'correct horse',
+    });
+  });
+
+  it('rejects a username with spaces or symbols', async () => {
+    const user = userEvent.setup();
+    renderSignIn();
+    await user.type(screen.getByLabelText('Username or email'), 'j smith!');
+    await user.type(screen.getByLabelText('Password'), 'x');
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(screen.getByText(/Enter your username/)).toBeInTheDocument();
+  });
+
   it('shows a plain message for wrong credentials', async () => {
     signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
     const user = userEvent.setup();
     renderSignIn();
-    await user.type(screen.getByLabelText('Email address'), 'scorer@example.test');
+    await user.type(screen.getByLabelText('Username or email'), 'scorer@example.test');
     await user.type(screen.getByLabelText('Password'), 'nope');
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
-    expect(await screen.findByText('Email or password is incorrect.')).toBeInTheDocument();
+    expect(await screen.findByText('Username or password is incorrect.')).toBeInTheDocument();
   });
 
   it('keeps the email link as a backup option', async () => {

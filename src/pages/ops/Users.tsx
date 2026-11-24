@@ -6,6 +6,7 @@ import { friendlyError } from '../../lib/supabase';
 import { Badge, Button, Card, Input, Notice, PageHeader, Select } from '../../components/ui';
 import { Empty, ErrorState, Loading } from '../../components/states';
 import { useConfirm } from '../../components/ConfirmDialog';
+import { displayLogin, USERNAME_DOMAIN } from '../../lib/username';
 
 export function Users() {
   const auth = useAuth();
@@ -36,18 +37,31 @@ export function Users() {
         title="Users & Assignments"
         subtitle="Activate staff, set roles, and assign events/venues."
       />
-      <Notice tone="info">
-        Create accounts in Supabase: Authentication → Users → Add user →{' '}
-        <strong>Create new user</strong>, with a temporary password and{' '}
-        <strong>Auto Confirm User</strong> ticked. Give the person their password directly; they
-        change it under <strong>Change Password</strong>. New accounts appear here as{' '}
-        <strong>inactive</strong>. Scorers, venue leads and sport managers also need an event
-        assignment. To reset a forgotten password, set a new one on the user in Supabase.
+      <Notice tone="info" title="Adding a staff member">
+        <ol className="mt-1 list-decimal space-y-1 pl-5">
+          <li>
+            Supabase: Authentication → Users → Add user → <strong>Create new user</strong>. For the
+            email, use their real address, or a username in the form{' '}
+            <strong>jsmith@{USERNAME_DOMAIN}</strong>. Set a temporary password and tick{' '}
+            <strong>Auto Confirm User</strong>.
+          </li>
+          <li>
+            Here: <strong>Activate</strong> them and set their role. Scorers, venue leads and sport
+            managers also need an event assignment.
+          </li>
+          <li>
+            Give them their username (e.g. <strong>jsmith</strong>) and password directly. They
+            change the password under <strong>Change Password</strong>.
+          </li>
+        </ol>
+        <p className="mt-2">
+          To reset a forgotten password, set a new one on the user in Supabase.
+        </p>
       </Notice>
       {err && <Notice tone="error">{friendlyError(err)}</Notice>}
       <Input
         aria-label="Search users"
-        placeholder="Search name or email"
+        placeholder="Search name or username"
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
@@ -67,7 +81,7 @@ export function Users() {
                         {p.display_name || '(no name)'}{' '}
                         {self && <span className="text-sm font-normal">(you)</span>}
                       </span>
-                      <span className="text-sm text-slate-700">{p.email}</span>
+                      <span className="text-sm text-slate-700">{displayLogin(p.email)}</span>
                     </span>
                     {p.active ? (
                       <Badge className="bg-field text-white">Active</Badge>
@@ -92,7 +106,7 @@ export function Users() {
                         const role = e.target.value as Role;
                         confirm.ask(
                           {
-                            title: `Change ${p.email} to ${ROLE_LABELS[role]}?`,
+                            title: `Change ${displayLogin(p.email)} to ${ROLE_LABELS[role]}?`,
                             confirmLabel: 'Change role',
                           },
                           () => upd.mutateAsync({ id: p.id, values: { role } }),
@@ -111,7 +125,7 @@ export function Users() {
                       onClick={() =>
                         confirm.ask(
                           {
-                            title: `${p.active ? 'Deactivate' : 'Activate'} ${p.email}?`,
+                            title: `${p.active ? 'Deactivate' : 'Activate'} ${displayLogin(p.email)}?`,
                             danger: p.active,
                             confirmLabel: p.active ? 'Deactivate' : 'Activate',
                           },
