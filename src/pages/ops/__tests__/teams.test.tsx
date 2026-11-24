@@ -22,7 +22,8 @@ vi.mock('../../../lib/supabase', () => ({
   },
 }));
 
-const { saveTeam } = await import('../Teams');
+const { saveTeam, EventRoster } = await import('../Teams');
+const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
 const { ConfirmDialog } = await import('../../../components/ConfirmDialog');
 
 const reg = (id: string, event_id: string) => ({ id, event_id, team_id: 't1' }) as EventParticipant;
@@ -95,5 +96,92 @@ describe('ConfirmDialog requireText', () => {
     await user.type(screen.getByLabelText(/to confirm/), 'C');
     await user.click(button);
     expect(onConfirm).toHaveBeenCalled();
+  });
+});
+
+describe('EventRoster (seeds and check-in on the Teams page)', () => {
+  const event = {
+    id: 'soc',
+    event_code: 'SOC',
+    event_name: 'Soccer',
+    format_type: 'single_elimination',
+    venue: null,
+    responsible_unit: null,
+    start_date: null,
+    end_date: null,
+    target_team_count: 20,
+    counts_toward_overall: true,
+    status: 'planning',
+    public_visible: true,
+    display_order: 1,
+    notes: null,
+  } as const;
+  const team = {
+    id: 't1',
+    team_name: 'Unit A Soccer',
+    unit: 'Unit A',
+    player_count: 12,
+    captain_name: null,
+    active: true,
+  };
+  const regs = [
+    {
+      id: 'r1',
+      event_id: 'soc',
+      team_id: 't1',
+      seed: 3,
+      check_in_status: 'registered',
+      eligible_for_points: true,
+      final_place: null,
+      event_points: 0,
+      active: true,
+      notes: null,
+    },
+  ] as EventParticipant[];
+  const renderRoster = (canEdit = true) =>
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <EventRoster
+          event={event}
+          regs={regs}
+          teamsById={new Map([['t1', team]])}
+          canEdit={canEdit}
+          onEditTeam={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+  it('shows the count against the target and saves seed and check-in changes', async () => {
+    const user = userEvent.setup();
+    renderRoster();
+    expect(screen.getByText(/Soccer: 1 team \(target 20\)/)).toBeInTheDocument();
+    expect(screen.getByText(/the target is 20/)).toBeInTheDocument();
+    const seed = screen.getByLabelText('Seed for Unit A Soccer');
+    await user.clear(seed);
+    await user.type(seed, '1');
+    await user.tab();
+    expect(update).toHaveBeenCalledWith('event_participants', 'r1', { seed: 1 });
+    await user.selectOptions(
+      screen.getByLabelText('Check-in status for Unit A Soccer'),
+      'checked_in',
+    );
+    expect(update).toHaveBeenCalledWith('event_participants', 'r1', {
+      check_in_status: 'checked_in',
+    });
+  });
+
+  it('removes a team from the event only after confirmation', async () => {
+    const user = userEvent.setup();
+    renderRoster();
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(remove).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Remove from event' }));
+    expect(remove).toHaveBeenCalledWith('event_participants', 'r1');
+  });
+
+  it('is read-only for users who cannot manage the event', () => {
+    renderRoster(false);
+    expect(screen.queryByLabelText('Seed for Unit A Soccer')).not.toBeInTheDocument();
+    expect(screen.getByText(/Seed 3/)).toBeInTheDocument();
   });
 });

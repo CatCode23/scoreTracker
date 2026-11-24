@@ -49,13 +49,18 @@ site" instead.
 
 ## 3. Seeds and check-in
 
-**Ops → Event Registration**:
+**Ops → Teams**, then choose the event in the **All events** filter. The page switches to
+that event's teams:
 
-1. Pick the event. Teams registered on the Teams page are listed here.
-2. Set seeds, or add more teams.
+1. Set each team's **seed**.
+2. Set **check-in**: Registered, Checked in, No show, or Withdrawn. Setting "No show"
+   does **not** apply a penalty (see Placements).
 3. Watch for the **target count warning**.
-4. Check-in status can be Registered, Checked in, No show, or Withdrawn. Setting
-   "No show" does **not** apply a penalty (see section 9).
+4. **Exclude pts** stops a team's placing from counting toward its unit's points.
+5. **Remove** takes a team out of that event; the team itself is kept. This is refused
+   once the team is in matches; mark it Withdrawn instead.
+
+To add a team to an event, edit the team (pencil) and tick the event.
 
 ## 4. Load schedules and brackets
 
@@ -114,23 +119,24 @@ Guidance by role:
 
 1. Create test teams with an obvious name, e.g. `TEST A`, in a test stage.
 2. Have each person who enters scores sign in on their own phone and save a result.
-3. Fix one of the results with **Edit result** (Match Management).
+3. Fix one of the results with **Edit result** (Matches → the match).
 4. Check the public page.
 5. **Delete the test data** afterwards. Delete matches first, then the registrations, then
    the teams. The audit log keeps the history.
 
 ## 7. Enter results
 
-**Ops → Score Entry:** pick the event and match, enter the scores (or times/places), pick
-the winner and tap **Save Official Result**. It is live on the public site straight away.
+**Ops → Matches:** pick the event, tap the match (the **To play** tab lists what's left),
+enter the scores (or times/places), pick the winner and tap **Save Official Result**. It
+is live on the public site straight away, and the teams move on to their next match.
 
-Results from **Scorer** accounts (if you use them) are not public until approved. When any
-are waiting, an **Approvals (n)** item appears in the menu: open it and **Approve**, or
-**Return**, **Dispute** or **Void** with a reason.
+Results from **Scorer** accounts (if you use them) are not public until approved. Open the
+match and **Approve** it, or use **Approvals (n)** in the menu, which appears only when
+something is waiting.
 
 ## 8. Fix a mistake (Edit result)
 
-**Ops → Match Management →** find the match → **Edit result**.
+**Ops → Matches →** **Finished** tab → tap the match → **Edit result**.
 
 1. Correct the scores, times, places or winner.
 2. Give a short reason, e.g. "typo, was 3-1".
@@ -150,7 +156,7 @@ Operations admins and the event's sport managers can edit results.
 
 **Normally this happens automatically.** When a result is saved (or a Scorer's result is
 approved), the winner goes into the "Winner goes to" slot and the loser into the "Loser
-goes to" slot, as set up for that match. Score Entry tells you where each team went.
+goes to" slot, as set up for that match. The match screen tells you where each team went.
 
 A move is **skipped, never forced**, when:
 - that slot already holds a different team;
@@ -158,16 +164,16 @@ A move is **skipped, never forced**, when:
 - the next match already has a result;
 - the match has **Move teams on: Automatically** turned off.
 
-Score Entry then warns you, and you place the team by hand:
+The match screen then warns you, and you place the team by hand:
 
-**Ops → Match Management.** On an Official match:
+**Ops → Matches →** tap the match **→ More**:
 
 1. Press **Advance winner** or **Route loser**.
 2. The destination defaults to the match's routing. Confirm the match and slot.
 3. If the slot is occupied, you must tick **overwrite**.
 4. Tick **I confirm** to complete the move.
 
-Other controls:
+Other controls under **More**:
 
 - **Move…** moves any team manually.
 - **Eliminate** marks a team out.

@@ -88,7 +88,7 @@ src/                     React app
   lib/api/               React Query hooks (public views / ops tables)
   pages/public/          Public dashboard + sport detail
   pages/ops/             Staff pages (score entry, approvals, setup, ...)
-  components/            UI kit, Bracket Board, Score Entry form, Approval card
+  components/            UI kit, Bracket Board, score form, Approval card
 supabase/migrations/     Schema, triggers, RLS, public views (run in order)
 supabase/seed.sql        Events, points matrix, scoring settings (no people / teams)
 supabase/tests/          Local Postgres harness + workflow/RLS test
@@ -301,7 +301,7 @@ If you rename the repository, update `.env.local` and the redirect URLs in Supab
   lost (this is stated on the score-entry screen).
 - **No automatic bracket generation.** Brackets are entered by hand or through CSV import.
   Advancement is automatic along the routing you set up, but never overwrites a filled
-  slot. Anything it skips is moved by hand in Match Management.
+  slot. Anything it skips is moved by hand (Matches → the match → More).
 - **Password resets are done by an admin** in Supabase. There is no self-service
   "forgot password" email, because that would depend on email delivery.
 - **The backup email link needs the same browser.** It must be opened in the browser that

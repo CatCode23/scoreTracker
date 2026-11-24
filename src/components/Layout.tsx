@@ -37,16 +37,15 @@ export function Layout() {
   const ops: NavItem[] = [
     { to: '/ops', label: 'Dashboard', show: active },
     { to: '/ops/assignments', label: 'My Assignments', show: active },
-    { to: '/ops/score', label: 'Score Entry', show: canSubmitAnything(auth) },
+    {
+      to: '/ops/matches',
+      label: 'Matches',
+      show: canSubmitAnything(auth) || canManageAnything(auth) || hasGlobalRead(auth),
+    },
     {
       to: '/ops/validate',
       label: `Approvals (${pendingCount})`,
       show: canValidateAnything(auth) && pendingCount > 0,
-    },
-    {
-      to: '/ops/matches',
-      label: 'Match Management',
-      show: canManageAnything(auth) || hasGlobalRead(auth),
     },
     { to: '/ops/setup', label: 'Match Setup', show: canManageAnything(auth) },
     {
@@ -55,8 +54,6 @@ export function Layout() {
       show: canManageAnything(auth) || hasGlobalRead(auth),
     },
     { to: '/ops/teams', label: 'Teams', show: canRegisterTeams(auth) },
-    { to: '/ops/registration', label: 'Event Registration', show: canManageAnything(auth) },
-    { to: '/ops/roster', label: 'Roster Review', show: active },
     { to: '/ops/users', label: 'Users', show: isOpsAdmin(auth) },
     { to: '/ops/settings', label: 'Settings', show: isOpsAdmin(auth) },
     { to: '/ops/audit', label: 'Audit Log', show: isOpsAdmin(auth) },

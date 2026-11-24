@@ -922,7 +922,7 @@ function MatchesTab({ event }: { event: EventRow }) {
                     if (!v.slot || !v.participant_id) return e.setErr('Choose a slot and a team.');
                     if (slots.some((s) => s.slot === v.slot))
                       return e.setErr(
-                        `Slot ${v.slot} is already used in ${m.match_code}. Remove it first or use Match Management to advance.`,
+                        `Slot ${v.slot} is already used in ${m.match_code}. Remove it first or use Matches → More to advance.`,
                       );
                     const ok = await e.wrap(() =>
                       save.mutateAsync({

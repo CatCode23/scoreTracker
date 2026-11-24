@@ -99,3 +99,11 @@ These assumptions were made where the specification left room for interpretation
     configured next slots. It never overwrites a slot holding another team, never adds a
     team to a match that already has a result, and can be turned off per match. Manual
     Advance winner / Route loser remain for anything it skips.
+29. **One Teams page.** The separate Roster Review and Event Registration pages were
+    removed. Teams handles creating/editing/deleting teams and their events; choosing an
+    event in its filter shows that event's seeds, check-in, points eligibility and
+    target-count warning.
+30. **One Matches page.** Score Entry and Match Management were combined: pick an event,
+    tap a match, then enter, approve or edit its result there. Rarely used bracket tools
+    (status, manual advance/route, move, eliminate) are under **More** on the match.
+    The old /ops/score link redirects to /ops/matches.
