@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../lib/auth';
 import type { Access } from '../../lib/domain/permissions';
-import { Loading, Unauthorized } from '../../components/states';
+import { ErrorState, Loading, Unauthorized } from '../../components/states';
 import { Card, Notice } from '../../components/ui';
 
 /** Route guard for operations pages. UI only: the database enforces access via RLS. */
@@ -21,6 +21,14 @@ export function RequireAccess({
   if (auth.loading) return <Loading label="Checking your access…" />;
   if (!auth.session) return <Navigate to="/signin" replace state={{ from: loc.pathname }} />;
   if (allowInactive) return <>{children}</>;
+  if (auth.profileError) {
+    return (
+      <Card>
+        <p className="mb-2 font-bold">Could not load your staff profile</p>
+        <ErrorState error={auth.profileError} onRetry={auth.refresh} />
+      </Card>
+    );
+  }
   if (!auth.profile || !auth.profile.active) {
     return (
       <Card>

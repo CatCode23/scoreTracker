@@ -8,6 +8,8 @@ import type { Access } from './domain/permissions';
 interface AuthState extends Access {
   session: Session | null;
   loading: boolean;
+  /** Set when the profile/assignments could not be loaded (not the same as inactive). */
+  profileError: unknown;
   signOut: () => Promise<void>;
   refresh: () => void;
 }
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile: profileQ.data?.profile ?? null,
       assignments: profileQ.data?.assignments ?? [],
       loading: sessionLoading || (Boolean(uid) && profileQ.isLoading),
+      profileError: profileQ.error,
       signOut: async () => {
         await supabase.auth.signOut();
       },
@@ -94,6 +97,7 @@ export function TestAuthProvider({
     profile: null,
     assignments: [],
     loading: false,
+    profileError: null,
     signOut: async () => {},
     refresh: () => {},
     ...value,

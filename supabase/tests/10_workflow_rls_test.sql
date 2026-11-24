@@ -123,6 +123,8 @@ select pg_temp.fails('select * from public.match_results', 'anon cannot read raw
 select pg_temp.fails('select * from public.user_assignments', 'anon cannot read assignments');
 select pg_temp.fails('select * from public.operator_names', 'anon cannot read operator names');
 select pg_temp.ok((select count(*) = 8 from public.public_events), 'anon sees 8 public events');
+select pg_temp.fails($$update public.public_events set event_name = 'hacked'$$, 'anon cannot write through public views');
+select pg_temp.fails($$delete from public.public_events$$, 'anon cannot delete through public views');
 select pg_temp.ok((select count(*) = 20 from public.public_event_sessions), 'anon sees schedule');
 select pg_temp.ok((select count(*) = 2 from public.public_matches where event_code = 'SOC'), 'anon sees scheduled matches');
 select pg_temp.ok((select bool_and(score is null) from public.public_match_participants), 'no scores before Official');
@@ -310,6 +312,9 @@ reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select pg_temp.fails($$update public.profiles set role = 'operations_admin' where id = auth.uid()$$,
   'user cannot elevate own role');
+select pg_temp.fails($$update public.operator_names set display_name = 'x'$$, 'staff cannot write through operator_names');
+select pg_temp.fails($$update public.public_events set event_name = 'hacked'$$, 'staff cannot write through public views');
+select pg_temp.fails($$select public.bump_public_update(null, 'spam')$$, 'clients cannot write the public change feed');
 reset role;
 
 \echo 'workflow + RLS tests complete'
