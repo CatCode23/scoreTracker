@@ -14,6 +14,8 @@ end; $$;
 create function pg_temp.fails(sql text, label text) returns void language plpgsql as $$
 begin
   begin
+    -- Check deferred foreign keys now, as a commit would.
+    set constraints all immediate;
     execute sql;
   exception when others then
     raise notice 'ok - % (rejected: %)', label, sqlerrm;
@@ -58,6 +60,10 @@ update public.profiles set active = true, role = 'sport_manager' where email = '
 select pg_temp.ok(public.load_preliminary_schedule(2026) = 20, 'preliminary schedule loads 20 sessions');
 select pg_temp.ok(public.load_preliminary_schedule(2026) = 0, 'schedule loader does not duplicate');
 select pg_temp.ok((select start_date = '2026-12-08' from public.events where event_code = 'BPT'), 'BPT dated Dec 8');
+
+insert into public.units (name) values ('1-2 SBCT'), ('2-2 SBCT'), ('16th CAB');
+select pg_temp.fails($$insert into public.teams (team_name, unit) values ('Typo Team', '1/2 SBCT')$$,
+  'team unit must come from the units list');
 
 insert into public.teams (id, team_name, unit, player_count, captain_name) values
   ('10000000-0000-0000-0000-000000000001', 'Raptors', '1-2 SBCT', 12, 'CPT Restricted Name'),
@@ -123,6 +129,8 @@ select pg_temp.fails('select * from public.match_results', 'anon cannot read raw
 select pg_temp.fails('select * from public.user_assignments', 'anon cannot read assignments');
 select pg_temp.fails('select * from public.operator_names', 'anon cannot read operator names');
 select pg_temp.ok((select count(*) = 8 from public.public_events), 'anon sees 8 public events');
+select pg_temp.fails($$update public.public_events set event_name = 'hacked'$$, 'anon cannot write through public views');
+select pg_temp.fails($$delete from public.public_events$$, 'anon cannot delete through public views');
 select pg_temp.ok((select count(*) = 20 from public.public_event_sessions), 'anon sees schedule');
 select pg_temp.ok((select count(*) = 2 from public.public_matches where event_code = 'SOC'), 'anon sees scheduled matches');
 select pg_temp.ok((select bool_and(score is null) from public.public_match_participants), 'no scores before Official');
@@ -258,10 +266,13 @@ reset role;
 
 select pg_temp.as_user(null);
 select pg_temp.ok((select count(*) = 3 from public.public_event_placements), 'published placements are public');
-select pg_temp.ok((select total_points = 8 and rank = 1 from public.public_overall_leaderboard where team_name = 'Raptors'),
-  'leaderboard: Raptors 8 pts, rank 1');
-select pg_temp.ok((select total_points = 0 from public.public_overall_leaderboard where team_name = 'Hawks'),
-  'leaderboard: Hawks 6 - 6 penalty = 0');
+select pg_temp.ok((select total_points = 8 and rank = 1 from public.public_overall_leaderboard where unit = '1-2 SBCT'),
+  'unit leaderboard: 1-2 SBCT 8 pts, rank 1');
+select pg_temp.ok((select total_points = 0 from public.public_overall_leaderboard where unit = '16th CAB'),
+  'unit leaderboard: 16th CAB 6 - 6 penalty = 0');
+select pg_temp.ok(not exists (select 1 from information_schema.columns
+  where table_name = 'public_overall_leaderboard' and column_name in ('team_id', 'team_name')),
+  'leaderboard is per unit, not per team');
 reset role;
 
 -- Changing an approved placement withdraws publication
@@ -310,6 +321,52 @@ reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select pg_temp.fails($$update public.profiles set role = 'operations_admin' where id = auth.uid()$$,
   'user cannot elevate own role');
+select pg_temp.fails($$update public.operator_names set display_name = 'x'$$, 'staff cannot write through operator_names');
+select pg_temp.fails($$update public.public_events set event_name = 'hacked'$$, 'staff cannot write through public views');
+select pg_temp.fails($$select public.bump_public_update(null, 'spam')$$, 'clients cannot write the public change feed');
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- Units, team deletes, event deletes
+-- ---------------------------------------------------------------------------
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+update public.units set name = '1st Bn 2nd SBCT' where name = '1-2 SBCT';
+select pg_temp.ok((select unit = '1st Bn 2nd SBCT' from public.teams where team_name = 'Raptors'), 'renaming a unit renames it on its teams');
+reset role;
+select pg_temp.as_user(null);
+select pg_temp.ok((select total_points = 8 from public.public_overall_leaderboard where unit = '1st Bn 2nd SBCT'), 'leaderboard follows unit rename');
+reset role;
+
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select pg_temp.fails($$delete from public.units where name = '16th CAB'$$, 'cannot delete a unit that still has teams');
+-- A team that is only registered (no matches) can be deleted, taking its registration with it.
+insert into public.teams (id, team_name, unit) values ('10000000-0000-0000-0000-000000000009', 'Spare', '2-2 SBCT');
+insert into public.event_participants (event_id, team_id)
+select id, '10000000-0000-0000-0000-000000000009' from public.events where event_code = 'BSK';
+delete from public.teams where id = '10000000-0000-0000-0000-000000000009';
+select pg_temp.ok(not exists (select 1 from public.event_participants where team_id = '10000000-0000-0000-0000-000000000009'),
+  'deleting a team removes its registrations');
+-- A team placed in a match cannot be deleted.
+select pg_temp.fails($$delete from public.teams where id = '10000000-0000-0000-0000-000000000002'$$,
+  'cannot delete a team that is in a match');
+reset role;
+
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+delete from public.teams where id = '10000000-0000-0000-0000-000000000003';
+delete from public.events where event_code = 'SOC';
+reset role;
+select pg_temp.ok((select count(*) = 3 from public.teams where team_name in ('Raptors', 'Lancers', 'Hawks')), 'sport manager cannot delete teams');
+select pg_temp.ok(exists (select 1 from public.events where event_code = 'SOC'), 'sport manager cannot delete events');
+
+-- Ops admin can create and delete a whole event, including matches and results.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into public.events (event_code, event_name, format_type) values ('TUG', 'Tug of War', 'single_elimination');
+select pg_temp.ok(exists (select 1 from public.events where event_code = 'TUG'), 'admin can create an event');
+delete from public.events where event_code = 'SOC';
+select pg_temp.ok(not exists (select 1 from public.events where event_code = 'SOC'), 'admin can delete an event with matches and results');
+select pg_temp.ok(not exists (select 1 from public.matches where match_code like 'SOC-%'), 'event delete removes its matches');
+delete from public.teams where id = '10000000-0000-0000-0000-000000000002';
+select pg_temp.ok(not exists (select 1 from public.teams where id = '10000000-0000-0000-0000-000000000002'), 'team deletable once its matches are gone');
 reset role;
 
 \echo 'workflow + RLS tests complete'

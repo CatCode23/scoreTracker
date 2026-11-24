@@ -208,7 +208,7 @@ export function Dashboard() {
           </ul>
         </Card>
 
-        <Card title="Overall Leaderboard (official, published)" className="lg:col-span-2">
+        <Card title="Unit Standings (official, published)" className="lg:col-span-2">
           {board.isLoading ? (
             <Loading />
           ) : board.error ? (

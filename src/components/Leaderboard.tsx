@@ -14,10 +14,10 @@ export function Leaderboard({ rows }: { rows: LeaderboardRow[] }) {
     );
   }
   return (
-    <ol className="space-y-2" aria-label="Overall leaderboard">
+    <ol className="space-y-2" aria-label="Overall unit leaderboard">
       {rows.map((r) => (
         <li
-          key={r.team_id}
+          key={r.unit}
           className="flex items-center gap-3 rounded-lg border border-slate-300 bg-white p-3"
         >
           <span className="flex w-10 shrink-0 items-center justify-center text-xl font-extrabold tabular-nums">
@@ -28,9 +28,10 @@ export function Leaderboard({ rows }: { rows: LeaderboardRow[] }) {
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-bold">{r.team_name}</span>
+            <span className="block truncate font-bold">{r.unit}</span>
             <span className="block truncate text-sm text-slate-700">
-              {r.unit} · {r.events_placed} event{r.events_placed === 1 ? '' : 's'}
+              {r.events_placed} event placing{r.events_placed === 1 ? '' : 's'}
+              {r.firsts > 0 && ` · ${r.firsts}× 1st`}
               {r.adjustment_points !== 0 &&
                 ` · adjustments ${r.adjustment_points > 0 ? '+' : ''}${r.adjustment_points}`}
             </span>

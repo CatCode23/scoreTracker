@@ -7,6 +7,7 @@ The source of truth is `supabase/migrations/`. Primary keys are UUIDs. `event_co
 
 ```mermaid
 erDiagram
+  units ||--o{ teams : fields
   events ||--o{ event_participants : registers
   teams ||--o{ event_participants : "plays in"
   events ||--o{ event_sessions : schedules
@@ -35,7 +36,8 @@ erDiagram
 | `profiles` | One row per staff user (`auth.users.id`). Has a `role` and `active` (default **false**). Created by a trigger when someone first signs in. |
 | `user_assignments` | Scopes a role to an event (null = all events) and a venue (null = all venues). A user can have many. |
 | `events` | The 8 sports and their format, venue, unit, dates, target count, and public flag. |
-| `teams` | One master record per team. `captain_name` is **restricted** and never appears in public views. |
+| `units` | The competing units (managed list, operations admin only). The overall leaderboard totals points per unit. |
+| `teams` | One record per team. `unit` must be a name from `units` (renames cascade; a unit with teams can't be deleted). `captain_name` is no longer used by the app and never appears in public views. Deleting a team deletes its registrations, unless it is in matches. |
 | `event_participants` | A team registered in an event: seed, check-in status, eligibility, final place mirror. |
 | `event_sessions` | Editable schedule blocks (date, time, venue, area, purpose, unit). |
 | `stages` | Pool, elimination, consolation, heat, placement, or final, in order. |
@@ -62,7 +64,7 @@ erDiagram
 | `public_match_results` | Official results only. No submitter or validator. |
 | `public_pool_standings` | Pool tables |
 | `public_event_placements` | Approved **and** published placements |
-| `public_overall_leaderboard` | Commander's Cup totals (placements + adjustments) with tiebreak ranking |
+| `public_overall_leaderboard` | Commander's Cup totals **per unit**: the sum of its teams' published placement points plus adjustments, with tiebreak ranking |
 | `public_last_update` | Last official change timestamp |
 
 ## Result lifecycle
@@ -98,12 +100,12 @@ Triggers enforce the following:
 | Request correction | own results | ✓ | ✓ | ✓ | – |
 | Decide correction | – | – | ✓ | ✓ | – |
 | Stages / pools / sessions / matches / advancement | – | – | ✓ (event) | ✓ | – |
-| Register teams / participants | – | – | ✓ | ✓ | – |
+| Create / edit teams, register participants | – | – | ✓ | ✓ | – |
+| Delete teams, manage units, create / delete events | – | – | – | ✓ | – |
 | Record placements, apply no-show penalty | – | – | ✓ | ✓ | – |
 | Approve / publish placements, override points | – | – | – | ✓ | – |
 | Events, settings, matrix, users, assignments | – | – | – | ✓ | – |
 | Audit log | – | – | – | ✓ | – |
-| Captain names | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 These rules are enforced by RLS policies, built on these helpers:
 

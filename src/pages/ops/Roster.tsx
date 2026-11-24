@@ -18,7 +18,7 @@ export function Roster() {
     <div className="space-y-4">
       <PageHeader
         title="Roster / Registration Review"
-        subtitle="Restricted: visible to authenticated staff only."
+        subtitle="Registered teams by event. Visible to signed-in staff only."
       />
       <Card>
         <Field label="Event" htmlFor="roster-event">
@@ -58,7 +58,6 @@ export function Roster() {
                 </p>
                 <p className="text-sm text-slate-700">Unit: {p.teams?.unit}</p>
                 <p className="text-sm text-slate-700">Players: {p.teams?.player_count ?? '—'}</p>
-                <p className="text-sm text-slate-700">Captain: {p.teams?.captain_name || '—'}</p>
                 <p className="text-sm font-semibold">{humanize(p.check_in_status)}</p>
               </li>
             ))}

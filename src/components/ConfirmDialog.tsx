@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { Button, Field, Notice, TextArea } from './ui';
+import { Button, Field, Input, Notice, TextArea } from './ui';
 import { friendlyError } from '../lib/supabase';
 
 export interface ConfirmOptions {
@@ -9,6 +9,8 @@ export interface ConfirmOptions {
   danger?: boolean;
   /** When set, a reason is required and passed to onConfirm. */
   reasonLabel?: string;
+  /** When set, the user must type this exact text to enable the confirm button. */
+  requireText?: string;
 }
 
 export function ConfirmDialog({
@@ -28,12 +30,14 @@ export function ConfirmDialog({
 }) {
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
+  const [typed, setTyped] = useState('');
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
 
   useEffect(() => {
     if (open) {
       setReason('');
+      setTyped('');
       setTouched(false);
       setTimeout(() => ref.current?.querySelector<HTMLElement>('textarea, button')?.focus(), 0);
     }
@@ -83,6 +87,25 @@ export function ConfirmDialog({
             />
           </Field>
         )}
+        {options.requireText && (
+          <Field
+            label={
+              <>
+                Type <strong>{options.requireText}</strong> to confirm
+              </>
+            }
+            htmlFor={`${id}-typed`}
+            className="mt-4"
+          >
+            <Input
+              id={`${id}-typed`}
+              value={typed}
+              autoComplete="off"
+              autoCapitalize="characters"
+              onChange={(e) => setTyped(e.target.value)}
+            />
+          </Field>
+        )}
         {error && (
           <Notice tone="error" className="mt-4">
             {error}
@@ -94,7 +117,9 @@ export function ConfirmDialog({
           </Button>
           <Button
             variant={options.danger ? 'danger' : 'primary'}
-            disabled={busy}
+            disabled={
+              busy || (Boolean(options.requireText) && typed.trim() !== options.requireText)
+            }
             onClick={() => {
               setTouched(true);
               if (needsReason && reason.trim().length < 3) return;

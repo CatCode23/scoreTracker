@@ -20,47 +20,48 @@ describe('pointsForPlace', () => {
   });
 });
 
-describe('computeLeaderboard', () => {
-  const p = (team_id: string, final_place: number) => ({
-    team_id,
-    team_name: team_id.toUpperCase(),
-    unit: 'U',
+describe('computeLeaderboard (by unit)', () => {
+  const p = (unit: string, final_place: number) => ({
+    unit,
     final_place,
     overall_points: pointsForPlace(final_place),
   });
 
-  it('sums points across events and sorts descending', () => {
-    const rows = computeLeaderboard([p('a', 1), p('b', 2), p('a', 3), p('b', 1)]);
-    expect(rows.map((r) => [r.team_id, r.total_points])).toEqual([
-      ['b', 15],
-      ['a', 14],
+  it('totals points for each unit across its teams in different sports', () => {
+    // 1-2 SBCT: soccer 1st (8) + basketball 3rd (6) = 14 ; 16th CAB: soccer 2nd (7) + basketball 1st (8) = 15
+    const rows = computeLeaderboard([
+      p('1-2 SBCT', 1),
+      p('16th CAB', 2),
+      p('1-2 SBCT', 3),
+      p('16th CAB', 1),
+    ]);
+    expect(rows.map((r) => [r.unit, r.total_points, r.events_placed])).toEqual([
+      ['16th CAB', 15, 2],
+      ['1-2 SBCT', 14, 2],
     ]);
   });
 
-  it('applies no-show penalties', () => {
-    const rows = computeLeaderboard([p('a', 3)], [{ team_id: 'a', points: -6 }]);
+  it('applies no-show penalties to the unit', () => {
+    const rows = computeLeaderboard([p('5-3 FA', 3)], [{ unit: '5-3 FA', points: -6 }]);
     expect(rows[0]).toMatchObject({ placement_points: 6, adjustment_points: -6, total_points: 0 });
   });
 
   it('breaks ties by number of 1st, then 2nd, then 3rd places', () => {
-    // a: 1st (8) + 8th (1) = 9 ; b: 2nd (7) + 7th (2) = 9 -> a wins on firsts
-    const rows = computeLeaderboard([p('a', 1), p('a', 8), p('b', 2), p('b', 7)]);
-    expect(rows.map((r) => [r.team_id, r.rank])).toEqual([
-      ['a', 1],
-      ['b', 2],
+    // A: 1st (8) + 8th (1) = 9 ; B: 2nd (7) + 7th (2) = 9 -> A wins on firsts
+    const rows = computeLeaderboard([p('A', 1), p('A', 8), p('B', 2), p('B', 7)]);
+    expect(rows.map((r) => [r.unit, r.rank])).toEqual([
+      ['A', 1],
+      ['B', 2],
     ]);
   });
 
   it('shares rank for exact ties (1,1,3)', () => {
-    const rows = computeLeaderboard([p('a', 2), p('b', 2), p('c', 4)]);
+    const rows = computeLeaderboard([p('A', 2), p('B', 2), p('C', 4)]);
     expect(rows.map((r) => r.rank)).toEqual([1, 1, 3]);
   });
 
-  it('includes penalty-only teams', () => {
-    const rows = computeLeaderboard([], [{ team_id: 'x', points: -6 }], {
-      x: { team_name: 'X', unit: 'U' },
-    });
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ team_name: 'X', total_points: -6, rank: 1 });
+  it('includes penalty-only units', () => {
+    const rows = computeLeaderboard([], [{ unit: 'X', points: -6 }]);
+    expect(rows).toEqual([expect.objectContaining({ unit: 'X', total_points: -6, rank: 1 })]);
   });
 });

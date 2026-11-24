@@ -40,7 +40,7 @@ export function usePublicLeaderboard() {
     queryKey: ['public', 'leaderboard'],
     queryFn: () =>
       rows<LeaderboardRow>(
-        supabase.from('public_overall_leaderboard').select('*').order('rank').order('team_name'),
+        supabase.from('public_overall_leaderboard').select('*').order('rank').order('unit'),
       ),
     ...opts,
   });
