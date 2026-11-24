@@ -13,11 +13,11 @@ export function cx(...c: Array<string | false | null | undefined>): string {
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'success';
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand-light focus-visible:ring-brand',
+  primary: 'bg-brand text-white hover:bg-brand-dark focus-visible:ring-brand',
   secondary:
     'bg-white text-slate-900 border border-slate-400 hover:bg-slate-100 focus-visible:ring-slate-500',
   danger: 'bg-red-700 text-white hover:bg-red-800 focus-visible:ring-red-700',
-  success: 'bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-700',
+  success: 'bg-field text-white hover:bg-field-light focus-visible:ring-field',
   ghost: 'bg-transparent text-slate-900 hover:bg-slate-200 focus-visible:ring-slate-500',
 };
 

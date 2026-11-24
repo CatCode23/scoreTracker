@@ -29,7 +29,7 @@ export function Leaderboard({ rows }: { rows: LeaderboardRow[] }) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-bold">{r.unit}</span>
-            <span className="block truncate text-sm text-slate-700">
+            <span className="block text-sm text-slate-700">
               {r.events_placed} event placing{r.events_placed === 1 ? '' : 's'}
               {r.firsts > 0 && ` · ${r.firsts}× 1st`}
               {r.adjustment_points !== 0 &&

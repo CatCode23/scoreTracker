@@ -106,7 +106,7 @@ export function Placements() {
             actions={
               <span className="flex gap-1">
                 {allPublic ? (
-                  <Badge className="bg-green-700 text-white">Published</Badge>
+                  <Badge className="bg-field text-white">Published</Badge>
                 ) : allApproved ? (
                   <Badge className="bg-sky-200">Approved, not public</Badge>
                 ) : (

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { LogIn, LogOut, Trophy, Menu, X } from 'lucide-react';
+import { LogIn, LogOut, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth';
 import { env } from '../lib/env';
@@ -68,12 +68,18 @@ export function Layout() {
         Skip to content
       </a>
       <header
-        className="sticky top-0 z-40 bg-brand text-white shadow"
+        className="sticky top-0 z-40 border-b-4 border-brand bg-ink text-white shadow"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2">
           <Link to="/public" className="flex min-h-touch min-w-0 items-center gap-2 font-extrabold">
-            <Trophy className="h-6 w-6 text-brand-accent" aria-hidden />
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt=""
+              className="h-10 w-10 shrink-0"
+              width={40}
+              height={40}
+            />
             <span className="truncate text-base leading-tight sm:text-lg">{env.appName}</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">
@@ -82,7 +88,7 @@ export function Layout() {
                 {ops.length > 0 && (
                   <button
                     type="button"
-                    className="flex min-h-touch min-w-touch items-center justify-center rounded-lg hover:bg-brand-light"
+                    className="flex min-h-touch min-w-touch items-center justify-center rounded-lg hover:bg-ink-soft"
                     aria-expanded={open}
                     aria-controls="ops-nav"
                     onClick={() => setOpen((v) => !v)}
@@ -94,7 +100,7 @@ export function Layout() {
                 <button
                   type="button"
                   onClick={() => void auth.signOut()}
-                  className="flex min-h-touch items-center gap-1 rounded-lg px-3 text-sm font-semibold hover:bg-brand-light"
+                  className="flex min-h-touch items-center gap-1 rounded-lg px-3 text-sm font-semibold hover:bg-ink-soft"
                 >
                   <LogOut className="h-5 w-5" aria-hidden />{' '}
                   <span className="hidden sm:inline">Sign out</span>
@@ -103,7 +109,7 @@ export function Layout() {
             ) : (
               <Link
                 to="/signin"
-                className="flex min-h-touch items-center gap-1 rounded-lg px-3 text-sm font-semibold hover:bg-brand-light"
+                className="flex min-h-touch items-center gap-1 rounded-lg px-3 text-sm font-semibold hover:bg-ink-soft"
               >
                 <LogIn className="h-5 w-5" aria-hidden />{' '}
                 <span className="whitespace-nowrap">Staff sign in</span>
@@ -112,16 +118,12 @@ export function Layout() {
           </div>
         </div>
         {auth.session && open && ops.length > 0 && (
-          <nav
-            id="ops-nav"
-            aria-label="Operations"
-            className="border-t border-brand-light bg-brand"
-          >
+          <nav id="ops-nav" aria-label="Operations" className="border-t border-ink-soft bg-ink">
             <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-1 p-2 sm:grid-cols-4">
               <li>
                 <NavLink
                   to="/public"
-                  className="flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-brand-light"
+                  className="flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-ink-soft"
                 >
                   Public view
                 </NavLink>
@@ -133,8 +135,8 @@ export function Layout() {
                     end={n.to === '/ops'}
                     className={({ isActive: a }) =>
                       cx(
-                        'flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-brand-light',
-                        a && 'bg-brand-light ring-2 ring-brand-accent',
+                        'flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-ink-soft',
+                        a && 'bg-ink-soft ring-2 ring-brand',
                       )
                     }
                   >
