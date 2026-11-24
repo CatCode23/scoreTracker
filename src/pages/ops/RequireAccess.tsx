@@ -1,0 +1,32 @@
+import type { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../lib/auth';
+import type { Access } from '../../lib/domain/permissions';
+import { Loading, Unauthorized } from '../../components/states';
+import { Card, Notice } from '../../components/ui';
+
+/** Route guard for operations pages. UI only: the database enforces access via RLS. */
+export function RequireAccess({
+  check,
+  children,
+}: {
+  check?: (a: Access) => boolean;
+  children: ReactNode;
+}) {
+  const auth = useAuth();
+  const loc = useLocation();
+  if (auth.loading) return <Loading label="Checking your access…" />;
+  if (!auth.session) return <Navigate to="/signin" replace state={{ from: loc.pathname }} />;
+  if (!auth.profile || !auth.profile.active) {
+    return (
+      <Card>
+        <Notice tone="warn" title="Account pending activation">
+          You are signed in as <strong>{auth.session.user.email}</strong>, but an operations admin
+          has not activated your account or assigned you a role yet. Give them this email address.
+        </Notice>
+      </Card>
+    );
+  }
+  if (check && !check(auth)) return <Unauthorized />;
+  return <>{children}</>;
+}
