@@ -84,6 +84,8 @@ To add a team to an event, edit the team (pencil) and tick the event.
    - **winner goes to** / **loser goes to**, with slots. When a result is saved, the
      winner (and loser) are moved into those slots automatically. Untick **Move teams on:
      Automatically** for a match if you want to place teams by hand.
+   - **Decides places** for the Final, 3rd-place and other placement games (e.g. Final →
+     1st/2nd). Saving their results fills in Placements (see section 10).
 4. **Assign** teams to slots (A/B, or Lane 1…n for heats).
 5. Alternatively, use **Import CSV**. Import matches first, then participants by seed.
    Import never overwrites existing matches.
@@ -185,11 +187,29 @@ and mark each team Advances, Wild card, or Did not advance.
 
 ## 10. Enter final placements
 
-**Ops → Placements**:
+**Placements fill in by themselves** from matches marked **Decides places** in Match
+Setup:
 
-1. Enter places 1–8 (more if needed). Points fill in automatically from the matrix.
+| Match | Decides places |
+|---|---|
+| Final | 1st (winner) / 2nd (loser) |
+| 3rd place game | 3rd / 4th |
+| 5th place game | 5th / 6th |
+| 7th place game | 7th / 8th |
+| A heat or station that sets the final order | 1st: the places entered in the result become the final places (choose a later number to start lower down) |
+
+When such a match's result is saved, its teams appear on **Ops → Placements** with their
+points. They are **not public yet**.
+
+**Ops → Placements** (pick the event):
+
+1. Check the places. A note lists any places still to fill, e.g. 5th–8th when there are
+   no consolation games. Add those by hand.
 2. An operations admin presses **Approve & Publish** to put them on the public page and
    the leaderboard.
+
+If a placement match's result is edited later, its placements are replaced and need
+publishing again. If the result is voided, the placements it filled in are removed.
 
 Editing an approved placement automatically withdraws its approval and publication.
 

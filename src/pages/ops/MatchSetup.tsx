@@ -15,7 +15,7 @@ import {
 } from '../../lib/api/ops';
 import { canManageEvent } from '../../lib/domain/permissions';
 import { headToHeadWarning, overlappingMatchWarnings } from '../../lib/domain/validation';
-import { formatDate, formatTime, humanize } from '../../lib/domain/format';
+import { formatDate, formatTime, humanize, ordinal } from '../../lib/domain/format';
 import {
   MATCH_TYPES,
   STAGE_TYPES,
@@ -649,6 +649,7 @@ function MatchesTab({ event }: { event: EventRow }) {
           next_loser_slot: orNull(v.next_loser_slot),
           public_visible: v.public_visible === 'on',
           auto_advance: v.auto_advance === 'on',
+          decides_place: intOrNull(v.decides_place),
         };
         const ok = await e.wrap(() =>
           m
@@ -768,6 +769,20 @@ function MatchesTab({ event }: { event: EventRow }) {
           />
           Show on public pages
         </label>
+      </Field>
+      <Field
+        label="Decides places"
+        htmlFor="m-decides"
+        hint="Fills in Placements when the result is saved. Heats/stations: the result's places start here."
+      >
+        <Select id="m-decides" name="decides_place" defaultValue={m?.decides_place ?? ''}>
+          <option value="">No</option>
+          {Array.from({ length: 16 }, (_, i) => i + 1).map((n) => (
+            <option key={n} value={n}>
+              {ordinal(n)} (winner) / {ordinal(n + 1)} (loser)
+            </option>
+          ))}
+        </Select>
       </Field>
       <Field
         label="Move teams on"

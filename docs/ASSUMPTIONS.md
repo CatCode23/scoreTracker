@@ -111,3 +111,7 @@ These assumptions were made where the specification left room for interpretation
     created as `jsmith@wotb.local` (domain configurable with `VITE_USERNAME_DOMAIN`). The
     sign-in box accepts `jsmith` and adds the domain; real email addresses still work. No
     email is ever sent to these addresses. "Confirm email" should be turned off in Supabase.
+32. **Placements fill in from placement matches.** A match can be marked "Decides places"
+    (winner N, loser N+1; heats/stations: the result's places offset from N). Its Official
+    result writes unapproved placements; publishing still needs an operations admin. If a
+    filled place or team already had a placement (e.g. entered by hand), it is replaced.

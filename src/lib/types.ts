@@ -203,6 +203,8 @@ export interface Match {
   next_loser_slot: string | null;
   /** Move the winner/loser on automatically when a result becomes Official. */
   auto_advance: boolean;
+  /** Final place decided by this match: winner gets it, loser the next (multi-team: places start here). */
+  decides_place: number | null;
   public_visible: boolean;
   notes: string | null;
   updated_at: string;
@@ -281,6 +283,8 @@ export interface EventPlacement {
   approved_at: string | null;
   public_visible: boolean;
   notes: string | null;
+  /** Set when the placement was filled in automatically from this match's result. */
+  source_match_id: string | null;
 }
 export interface PointsMatrixRow {
   place: number;

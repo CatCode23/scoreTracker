@@ -153,7 +153,8 @@ Use one of these two options.
 order. Each new migration is a new file; earlier files are never changed. For example, a
 project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql`,
 `…0006_units_and_deletes.sql`, `…0007_fix_cascade_checks.sql` and
-`…0008_direct_results_and_edits.sql` and `…0009_auto_advance.sql`, in that order.
+`…0008_direct_results_and_edits.sql`, `…0009_auto_advance.sql` and
+`…0010_auto_placements.sql`, in that order.
 
 ### Sample data (optional, for trying the app)
 
@@ -327,6 +328,8 @@ If you rename the repository, update `.env.local` and the redirect URLs in Supab
 - **Expected linter warning.** The public views are owner-rights ("security definer")
   views on purpose. Supabase's linter will flag them, and this is expected. Each view
   selects only safe columns (see the migration header).
+- **Placements fill in from matches marked "Decides places"** (Final, 3rd place, …) but
+  still need an admin's Approve & Publish. Places no match decides are entered by hand.
 - **Placement tiebreakers are recorded, not computed.** Pool standings use a suggested
   rank (W=2/T=1, then point differential, then points for), which managers can override.
 

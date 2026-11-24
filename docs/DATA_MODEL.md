@@ -93,6 +93,9 @@ Triggers enforce the following:
 - When a result becomes Official, `auto_advance_from()` places the winner/loser into the
   match's `next_winner_*` / `next_loser_*` slots (if `matches.auto_advance`). It skips,
   never overwrites, a slot holding another team, and skips matches that already have a result.
+- When a result becomes Official on a match with `decides_place`, `auto_fill_placements()`
+  writes unapproved, non-public `event_placements` (winner = N, loser = N+1; multi-team:
+  N - 1 + entered place) with `source_match_id`. Editing replaces them; voiding removes them.
 - Official values are copied onto `match_participants`. They are cleared if that result is
   later voided.
 
