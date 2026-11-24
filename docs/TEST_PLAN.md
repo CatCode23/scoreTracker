@@ -48,12 +48,15 @@ Negative checks to repeat manually:
 
 ## Test account setup guide (do not create production accounts with real people's data for tests)
 
-1. In Supabase, go to *Authentication → Users → Invite user* and invite test mailboxes you
-   control, e.g. `you+admin@…`, `you+scorer@…`, `you+lead@…`, `you+manager@…`.
-2. Sign in once with each, so the profile rows get created.
+1. In Supabase, go to *Authentication → Users → Add user → Create new user* and create
+   test accounts with addresses you control, e.g. `you+scorer@…`, `you+lead@…`,
+   `you+manager@…`. Give each a password and tick **Auto Confirm User**. The profile rows
+   are created automatically.
 3. As admin, go to **Ops → Users**: activate each account, and assign:
    - scorer: Scorer · Soccer · North Fort Athletic Complex
    - lead: Venue Lead · Soccer · North Fort Athletic Complex
    - manager: Sport Manager · Soccer · (all venues)
-4. After testing, **deactivate** the test accounts, or delete them in Supabase Auth.
-5. Delete the `TEST` matches, registrations and teams.
+4. Sign in as each one in the app (a private browser window per account works well), and
+   check that **Change Password** works.
+5. After testing, **deactivate** the test accounts, or delete them in Supabase Auth.
+6. Delete the `TEST` matches, registrations and teams.

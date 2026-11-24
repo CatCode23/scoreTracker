@@ -3,13 +3,17 @@ import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, KeyRound } from 'lucide-react';
+import { KeyRound, LogIn, Mail } from 'lucide-react';
 import { supabase, isConfigured, friendlyError } from '../../lib/supabase';
 import { appRootUrl } from '../../lib/env';
 import { useAuth } from '../../lib/auth';
 import { Button, Card, Field, Input, Notice, PageHeader } from '../../components/ui';
 import { NotConfigured } from '../../components/states';
 
+const passwordSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address'),
+  password: z.string().min(1, 'Enter your password'),
+});
 const emailSchema = z.object({ email: z.string().trim().email('Enter a valid email address') });
 const codeSchema = z.object({
   code: z
@@ -18,33 +22,48 @@ const codeSchema = z.object({
     .regex(/^\d{6,10}$/, 'Enter the numeric code from the email'),
 });
 
+/** Plain-language message for Supabase sign-in errors. */
+export function signInErrorMessage(message: string): string {
+  if (/invalid login credentials/i.test(message)) return 'Email or password is incorrect.';
+  if (/email not confirmed/i.test(message)) {
+    return 'This account has not been confirmed. Ask the operations cell to confirm it in Supabase.';
+  }
+  if (/rate limit|too many/i.test(message)) {
+    return 'Too many sign-in emails have been sent. Wait a while and try again, or sign in with your password.';
+  }
+  if (/signups not allowed|not found|otp_disabled/i.test(message)) {
+    return 'This email is not registered for staff access. Contact the operations cell.';
+  }
+  if (/expired|invalid/i.test(message))
+    return 'That code is invalid or expired. Request a new one.';
+  return friendlyError({ message });
+}
+
 export function SignIn() {
   const auth = useAuth();
-  const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showEmailOption, setShowEmailOption] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const pwForm = useForm<z.infer<typeof passwordSchema>>({ resolver: zodResolver(passwordSchema) });
   const emailForm = useForm<z.infer<typeof emailSchema>>({ resolver: zodResolver(emailSchema) });
   const codeForm = useForm<z.infer<typeof codeSchema>>({ resolver: zodResolver(codeSchema) });
 
   if (auth.session) return <Navigate to="/ops" replace />;
 
+  const signInWithPassword = pwForm.handleSubmit(async ({ email, password }) => {
+    setError(null);
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) setError(signInErrorMessage(err.message));
+  });
+
   const sendLink = emailForm.handleSubmit(async ({ email }) => {
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: appRootUrl(),
-        // Accounts are created by an operations admin (Supabase "Invite user").
-        shouldCreateUser: false,
-      },
+      // Accounts are created by an operations admin; never self-register.
+      options: { emailRedirectTo: appRootUrl(), shouldCreateUser: false },
     });
-    if (err) {
-      setError(
-        /signups not allowed|not found|otp_disabled/i.test(err.message)
-          ? 'This email is not registered for staff access. Contact the operations cell.'
-          : friendlyError(err),
-      );
-      return;
-    }
+    if (err) return setError(signInErrorMessage(err.message));
     setSentTo(email);
   });
 
@@ -55,12 +74,7 @@ export function SignIn() {
       token: code,
       type: 'email',
     });
-    if (err)
-      setError(
-        /expired|invalid/i.test(err.message)
-          ? 'That code is invalid or expired. Request a new link.'
-          : friendlyError(err),
-      );
+    if (err) setError(signInErrorMessage(err.message));
   });
 
   return (
@@ -76,16 +90,62 @@ export function SignIn() {
       </Notice>
       {error && <Notice tone="error">{error}</Notice>}
 
-      {!sentTo ? (
-        <Card>
+      <Card>
+        <form
+          onSubmit={signInWithPassword}
+          className="space-y-4"
+          noValidate
+          aria-label="Sign in with password"
+        >
+          <Field
+            label="Email address"
+            htmlFor="email"
+            error={pwForm.formState.errors.email?.message}
+          >
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="username"
+              {...pwForm.register('email')}
+            />
+          </Field>
+          <Field
+            label="Password"
+            htmlFor="password"
+            error={pwForm.formState.errors.password?.message}
+          >
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              {...pwForm.register('password')}
+            />
+          </Field>
+          <Button type="submit" block disabled={pwForm.formState.isSubmitting || !isConfigured}>
+            <LogIn className="h-5 w-5" aria-hidden />
+            {pwForm.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+        <p className="mt-3 text-sm text-slate-700">
+          Forgot your password or don&apos;t have an account? Contact the operations cell.
+        </p>
+      </Card>
+
+      {!showEmailOption ? (
+        <Button variant="ghost" block onClick={() => setShowEmailOption(true)}>
+          <Mail className="h-5 w-5" aria-hidden /> Sign in with an email link instead
+        </Button>
+      ) : !sentTo ? (
+        <Card title="Email sign-in link (backup)">
           <form onSubmit={sendLink} className="space-y-4" noValidate>
             <Field
               label="Email address"
-              htmlFor="email"
+              htmlFor="link-email"
               error={emailForm.formState.errors.email?.message}
             >
               <Input
-                id="email"
+                id="link-email"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -94,6 +154,7 @@ export function SignIn() {
             </Field>
             <Button
               type="submit"
+              variant="secondary"
               block
               disabled={emailForm.formState.isSubmitting || !isConfigured}
             >
@@ -105,9 +166,8 @@ export function SignIn() {
       ) : (
         <Card>
           <Notice tone="success" title="Check your email">
-            We sent a sign-in link to <strong>{sentTo}</strong>. Open it{' '}
-            <strong>on this device, in this browser</strong>. If your email app opens links in a
-            different browser, type the code from the email below instead.
+            We sent a sign-in link to <strong>{sentTo}</strong>. Open it on this device, in this
+            browser, or type the code from the email below.
           </Notice>
           <form onSubmit={verify} className="mt-4 space-y-4" noValidate>
             <Field

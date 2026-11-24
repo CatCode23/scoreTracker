@@ -18,9 +18,9 @@ These assumptions were made where the specification left room for interpretation
    `tournament_year` in `scoring_settings`.
 3. **Target team count** is seeded as 20 per event and is editable. Nothing is hard-coded
    around it.
-4. **Accounts are invite-only.** New `auth.users` get an **inactive** `read_only` profile.
-   An operations admin activates them and assigns roles. Magic links use
-   `shouldCreateUser: false`.
+4. **Accounts are created by admins only.** New `auth.users` get an **inactive**
+   `read_only` profile. An operations admin activates them and assigns roles. The backup
+   email link uses `shouldCreateUser: false`, so it can't create accounts.
 5. **Two layers of roles.** `profiles.role` is the primary label and grants global powers
    for `operations_admin` and `read_only`. Scoped powers (scorer, venue lead, sport
    manager) come from `user_assignments`, which allows several events or venues per
@@ -59,8 +59,17 @@ These assumptions were made where the specification left room for interpretation
     team-registration users").
 19. **The audit log** also covers teams, registrations, assignments, profiles, settings
     and events, beyond the five tables the spec required.
-20. **Magic-link flow:** PKCE, because it is compatible with HashRouter. Because phone
-    email apps often open a different browser, the sign-in page also accepts the emailed
-    one-time code. This requires `{{ .Token }}` in the email template.
+20. **Email + password sign-in (changed from the original magic-link design).** The
+    original spec called for magic-link or OAuth sign-in. Supabase's built-in email sender
+    allows only a few emails per hour, which locked staff out during setup, so the primary
+    sign-in is now email + password through Supabase Auth.
+    - Passwords are stored and checked by Supabase (hashed). The app never stores them,
+      so the spec's "no password storage in the application" still holds.
+    - Admins create accounts with a temporary password (*Create new user*, Auto Confirm),
+      and staff change it on the **Change Password** page (minimum 10 characters).
+      Resets are done by an admin in Supabase.
+    - Email link sign-in remains as a backup option. It uses PKCE, which is compatible
+      with HashRouter, and also accepts the emailed one-time code; that requires
+      `{{ .Token }}` in the email template.
 21. **Realtime** for public clients goes through a non-sensitive `public_updates` table.
     Realtime cannot stream changes from views, and the raw tables are not readable by anon.

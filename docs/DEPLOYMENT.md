@@ -15,14 +15,16 @@ Follow README → *Supabase setup*, steps 1–6, in this order:
 1. Create the project.
 2. Run the migrations in order.
 3. Run `seed.sql`.
-4. Configure Auth: invite-only, add `{{ .Token }}` to the email template, and set the
-   redirect URLs.
-5. Bootstrap the first admin.
+4. Configure Auth: Email provider enabled (password sign-in), new sign-ups disabled,
+   minimum password length 10, and the redirect URLs.
+5. Create your own user (*Add user → Create new user*, Auto Confirm) and bootstrap it as
+   the first admin.
 6. Load the schedule for the tournament year.
 
 Recommended:
 
-- Configure **custom SMTP**. The default sender is rate-limited.
+- Configure **custom SMTP** only if you want the backup email-link sign-in. Password
+  sign-in sends no email.
 - Turn on **Point-in-time recovery** or take a manual backup before the event.
 
 ## 2. GitHub repository settings

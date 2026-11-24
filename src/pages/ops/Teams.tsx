@@ -107,8 +107,7 @@ export function Teams() {
         }
       />
       <Notice tone="warn">
-        Captain names are restricted operational data. Do not enter CUI or unnecessary personal
-        data.
+        Captain names are visible to signed-in staff only. Do not enter unnecessary personal data.
       </Notice>
       {editing && (
         <Card title={editing === 'new' ? 'New team' : `Edit ${editing.team_name}`}>

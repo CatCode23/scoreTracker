@@ -45,6 +45,9 @@ const EventRegistration = lazy(() =>
 const Roster = lazy(() => import('./pages/ops/Roster').then((m) => ({ default: m.Roster })));
 const Users = lazy(() => import('./pages/ops/Users').then((m) => ({ default: m.Users })));
 const Settings = lazy(() => import('./pages/ops/Settings').then((m) => ({ default: m.Settings })));
+const ChangePassword = lazy(() =>
+  import('./pages/ops/ChangePassword').then((m) => ({ default: m.ChangePassword })),
+);
 const AuditLog = lazy(() => import('./pages/ops/AuditLog').then((m) => ({ default: m.AuditLog })));
 
 const guard = (el: JSX.Element, check?: (a: Access) => boolean) => (
@@ -63,6 +66,16 @@ export function AppRoutes() {
         <Route path="signin" element={<SignIn />} />
         <Route path="ops">
           <Route index element={guard(<Dashboard />)} />
+          <Route
+            path="password"
+            element={
+              <RequireAccess allowInactive>
+                <Suspense fallback={<Loading />}>
+                  <ChangePassword />
+                </Suspense>
+              </RequireAccess>
+            }
+          />
           <Route path="assignments" element={guard(<MyAssignments />)} />
           <Route path="score" element={guard(<ScoreEntry />, canSubmitAnything)} />
           <Route
