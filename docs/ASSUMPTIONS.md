@@ -86,3 +86,11 @@ These assumptions were made where the specification left room for interpretation
       it can be marked inactive). Only operations admins delete teams.
     - Deleting an event removes everything in it but keeps the teams, and requires typing
       the event code.
+25. **No separate validation step (changed from the original spec).** Event
+    administrators enter scores themselves, so results they enter (operations admin, sport
+    manager, venue lead) are Official immediately. Scorer accounts, if used, still need
+    approval, and the Approvals menu item only appears when something is waiting.
+26. **Referee confirmation removed.** The checkbox is gone; the `referee_confirmed` column
+    stays in the database, unused.
+27. **Edit result replaces correction requests.** Operations admins and sport managers fix
+    an Official result directly; the old version and the reason are kept in the audit log.

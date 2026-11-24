@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useCorrections, usePlacements, useResults } from '../../lib/api/ops';
+import { usePlacements, useResults } from '../../lib/api/ops';
 import { useLookups } from '../../lib/api/lookups';
 import { usePublicLeaderboard } from '../../lib/api/public';
 import { formatDateTime, formatTime } from '../../lib/domain/format';
@@ -40,7 +40,6 @@ export function Dashboard() {
   const L = useLookups();
   const results = useResults();
   const placements = usePlacements();
-  const corrections = useCorrections('pending');
   const board = usePublicLeaderboard();
 
   if (L.loading || results.isLoading) return <Loading />;
@@ -68,18 +67,7 @@ export function Dashboard() {
       />
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat
-          label="Awaiting Validation"
-          value={awaiting.length}
-          to="/ops/validate"
-          tone="border-amber-400 bg-amber-50"
-        />
-        <Stat
-          label="Disputed / Returned"
-          value={res.filter((r) => r.status === 'disputed' || r.status === 'returned').length}
-          to="/ops/validate"
-          tone="border-red-400 bg-red-50"
-        />
+        <Stat label="Official results" value={res.filter((r) => r.status === 'official').length} />
         <Stat label="In Progress" value={active.length} to="/ops/matches" />
         <Stat
           label="Delayed"
@@ -87,46 +75,49 @@ export function Dashboard() {
           to="/ops/matches"
           tone="border-orange-400 bg-orange-50"
         />
-        <Stat
-          label="Pending corrections"
-          value={corrections.data?.length ?? 0}
-          to="/ops/validate"
-        />
+        {awaiting.length > 0 && (
+          <Stat
+            label="Awaiting Approval"
+            value={awaiting.length}
+            to="/ops/validate"
+            tone="border-amber-400 bg-amber-50"
+          />
+        )}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
-        <Card
-          title={
-            <span className="flex items-center gap-2">
-              Awaiting Validation <UnofficialBadge />
-            </span>
-          }
-        >
-          {awaiting.length === 0 ? (
-            <Empty title="Nothing waiting" />
-          ) : (
-            <ul className="space-y-2">
-              {awaiting.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-300 p-2"
-                >
-                  <span>
-                    <span className="block font-semibold">
-                      {matchLine(L.matchById.get(r.match_id))}
+        {awaiting.length > 0 && (
+          <Card
+            title={
+              <span className="flex items-center gap-2">
+                Awaiting Approval <UnofficialBadge />
+              </span>
+            }
+          >
+            {
+              <ul className="space-y-2">
+                {awaiting.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-slate-300 p-2"
+                  >
+                    <span>
+                      <span className="block font-semibold">
+                        {matchLine(L.matchById.get(r.match_id))}
+                      </span>
+                      <span className="text-sm text-slate-700">
+                        Submitted {formatDateTime(r.submitted_at)}
+                      </span>
                     </span>
-                    <span className="text-sm text-slate-700">
-                      Submitted {formatDateTime(r.submitted_at)}
-                    </span>
-                  </span>
-                  <ResultStatusBadge status={r.status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+                    <ResultStatusBadge status={r.status} />
+                  </li>
+                ))}
+              </ul>
+            }
+          </Card>
+        )}
 
-        <Card title="Disputed / Returned / Void">
+        <Card title="Edited / voided results">
           {problem.length === 0 ? (
             <Empty title="None" />
           ) : (

@@ -3,7 +3,7 @@ import type { MatchStatus, PublicStatus, ResultStatus } from '../lib/types';
 
 export const RESULT_STATUS_LABEL: Record<ResultStatus, string> = {
   draft: 'Draft',
-  submitted: 'Awaiting Validation',
+  submitted: 'Awaiting Approval',
   official: 'Official',
   returned: 'Returned for Correction',
   disputed: 'Disputed',
@@ -14,7 +14,7 @@ export const MATCH_STATUS_LABEL: Record<MatchStatus, string> = {
   planned: 'Scheduled',
   ready: 'Ready',
   in_progress: 'In Progress',
-  submitted: 'Awaiting Validation',
+  submitted: 'Awaiting Approval',
   official: 'Official',
   complete: 'Complete',
   delayed: 'Delayed',

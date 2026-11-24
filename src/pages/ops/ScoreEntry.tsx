@@ -3,15 +3,18 @@ import { ClipboardList } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { useLookups } from '../../lib/api/lookups';
 import { db, useMatchParticipants, useOpsMutation, useResults } from '../../lib/api/ops';
-import { hasEventRole, hasMatchRole, SUBMIT_ROLES } from '../../lib/domain/permissions';
+import {
+  hasEventRole,
+  hasMatchRole,
+  SUBMIT_ROLES,
+  VALIDATE_ROLES,
+} from '../../lib/domain/permissions';
 import { formatDate, formatDateTime, formatTime } from '../../lib/domain/format';
-import type { Correction, MatchResult } from '../../lib/types';
 import { ScoreEntryForm, type ResultPayload } from '../../components/ScoreEntryForm';
-import { Button, Card, Field, Notice, PageHeader, Select, TextArea, cx } from '../../components/ui';
+import { Card, Field, Notice, PageHeader, Select, cx } from '../../components/ui';
 import { Empty, ErrorState, Loading, OFFLINE_CONTINGENCY } from '../../components/states';
 import { MatchStatusBadge, ResultStatusBadge } from '../../components/status';
 import { SyncButton } from '../../components/SyncButton';
-import { friendlyError } from '../../lib/supabase';
 
 const OPEN = new Set(['planned', 'ready', 'in_progress', 'delayed']);
 
@@ -51,10 +54,15 @@ export function ScoreEntry() {
       label: L.team(p.participant_id),
     }));
 
+  // Admins, sport managers and venue leads enter Official results directly; Scorer
+  // accounts submit for approval. The database enforces the same rule.
+  const official = match
+    ? hasMatchRole(auth, match.event_id, L.venueOf(match), VALIDATE_ROLES)
+    : false;
   const submit = useOpsMutation(async (payload: ResultPayload) => {
     await db.insert('match_results', {
       match_id: matchId,
-      status: 'submitted',
+      status: official ? 'official' : 'submitted',
       submitted_by: auth.session!.user.id,
       ...payload,
     });
@@ -71,9 +79,7 @@ export function ScoreEntry() {
     <div className="mx-auto max-w-2xl space-y-4">
       <PageHeader title="Score Entry" actions={<SyncButton />} />
       <Notice tone="info" title="Field-use guide">
-        <p className="text-base font-semibold">
-          1. Select Match. 2. Enter result. 3. Confirm referee approval. 4. Submit.
-        </p>
+        <p className="text-base font-semibold">1. Select match. 2. Enter result. 3. Save.</p>
         <p className="mt-1">{OFFLINE_CONTINGENCY}</p>
       </Notice>
 
@@ -140,11 +146,11 @@ export function ScoreEntry() {
       )}
 
       {match && (
-        <Card title={`2–4. Enter result: ${match.match_code}`}>
+        <Card title={`2–3. Enter result: ${match.match_code}`}>
           {match.status === 'submitted' ? (
-            <Notice tone="warn" title="Awaiting Validation">
-              A result for this match has already been submitted. Use “Request correction” below if
-              it is wrong.
+            <Notice tone="warn" title="Awaiting Approval">
+              A result for this match has already been submitted and is waiting for an event
+              administrator. Tell them if it is wrong.
             </Notice>
           ) : mps.isLoading ? (
             <Loading />
@@ -152,6 +158,7 @@ export function ScoreEntry() {
             <ScoreEntryForm
               matchType={match.match_type}
               participants={participants}
+              submitsOfficial={official}
               onSubmit={(p) => submit.mutateAsync(p).then(() => undefined)}
             />
           )}
@@ -170,108 +177,23 @@ export function ScoreEntry() {
         ) : (
           <ul className="space-y-2">
             {myResults.map((r) => (
-              <MySubmission
+              <li
                 key={r.id}
-                result={r}
-                title={L.matchById.get(r.match_id)?.match_code ?? 'Match'}
-              />
+                className="flex items-center justify-between gap-2 rounded-lg border border-slate-300 p-3"
+              >
+                <span>
+                  <span className="block font-semibold">
+                    {L.matchById.get(r.match_id)?.match_code ?? 'Match'}
+                  </span>
+                  <span className="text-sm text-slate-700">{formatDateTime(r.submitted_at)}</span>
+                  {r.status_reason && <span className="block text-sm">{r.status_reason}</span>}
+                </span>
+                <ResultStatusBadge status={r.status} />
+              </li>
             ))}
           </ul>
         )}
       </Card>
     </div>
-  );
-}
-
-function MySubmission({ result, title }: { result: MatchResult; title: string }) {
-  const auth = useAuth();
-  const [open, setOpen] = useState(false);
-  const [type, setType] = useState<Correction['correction_type']>('score_correction');
-  const [reason, setReason] = useState('');
-  const [msg, setMsg] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
-  const request = useOpsMutation(() =>
-    db.insert('corrections', {
-      result_id: result.id,
-      requested_by: auth.session!.user.id,
-      correction_type: type,
-      reason: reason.trim(),
-    }),
-  );
-  const canRequest = ['submitted', 'official', 'disputed'].includes(result.status);
-  return (
-    <li className="rounded-lg border border-slate-300 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <span>
-          <span className="block font-semibold">{title}</span>
-          <span className="text-sm text-slate-700">{formatDateTime(result.submitted_at)}</span>
-        </span>
-        <ResultStatusBadge status={result.status} />
-      </div>
-      {result.status_reason && <p className="mt-1 text-sm">Reason: {result.status_reason}</p>}
-      {canRequest && !open && (
-        <Button variant="secondary" className="mt-2" onClick={() => setOpen(true)}>
-          Request correction
-        </Button>
-      )}
-      {open && (
-        <form
-          className="mt-3 space-y-3"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (reason.trim().length < 3)
-              return setMsg({ tone: 'error', text: 'A reason is required.' });
-            try {
-              await request.mutateAsync(undefined);
-              setMsg({
-                tone: 'success',
-                text: 'Correction requested. The sport manager will review it.',
-              });
-              setOpen(false);
-              setReason('');
-            } catch (err) {
-              setMsg({ tone: 'error', text: friendlyError(err) });
-            }
-          }}
-        >
-          <Field label="Correction type" htmlFor={`ct-${result.id}`}>
-            <Select
-              id={`ct-${result.id}`}
-              value={type}
-              onChange={(e) => setType(e.target.value as Correction['correction_type'])}
-            >
-              <option value="score_correction">Score correction</option>
-              <option value="winner_correction">Winner correction</option>
-              <option value="placement_correction">Placement correction</option>
-              <option value="forfeit">Forfeit</option>
-              <option value="dispute">Dispute</option>
-              <option value="administrative">Administrative</option>
-            </Select>
-          </Field>
-          <Field
-            label="What is wrong and what should it be? (required)"
-            htmlFor={`cr-${result.id}`}
-          >
-            <TextArea
-              id={`cr-${result.id}`}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </Field>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={request.isPending}>
-              Send request
-            </Button>
-            <Button variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
-      {msg && (
-        <Notice tone={msg.tone} className="mt-2">
-          {msg.text}
-        </Notice>
-      )}
-    </li>
   );
 }

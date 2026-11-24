@@ -143,6 +143,23 @@ export function useResults(filter?: { eventId?: string; statuses?: MatchResult['
   });
 }
 
+/** Number of results waiting for approval (from Scorer accounts) that the user can see. */
+export function usePendingApprovalCount(enabled: boolean) {
+  return useQuery({
+    queryKey: ['ops', 'pending-approvals'],
+    enabled,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('match_results')
+        .select('id', { count: 'exact', head: true })
+        .in('status', ['submitted', 'disputed']);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    ...live,
+  });
+}
+
 export function useCorrections(decision?: Correction['decision']) {
   return useQuery({
     queryKey: ['ops', 'corrections', decision ?? 'all'],
