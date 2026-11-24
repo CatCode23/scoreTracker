@@ -16,9 +16,26 @@ import {
 import { canManageEvent } from '../../lib/domain/permissions';
 import { headToHeadWarning, overlappingMatchWarnings } from '../../lib/domain/validation';
 import { formatDate, formatTime, humanize } from '../../lib/domain/format';
-import { MATCH_TYPES, STAGE_TYPES, type EventRow, type Match, type MatchType, type StageType } from '../../lib/types';
+import {
+  MATCH_TYPES,
+  STAGE_TYPES,
+  type EventRow,
+  type Match,
+  type MatchType,
+  type StageType,
+} from '../../lib/types';
 import { friendlyError, supabase } from '../../lib/supabase';
-import { Button, Card, Field, Input, Notice, PageHeader, Select, Tabs, TextArea } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Field,
+  Input,
+  Notice,
+  PageHeader,
+  Select,
+  Tabs,
+  TextArea,
+} from '../../components/ui';
 import { Empty, ErrorState, Loading, Unauthorized } from '../../components/states';
 import { MatchStatusBadge } from '../../components/status';
 import { useConfirm } from '../../components/ConfirmDialog';
@@ -43,11 +60,15 @@ export function MatchSetup() {
   if (events.isLoading) return <Loading />;
   if (events.error) return <ErrorState error={events.error} />;
   const manageable = (events.data ?? []).filter((e) => canManageEvent(auth, e.id));
-  if (manageable.length === 0) return <Unauthorized message="Only sport managers and operations admins can set up matches." />;
+  if (manageable.length === 0)
+    return <Unauthorized message="Only sport managers and operations admins can set up matches." />;
   const event = manageable.find((e) => e.id === eventId);
   return (
     <div className="space-y-4">
-      <PageHeader title="Match Setup" subtitle="Stages, pools, sessions, matches and match participants." />
+      <PageHeader
+        title="Match Setup"
+        subtitle="Stages, pools, sessions, matches and match participants."
+      />
       <Card>
         <Field label="Event" htmlFor="setup-event">
           <Select id="setup-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -94,7 +115,16 @@ function useErr() {
       return false;
     }
   };
-  return { err, setErr, wrap, node: err && <Notice tone="error" className="mt-2">{err}</Notice> };
+  return {
+    err,
+    setErr,
+    wrap,
+    node: err && (
+      <Notice tone="error" className="mt-2">
+        {err}
+      </Notice>
+    ),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -103,14 +133,23 @@ function StagesTab({ event }: { event: EventRow }) {
   const pools = usePools(event.id);
   const participants = useParticipants(event.id);
   const assignments = usePoolAssignments((pools.data ?? []).map((p) => p.id));
-  const save = useOpsMutation((args: { table: string; values: object }) => db.insert(args.table, args.values));
-  const upd = useOpsMutation((args: { table: string; id: string; values: object }) => db.update(args.table, args.id, args.values));
-  const del = useOpsMutation((args: { table: string; id: string }) => db.remove(args.table, args.id));
-  const recompute = useOpsMutation((poolId: string) => db.rpc('recompute_pool_standings', { p_pool_id: poolId }));
+  const save = useOpsMutation((args: { table: string; values: object }) =>
+    db.insert(args.table, args.values),
+  );
+  const upd = useOpsMutation((args: { table: string; id: string; values: object }) =>
+    db.update(args.table, args.id, args.values),
+  );
+  const del = useOpsMutation((args: { table: string; id: string }) =>
+    db.remove(args.table, args.id),
+  );
+  const recompute = useOpsMutation((poolId: string) =>
+    db.rpc('recompute_pool_standings', { p_pool_id: poolId }),
+  );
   const confirm = useConfirm();
   const e = useErr();
   const nextOrder = Math.max(0, ...(stages.data ?? []).map((s) => s.stage_order)) + 1;
-  const team = (pid: string) => participants.data?.find((p) => p.id === pid)?.teams?.team_name ?? 'Team';
+  const team = (pid: string) =>
+    participants.data?.find((p) => p.id === pid)?.teams?.team_name ?? 'Team';
 
   if (stages.isLoading) return <Loading />;
   return (
@@ -139,13 +178,26 @@ function StagesTab({ event }: { event: EventRow }) {
           }}
         >
           <Field label="Stage name" htmlFor="stage_name">
-            <Input id="stage_name" name="stage_name" placeholder="e.g. Pool Play, Championship, Consolation" />
+            <Input
+              id="stage_name"
+              name="stage_name"
+              placeholder="e.g. Pool Play, Championship, Consolation"
+            />
           </Field>
           <Field label="Order" htmlFor="stage_order">
-            <Input id="stage_order" name="stage_order" inputMode="numeric" defaultValue={nextOrder} />
+            <Input
+              id="stage_order"
+              name="stage_order"
+              inputMode="numeric"
+              defaultValue={nextOrder}
+            />
           </Field>
           <Field label="Type" htmlFor="stage_type">
-            <Select id="stage_type" name="stage_type" defaultValue={event.format_type === 'pool_then_playoff' ? 'pool' : 'elimination'}>
+            <Select
+              id="stage_type"
+              name="stage_type"
+              defaultValue={event.format_type === 'pool_then_playoff' ? 'pool' : 'elimination'}
+            >
               {STAGE_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {humanize(t)}
@@ -156,8 +208,16 @@ function StagesTab({ event }: { event: EventRow }) {
           <Field label="Date" htmlFor="scheduled_date">
             <Input id="scheduled_date" name="scheduled_date" type="date" />
           </Field>
-          <Field label="Advancement rule (plain text)" htmlFor="advancement_rule" className="sm:col-span-2 lg:col-span-3">
-            <Input id="advancement_rule" name="advancement_rule" placeholder="e.g. Top 2 per pool + 2 wild cards advance" />
+          <Field
+            label="Advancement rule (plain text)"
+            htmlFor="advancement_rule"
+            className="sm:col-span-2 lg:col-span-3"
+          >
+            <Input
+              id="advancement_rule"
+              name="advancement_rule"
+              placeholder="e.g. Top 2 per pool + 2 wild cards advance"
+            />
           </Field>
           <div className="flex items-end">
             <Button type="submit" block>
@@ -182,7 +242,9 @@ function StagesTab({ event }: { event: EventRow }) {
                   <Select
                     aria-label="Stage status"
                     value={s.status}
-                    onChange={(ev) => upd.mutate({ table: 'stages', id: s.id, values: { status: ev.target.value } })}
+                    onChange={(ev) =>
+                      upd.mutate({ table: 'stages', id: s.id, values: { status: ev.target.value } })
+                    }
                   >
                     <option value="planned">Planned</option>
                     <option value="active">Active</option>
@@ -193,7 +255,12 @@ function StagesTab({ event }: { event: EventRow }) {
                     aria-label={`Delete stage ${s.stage_name}`}
                     onClick={() =>
                       confirm.ask(
-                        { title: `Delete stage "${s.stage_name}"?`, body: 'This deletes its pools and matches too.', danger: true, confirmLabel: 'Delete' },
+                        {
+                          title: `Delete stage "${s.stage_name}"?`,
+                          body: 'This deletes its pools and matches too.',
+                          danger: true,
+                          confirmLabel: 'Delete',
+                        },
                         () => del.mutateAsync({ table: 'stages', id: s.id }),
                       )
                     }
@@ -217,7 +284,14 @@ function StagesTab({ event }: { event: EventRow }) {
                       const form = ev.currentTarget;
                       if (!v.pool_name) return;
                       const ok = await e.wrap(() =>
-                        save.mutateAsync({ table: 'pools', values: { stage_id: s.id, pool_name: v.pool_name, venue_area: orNull(v.venue_area) } }),
+                        save.mutateAsync({
+                          table: 'pools',
+                          values: {
+                            stage_id: s.id,
+                            pool_name: v.pool_name,
+                            venue_area: orNull(v.venue_area),
+                          },
+                        }),
                       )();
                       if (ok) form.reset();
                     }}
@@ -226,29 +300,51 @@ function StagesTab({ event }: { event: EventRow }) {
                       <Input id={`pn-${s.id}`} name="pool_name" placeholder="A" className="w-28" />
                     </Field>
                     <Field label="Area" htmlFor={`pa-${s.id}`}>
-                      <Input id={`pa-${s.id}`} name="venue_area" placeholder="Court 1" className="w-36" />
+                      <Input
+                        id={`pa-${s.id}`}
+                        name="venue_area"
+                        placeholder="Court 1"
+                        className="w-36"
+                      />
                     </Field>
                     <Button type="submit" variant="secondary">
                       Add pool
                     </Button>
                   </form>
                   {stagePools.map((p) => {
-                    const members = (assignments.data ?? []).filter((a) => a.pool_id === p.id).sort((a, b) => (a.pool_rank ?? 99) - (b.pool_rank ?? 99));
-                    const assigned = new Set((assignments.data ?? []).filter((a) => stagePools.some((sp) => sp.id === a.pool_id)).map((a) => a.participant_id));
+                    const members = (assignments.data ?? [])
+                      .filter((a) => a.pool_id === p.id)
+                      .sort((a, b) => (a.pool_rank ?? 99) - (b.pool_rank ?? 99));
+                    const assigned = new Set(
+                      (assignments.data ?? [])
+                        .filter((a) => stagePools.some((sp) => sp.id === a.pool_id))
+                        .map((a) => a.participant_id),
+                    );
                     return (
                       <div key={p.id} className="rounded-lg border border-slate-300 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="font-bold">
-                            Pool {p.pool_name} {p.venue_area && <span className="font-normal text-slate-600">· {p.venue_area}</span>}
+                            Pool {p.pool_name}{' '}
+                            {p.venue_area && (
+                              <span className="font-normal text-slate-600">· {p.venue_area}</span>
+                            )}
                           </p>
-                          <Button variant="secondary" onClick={() => e.wrap(() => recompute.mutateAsync(p.id))()}>
+                          <Button
+                            variant="secondary"
+                            onClick={() => e.wrap(() => recompute.mutateAsync(p.id))()}
+                          >
                             Recompute standings
                           </Button>
                         </div>
                         <ul className="mt-2 space-y-1">
                           {members.map((m) => (
-                            <li key={m.id} className="flex flex-wrap items-center gap-2 rounded bg-slate-50 px-2 py-1 text-sm">
-                              <span className="min-w-[8rem] flex-1 font-semibold">{team(m.participant_id)}</span>
+                            <li
+                              key={m.id}
+                              className="flex flex-wrap items-center gap-2 rounded bg-slate-50 px-2 py-1 text-sm"
+                            >
+                              <span className="min-w-[8rem] flex-1 font-semibold">
+                                {team(m.participant_id)}
+                              </span>
                               <span className="tabular-nums">
                                 {m.wins}-{m.losses}-{m.ties} · {Number(m.point_differential)}
                               </span>
@@ -258,19 +354,32 @@ function StagesTab({ event }: { event: EventRow }) {
                                 inputMode="numeric"
                                 defaultValue={m.pool_rank ?? ''}
                                 onBlur={(ev) =>
-                                  upd.mutate({ table: 'pool_assignments', id: m.id, values: { pool_rank: intOrNull(ev.target.value) } })
+                                  upd.mutate({
+                                    table: 'pool_assignments',
+                                    id: m.id,
+                                    values: { pool_rank: intOrNull(ev.target.value) },
+                                  })
                                 }
                               />
                               <Select
                                 aria-label="Advancement"
                                 className="w-40"
-                                value={m.advanced ? m.advancement_type ?? 'automatic' : m.advancement_type === 'did_not_advance' ? 'did_not_advance' : ''}
+                                value={
+                                  m.advanced
+                                    ? (m.advancement_type ?? 'automatic')
+                                    : m.advancement_type === 'did_not_advance'
+                                      ? 'did_not_advance'
+                                      : ''
+                                }
                                 onChange={(ev) => {
                                   const v = ev.target.value;
                                   upd.mutate({
                                     table: 'pool_assignments',
                                     id: m.id,
-                                    values: { advanced: v === 'automatic' || v === 'wild_card', advancement_type: v || null },
+                                    values: {
+                                      advanced: v === 'automatic' || v === 'wild_card',
+                                      advancement_type: v || null,
+                                    },
                                   });
                                 }}
                               >
@@ -279,7 +388,11 @@ function StagesTab({ event }: { event: EventRow }) {
                                 <option value="wild_card">Wild card</option>
                                 <option value="did_not_advance">Did not advance</option>
                               </Select>
-                              <Button variant="ghost" aria-label="Remove from pool" onClick={() => del.mutate({ table: 'pool_assignments', id: m.id })}>
+                              <Button
+                                variant="ghost"
+                                aria-label="Remove from pool"
+                                onClick={() => del.mutate({ table: 'pool_assignments', id: m.id })}
+                              >
                                 <Trash2 className="h-4 w-4" aria-hidden />
                               </Button>
                             </li>
@@ -293,7 +406,11 @@ function StagesTab({ event }: { event: EventRow }) {
                             await e.wrap(() =>
                               save.mutateAsync({
                                 table: 'pool_assignments',
-                                values: { pool_id: p.id, participant_id: v.participant_id, pool_seed: intOrNull(v.pool_seed) },
+                                values: {
+                                  pool_id: p.id,
+                                  participant_id: v.participant_id,
+                                  pool_seed: intOrNull(v.pool_seed),
+                                },
                               }),
                             )();
                           }}
@@ -308,7 +425,13 @@ function StagesTab({ event }: { event: EventRow }) {
                                 </option>
                               ))}
                           </Select>
-                          <Input name="pool_seed" aria-label="Pool seed" placeholder="Seed" className="w-20" inputMode="numeric" />
+                          <Input
+                            name="pool_seed"
+                            aria-label="Pool seed"
+                            placeholder="Seed"
+                            className="w-20"
+                            inputMode="numeric"
+                          />
                           <Button type="submit" variant="secondary">
                             Add
                           </Button>
@@ -322,7 +445,9 @@ function StagesTab({ event }: { event: EventRow }) {
           );
         })
       )}
-      {(upd.error || del.error) && <Notice tone="error">{friendlyError(upd.error ?? del.error)}</Notice>}
+      {(upd.error || del.error) && (
+        <Notice tone="error">{friendlyError(upd.error ?? del.error)}</Notice>
+      )}
       {confirm.dialog}
     </div>
   );
@@ -332,14 +457,18 @@ function StagesTab({ event }: { event: EventRow }) {
 function SessionsTab({ event }: { event: EventRow }) {
   const sessions = useSessions(event.id);
   const save = useOpsMutation((values: object) => db.insert('event_sessions', values));
-  const upd = useOpsMutation((args: { id: string; values: object }) => db.update('event_sessions', args.id, args.values));
+  const upd = useOpsMutation((args: { id: string; values: object }) =>
+    db.update('event_sessions', args.id, args.values),
+  );
   const del = useOpsMutation((id: string) => db.remove('event_sessions', id));
   const confirm = useConfirm();
   const e = useErr();
   if (sessions.isLoading) return <Loading />;
   return (
     <div className="space-y-4">
-      <Notice tone="info">The preliminary schedule is editable. Changes appear on the public schedule.</Notice>
+      <Notice tone="info">
+        The preliminary schedule is editable. Changes appear on the public schedule.
+      </Notice>
       <Card title="Add session">
         <form
           className="grid gap-3 sm:grid-cols-3"
@@ -347,7 +476,8 @@ function SessionsTab({ event }: { event: EventRow }) {
             const v = formValues(ev);
             const form = ev.currentTarget;
             if (!v.session_date) return e.setErr('Date is required.');
-            if (v.start_time && v.end_time && v.end_time <= v.start_time) return e.setErr('End time must be after start time.');
+            if (v.start_time && v.end_time && v.end_time <= v.start_time)
+              return e.setErr('End time must be after start time.');
             const ok = await e.wrap(() =>
               save.mutateAsync({
                 event_id: event.id,
@@ -395,15 +525,27 @@ function SessionsTab({ event }: { event: EventRow }) {
       ) : (
         <ul className="space-y-2">
           {(sessions.data ?? []).map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3">
+            <li
+              key={s.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3"
+            >
               <span>
                 <span className="block font-bold">
-                  {formatDate(s.session_date, true)} · {formatTime(s.start_time)}–{formatTime(s.end_time)}
+                  {formatDate(s.session_date, true)} · {formatTime(s.start_time)}–
+                  {formatTime(s.end_time)}
                 </span>
-                <span className="text-sm text-slate-700">{[s.venue, s.venue_area, s.session_purpose, s.responsible_unit].filter(Boolean).join(' · ')}</span>
+                <span className="text-sm text-slate-700">
+                  {[s.venue, s.venue_area, s.session_purpose, s.responsible_unit]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
               </span>
               <span className="flex gap-2">
-                <Select aria-label="Session status" value={s.status} onChange={(ev) => upd.mutate({ id: s.id, values: { status: ev.target.value } })}>
+                <Select
+                  aria-label="Session status"
+                  value={s.status}
+                  onChange={(ev) => upd.mutate({ id: s.id, values: { status: ev.target.value } })}
+                >
                   {['planned', 'active', 'complete', 'cancelled'].map((x) => (
                     <option key={x} value={x}>
                       {humanize(x)}
@@ -413,7 +555,12 @@ function SessionsTab({ event }: { event: EventRow }) {
                 <Button
                   variant="ghost"
                   aria-label="Delete session"
-                  onClick={() => confirm.ask({ title: 'Delete this session?', danger: true, confirmLabel: 'Delete' }, () => del.mutateAsync(s.id))}
+                  onClick={() =>
+                    confirm.ask(
+                      { title: 'Delete this session?', danger: true, confirmLabel: 'Delete' },
+                      () => del.mutateAsync(s.id),
+                    )
+                  }
                 >
                   <Trash2 className="h-5 w-5" aria-hidden />
                 </Button>
@@ -435,9 +582,15 @@ function MatchesTab({ event }: { event: EventRow }) {
   const matches = useMatches(event.id);
   const mps = useMatchParticipants(event.id);
   const participants = useParticipants(event.id);
-  const save = useOpsMutation((args: { table: string; values: object }) => db.insert(args.table, args.values));
-  const upd = useOpsMutation((args: { id: string; values: object }) => db.update('matches', args.id, args.values));
-  const del = useOpsMutation((args: { table: string; id: string }) => db.remove(args.table, args.id));
+  const save = useOpsMutation((args: { table: string; values: object }) =>
+    db.insert(args.table, args.values),
+  );
+  const upd = useOpsMutation((args: { id: string; values: object }) =>
+    db.update('matches', args.id, args.values),
+  );
+  const del = useOpsMutation((args: { table: string; id: string }) =>
+    db.remove(args.table, args.id),
+  );
   const confirm = useConfirm();
   const e = useErr();
   const [editing, setEditing] = useState<Match | null>(null);
@@ -455,7 +608,9 @@ function MatchesTab({ event }: { event: EventRow }) {
           match_code: m.match_code,
           match_date: m.match_date,
           start_time: m.start_time,
-          participant_ids: (mps.data ?? []).filter((p) => p.match_id === m.id && p.participant_id).map((p) => p.participant_id!),
+          participant_ids: (mps.data ?? [])
+            .filter((p) => p.match_id === m.id && p.participant_id)
+            .map((p) => p.participant_id!),
         })),
         (id) => team(id),
       ),
@@ -464,7 +619,8 @@ function MatchesTab({ event }: { event: EventRow }) {
   );
 
   if (stages.isLoading || matches.isLoading) return <Loading />;
-  if ((stages.data ?? []).length === 0) return <Empty title="Create a stage first (Stages & Pools tab)." />;
+  if ((stages.data ?? []).length === 0)
+    return <Empty title="Create a stage first (Stages & Pools tab)." />;
 
   const matchForm = (m: Match | null) => (
     <form
@@ -493,7 +649,11 @@ function MatchesTab({ event }: { event: EventRow }) {
           next_loser_slot: orNull(v.next_loser_slot),
           public_visible: v.public_visible === 'on',
         };
-        const ok = await e.wrap(() => (m ? upd.mutateAsync({ id: m.id, values }) : save.mutateAsync({ table: 'matches', values })))();
+        const ok = await e.wrap(() =>
+          m
+            ? upd.mutateAsync({ id: m.id, values })
+            : save.mutateAsync({ table: 'matches', values }),
+        )();
         if (ok) {
           if (m) setEditing(null);
           else form.reset();
@@ -501,7 +661,11 @@ function MatchesTab({ event }: { event: EventRow }) {
       }}
     >
       <Field label="Match code" htmlFor="m-code" hint="Unique, e.g. SOC-R1-M1">
-        <Input id="m-code" name="match_code" defaultValue={m?.match_code ?? `${event.event_code}-`} />
+        <Input
+          id="m-code"
+          name="match_code"
+          defaultValue={m?.match_code ?? `${event.event_code}-`}
+        />
       </Field>
       <Field label="Stage" htmlFor="m-stage">
         <Select id="m-stage" name="stage_id" defaultValue={m?.stage_id}>
@@ -526,7 +690,16 @@ function MatchesTab({ event }: { event: EventRow }) {
         <Select
           id="m-type"
           name="match_type"
-          defaultValue={m?.match_type ?? (event.format_type === 'heat_time' ? 'heat' : event.format_type === 'multi_station' ? 'multi_station' : event.format_type === 'weight_class' ? 'bout' : 'head_to_head')}
+          defaultValue={
+            m?.match_type ??
+            (event.format_type === 'heat_time'
+              ? 'heat'
+              : event.format_type === 'multi_station'
+                ? 'multi_station'
+                : event.format_type === 'weight_class'
+                  ? 'bout'
+                  : 'head_to_head')
+          }
         >
           {MATCH_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -536,13 +709,28 @@ function MatchesTab({ event }: { event: EventRow }) {
         </Select>
       </Field>
       <Field label="Round name" htmlFor="m-round">
-        <Input id="m-round" name="round_name" defaultValue={m?.round_name ?? ''} placeholder="Quarterfinal, 3rd Place, Heat 1, 185 lb…" />
+        <Input
+          id="m-round"
+          name="round_name"
+          defaultValue={m?.round_name ?? ''}
+          placeholder="Quarterfinal, 3rd Place, Heat 1, 185 lb…"
+        />
       </Field>
       <Field label="Round order" htmlFor="m-ro">
-        <Input id="m-ro" name="round_order" inputMode="numeric" defaultValue={m?.round_order ?? 1} />
+        <Input
+          id="m-ro"
+          name="round_order"
+          inputMode="numeric"
+          defaultValue={m?.round_order ?? 1}
+        />
       </Field>
       <Field label="Match number" htmlFor="m-no">
-        <Input id="m-no" name="match_number" inputMode="numeric" defaultValue={m?.match_number ?? ''} />
+        <Input
+          id="m-no"
+          name="match_number"
+          inputMode="numeric"
+          defaultValue={m?.match_number ?? ''}
+        />
       </Field>
       <Field label="Session" htmlFor="m-session" hint="Sets the venue used for scorer access">
         <Select id="m-session" name="session_id" defaultValue={m?.session_id ?? ''}>
@@ -558,38 +746,58 @@ function MatchesTab({ event }: { event: EventRow }) {
         <Input id="m-date" name="match_date" type="date" defaultValue={m?.match_date ?? ''} />
       </Field>
       <Field label="Start time" htmlFor="m-time">
-        <Input id="m-time" name="start_time" type="time" defaultValue={m?.start_time?.slice(0, 5) ?? ''} />
+        <Input
+          id="m-time"
+          name="start_time"
+          type="time"
+          defaultValue={m?.start_time?.slice(0, 5) ?? ''}
+        />
       </Field>
       <Field label="Area / court / field" htmlFor="m-area">
         <Input id="m-area" name="venue_area" defaultValue={m?.venue_area ?? ''} />
       </Field>
       <Field label="Public" htmlFor="m-public">
         <label className="flex min-h-touch items-center gap-2">
-          <input id="m-public" type="checkbox" name="public_visible" defaultChecked={m?.public_visible ?? true} className="h-6 w-6 accent-brand" />
+          <input
+            id="m-public"
+            type="checkbox"
+            name="public_visible"
+            defaultChecked={m?.public_visible ?? true}
+            className="h-6 w-6 accent-brand"
+          />
           Show on public pages
         </label>
       </Field>
       <Field label="Winner goes to" htmlFor="m-nw">
         <Select id="m-nw" name="next_winner_match_id" defaultValue={m?.next_winner_match_id ?? ''}>
           <option value="">—</option>
-          {list.filter((x) => x.id !== m?.id).map((x) => (
-            <option key={x.id} value={x.id}>
-              {x.match_code}
-            </option>
-          ))}
+          {list
+            .filter((x) => x.id !== m?.id)
+            .map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.match_code}
+              </option>
+            ))}
         </Select>
       </Field>
       <Field label="Winner slot" htmlFor="m-nws">
-        <Input id="m-nws" name="next_winner_slot" defaultValue={m?.next_winner_slot ?? ''} placeholder="A / B / Lane 1" />
+        <Input
+          id="m-nws"
+          name="next_winner_slot"
+          defaultValue={m?.next_winner_slot ?? ''}
+          placeholder="A / B / Lane 1"
+        />
       </Field>
       <Field label="Loser goes to (3rd place / consolation)" htmlFor="m-nl">
         <Select id="m-nl" name="next_loser_match_id" defaultValue={m?.next_loser_match_id ?? ''}>
           <option value="">—</option>
-          {list.filter((x) => x.id !== m?.id).map((x) => (
-            <option key={x.id} value={x.id}>
-              {x.match_code}
-            </option>
-          ))}
+          {list
+            .filter((x) => x.id !== m?.id)
+            .map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.match_code}
+              </option>
+            ))}
         </Select>
       </Field>
       <Field label="Loser slot" htmlFor="m-nls">
@@ -626,8 +834,13 @@ function MatchesTab({ event }: { event: EventRow }) {
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
           {list.map((m) => {
-            const slots = (mps.data ?? []).filter((p) => p.match_id === m.id).sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }));
-            const warn = headToHeadWarning(m.match_type, slots.filter((s) => s.participant_id).length);
+            const slots = (mps.data ?? [])
+              .filter((p) => p.match_id === m.id)
+              .sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }));
+            const warn = headToHeadWarning(
+              m.match_type,
+              slots.filter((s) => s.participant_id).length,
+            );
             const stage = stages.data?.find((s) => s.id === m.stage_id);
             const inMatch = new Set(slots.map((s) => s.participant_id));
             return (
@@ -636,26 +849,46 @@ function MatchesTab({ event }: { event: EventRow }) {
                   <span>
                     <span className="block font-bold">{m.match_code}</span>
                     <span className="text-sm text-slate-700">
-                      {[stage?.stage_name, m.round_name, m.match_number && `#${m.match_number}`, humanize(m.match_type), formatDate(m.match_date), formatTime(m.start_time)]
+                      {[
+                        stage?.stage_name,
+                        m.round_name,
+                        m.match_number && `#${m.match_number}`,
+                        humanize(m.match_type),
+                        formatDate(m.match_date),
+                        formatTime(m.start_time),
+                      ]
                         .filter(Boolean)
                         .join(' · ')}
                     </span>
                   </span>
                   <MatchStatusBadge status={m.status} />
                 </div>
-                {warn && <Notice tone="warn" className="mt-2">{warn}</Notice>}
+                {warn && (
+                  <Notice tone="warn" className="mt-2">
+                    {warn}
+                  </Notice>
+                )}
                 <ul className="mt-2 space-y-1">
                   {slots.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-2 rounded bg-slate-50 px-2 py-1 text-sm">
+                    <li
+                      key={s.id}
+                      className="flex items-center justify-between gap-2 rounded bg-slate-50 px-2 py-1 text-sm"
+                    >
                       <span>
-                        <strong>{s.slot}</strong> · {team(s.participant_id)} <span className="text-slate-600">({humanize(s.source_type)})</span>
+                        <strong>{s.slot}</strong> · {team(s.participant_id)}{' '}
+                        <span className="text-slate-600">({humanize(s.source_type)})</span>
                       </span>
                       <Button
                         variant="ghost"
                         aria-label={`Remove slot ${s.slot}`}
                         onClick={() =>
-                          confirm.ask({ title: `Remove ${team(s.participant_id)} from ${m.match_code}?`, danger: true, confirmLabel: 'Remove' }, () =>
-                            del.mutateAsync({ table: 'match_participants', id: s.id }),
+                          confirm.ask(
+                            {
+                              title: `Remove ${team(s.participant_id)} from ${m.match_code}?`,
+                              danger: true,
+                              confirmLabel: 'Remove',
+                            },
+                            () => del.mutateAsync({ table: 'match_participants', id: s.id }),
                           )
                         }
                       >
@@ -670,14 +903,34 @@ function MatchesTab({ event }: { event: EventRow }) {
                     const v = formValues(ev);
                     const form = ev.currentTarget;
                     if (!v.slot || !v.participant_id) return e.setErr('Choose a slot and a team.');
-                    if (slots.some((s) => s.slot === v.slot)) return e.setErr(`Slot ${v.slot} is already used in ${m.match_code}. Remove it first or use Match Management to advance.`);
+                    if (slots.some((s) => s.slot === v.slot))
+                      return e.setErr(
+                        `Slot ${v.slot} is already used in ${m.match_code}. Remove it first or use Match Management to advance.`,
+                      );
                     const ok = await e.wrap(() =>
-                      save.mutateAsync({ table: 'match_participants', values: { match_id: m.id, slot: v.slot, participant_id: v.participant_id, source_type: v.source_type } }),
+                      save.mutateAsync({
+                        table: 'match_participants',
+                        values: {
+                          match_id: m.id,
+                          slot: v.slot,
+                          participant_id: v.participant_id,
+                          source_type: v.source_type,
+                        },
+                      }),
                     )();
                     if (ok) form.reset();
                   }}
                 >
-                  <Input name="slot" aria-label="Slot" placeholder="Slot" className="w-24" defaultValue={['A', 'B'].find((x) => !slots.some((s) => s.slot === x)) ?? `Lane ${slots.length + 1}`} />
+                  <Input
+                    name="slot"
+                    aria-label="Slot"
+                    placeholder="Slot"
+                    className="w-24"
+                    defaultValue={
+                      ['A', 'B'].find((x) => !slots.some((s) => s.slot === x)) ??
+                      `Lane ${slots.length + 1}`
+                    }
+                  />
                   <Select name="participant_id" aria-label="Team" className="w-52">
                     <option value="">Team…</option>
                     {(participants.data ?? [])
@@ -689,7 +942,12 @@ function MatchesTab({ event }: { event: EventRow }) {
                         </option>
                       ))}
                   </Select>
-                  <Select name="source_type" aria-label="Source" className="w-36" defaultValue="seed">
+                  <Select
+                    name="source_type"
+                    aria-label="Source"
+                    className="w-36"
+                    defaultValue="seed"
+                  >
                     {['seed', 'pool_rank', 'wild_card', 'manual'].map((x) => (
                       <option key={x} value={x}>
                         {humanize(x)}
@@ -708,8 +966,14 @@ function MatchesTab({ event }: { event: EventRow }) {
                     variant="ghost"
                     className="text-red-700"
                     onClick={() =>
-                      confirm.ask({ title: `Delete match ${m.match_code}?`, body: 'Its participants and results are deleted too.', danger: true, confirmLabel: 'Delete' }, () =>
-                        del.mutateAsync({ table: 'matches', id: m.id }),
+                      confirm.ask(
+                        {
+                          title: `Delete match ${m.match_code}?`,
+                          body: 'Its participants and results are deleted too.',
+                          danger: true,
+                          confirmLabel: 'Delete',
+                        },
+                        () => del.mutateAsync({ table: 'matches', id: m.id }),
                       )
                     }
                   >
@@ -750,7 +1014,10 @@ function ImportTab({ event }: { event: EventRow }) {
       const code = (r.match_code ?? '').toUpperCase();
       const stageId = stageByOrder.get(r.stage_order ?? '');
       if (!code || !stageId) {
-        out.push({ tone: 'error', text: `Skipped row "${code || '?'}": missing match_code or unknown stage_order "${r.stage_order}".` });
+        out.push({
+          tone: 'error',
+          text: `Skipped row "${code || '?'}": missing match_code or unknown stage_order "${r.stage_order}".`,
+        });
         continue;
       }
       if (created.has(code)) {
@@ -776,22 +1043,33 @@ function ImportTab({ event }: { event: EventRow }) {
         });
         out.push({ tone: 'success', text: `Created ${code}` });
         created.set(code, 'new');
-        pending.push({ code, nw: r.next_winner_code, nws: r.next_winner_slot, nl: r.next_loser_code, nls: r.next_loser_slot });
+        pending.push({
+          code,
+          nw: r.next_winner_code,
+          nws: r.next_winner_slot,
+          nl: r.next_loser_code,
+          nls: r.next_loser_slot,
+        });
       } catch (x) {
         out.push({ tone: 'error', text: `${code}: ${friendlyError(x)}` });
       }
     }
     // Second pass: link next-match pointers now that all codes exist.
     if (pending.some((p) => p.nw || p.nl)) {
-      const { data } = await supabase.from('matches').select('id, match_code').eq('event_id', event.id);
-      const idOf = new Map((data ?? []).map((m: { id: string; match_code: string }) => [m.match_code, m.id]));
+      const { data } = await supabase
+        .from('matches')
+        .select('id, match_code')
+        .eq('event_id', event.id);
+      const idOf = new Map(
+        (data ?? []).map((m: { id: string; match_code: string }) => [m.match_code, m.id]),
+      );
       for (const p of pending) {
         if (!p.nw && !p.nl) continue;
         try {
           await db.update('matches', idOf.get(p.code)!, {
-            next_winner_match_id: p.nw ? idOf.get(p.nw.toUpperCase()) ?? null : null,
+            next_winner_match_id: p.nw ? (idOf.get(p.nw.toUpperCase()) ?? null) : null,
             next_winner_slot: p.nws || null,
-            next_loser_match_id: p.nl ? idOf.get(p.nl.toUpperCase()) ?? null : null,
+            next_loser_match_id: p.nl ? (idOf.get(p.nl.toUpperCase()) ?? null) : null,
             next_loser_slot: p.nls || null,
           });
         } catch (x) {
@@ -804,18 +1082,31 @@ function ImportTab({ event }: { event: EventRow }) {
 
   const importSlots = async () => {
     const out: typeof log = [];
-    const { data } = await supabase.from('matches').select('id, match_code').eq('event_id', event.id);
-    const idOf = new Map((data ?? []).map((m: { id: string; match_code: string }) => [m.match_code, m.id]));
+    const { data } = await supabase
+      .from('matches')
+      .select('id, match_code')
+      .eq('event_id', event.id);
+    const idOf = new Map(
+      (data ?? []).map((m: { id: string; match_code: string }) => [m.match_code, m.id]),
+    );
     const bySeed = new Map((participants.data ?? []).map((p) => [String(p.seed), p.id]));
     for (const r of parseCsv(slotCsv)) {
       const mid = idOf.get((r.match_code ?? '').toUpperCase());
       const pid = bySeed.get(r.seed ?? '');
       if (!mid || !pid || !r.slot) {
-        out.push({ tone: 'error', text: `Skipped ${r.match_code}/${r.slot}: unknown match code or seed "${r.seed}".` });
+        out.push({
+          tone: 'error',
+          text: `Skipped ${r.match_code}/${r.slot}: unknown match code or seed "${r.seed}".`,
+        });
         continue;
       }
       try {
-        await db.insert('match_participants', { match_id: mid, slot: r.slot, participant_id: pid, source_type: 'seed' });
+        await db.insert('match_participants', {
+          match_id: mid,
+          slot: r.slot,
+          participant_id: pid,
+          source_type: 'seed',
+        });
         out.push({ tone: 'success', text: `${r.match_code} slot ${r.slot} ← seed ${r.seed}` });
       } catch (x) {
         out.push({ tone: 'error', text: `${r.match_code}/${r.slot}: ${friendlyError(x)}` });
@@ -827,18 +1118,32 @@ function ImportTab({ event }: { event: EventRow }) {
   return (
     <div className="space-y-4">
       <Notice tone="info">
-        Import never overwrites existing matches. Stages must exist first (referenced by stage order). Times use 24-hour HH:MM.
-        Teams are placed by their event seed.
+        Import never overwrites existing matches. Stages must exist first (referenced by stage
+        order). Times use 24-hour HH:MM. Teams are placed by their event seed.
       </Notice>
       <Card title="1. Matches CSV">
-        <TextArea aria-label="Matches CSV" className="font-mono text-sm" rows={8} value={matchCsv} onChange={(e) => setMatchCsv(e.target.value)} />
-        <p className="mt-1 text-xs text-slate-600">Example: SOC-QF1,1,Quarterfinal,1,1,head_to_head,2026-12-08,09:00,Field 1,SOC-SF1,A,,</p>
+        <TextArea
+          aria-label="Matches CSV"
+          className="font-mono text-sm"
+          rows={8}
+          value={matchCsv}
+          onChange={(e) => setMatchCsv(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-slate-600">
+          Example: SOC-QF1,1,Quarterfinal,1,1,head_to_head,2026-12-08,09:00,Field 1,SOC-SF1,A,,
+        </p>
         <Button className="mt-2" disabled={run.isPending} onClick={() => run.mutate(importMatches)}>
           Import matches
         </Button>
       </Card>
       <Card title="2. Match participants CSV (by seed)">
-        <TextArea aria-label="Participants CSV" className="font-mono text-sm" rows={6} value={slotCsv} onChange={(e) => setSlotCsv(e.target.value)} />
+        <TextArea
+          aria-label="Participants CSV"
+          className="font-mono text-sm"
+          rows={6}
+          value={slotCsv}
+          onChange={(e) => setSlotCsv(e.target.value)}
+        />
         <p className="mt-1 text-xs text-slate-600">Example: SOC-QF1,A,1</p>
         <Button className="mt-2" disabled={run.isPending} onClick={() => run.mutate(importSlots)}>
           Import participants
@@ -848,7 +1153,16 @@ function ImportTab({ event }: { event: EventRow }) {
         <Card title="Import results">
           <ul className="space-y-1 text-sm">
             {log.map((l, i) => (
-              <li key={i} className={l.tone === 'error' ? 'text-red-800' : l.tone === 'warn' ? 'text-amber-800' : 'text-green-800'}>
+              <li
+                key={i}
+                className={
+                  l.tone === 'error'
+                    ? 'text-red-800'
+                    : l.tone === 'warn'
+                      ? 'text-amber-800'
+                      : 'text-green-800'
+                }
+              >
                 {l.text}
               </li>
             ))}

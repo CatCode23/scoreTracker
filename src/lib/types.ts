@@ -2,7 +2,13 @@
 // `supabase gen types typescript` as a follow-on if the schema grows.
 
 export type Role = 'scorer' | 'venue_lead' | 'sport_manager' | 'operations_admin' | 'read_only';
-export const ROLES: Role[] = ['scorer', 'venue_lead', 'sport_manager', 'operations_admin', 'read_only'];
+export const ROLES: Role[] = [
+  'scorer',
+  'venue_lead',
+  'sport_manager',
+  'operations_admin',
+  'read_only',
+];
 export const ROLE_LABELS: Record<Role, string> = {
   scorer: 'Scorer',
   venue_lead: 'Venue Lead',
@@ -27,26 +33,50 @@ export const FORMAT_LABELS: Record<FormatType, string> = {
   weight_class: 'Weight classes / bouts',
 };
 
-export type MatchType = 'head_to_head' | 'bout' | 'pool_game' | 'heat' | 'timed_event' | 'multi_station';
-export const MATCH_TYPES: MatchType[] = ['head_to_head', 'bout', 'pool_game', 'heat', 'timed_event', 'multi_station'];
-export type MatchStatus =
-  | 'planned'
-  | 'ready'
-  | 'in_progress'
-  | 'submitted'
-  | 'official'
-  | 'complete'
-  | 'delayed'
-  | 'void';
-export const MATCH_STATUSES: MatchStatus[] = [
-  'planned', 'ready', 'in_progress', 'submitted', 'official', 'complete', 'delayed', 'void',
+export type MatchType =
+  'head_to_head' | 'bout' | 'pool_game' | 'heat' | 'timed_event' | 'multi_station';
+export const MATCH_TYPES: MatchType[] = [
+  'head_to_head',
+  'bout',
+  'pool_game',
+  'heat',
+  'timed_event',
+  'multi_station',
 ];
-export type ResultMethod = 'score' | 'time' | 'placement' | 'technical_score' | 'forfeit' | 'disqualification';
-export const RESULT_METHODS: ResultMethod[] = ['score', 'time', 'placement', 'technical_score', 'forfeit', 'disqualification'];
+export type MatchStatus =
+  'planned' | 'ready' | 'in_progress' | 'submitted' | 'official' | 'complete' | 'delayed' | 'void';
+export const MATCH_STATUSES: MatchStatus[] = [
+  'planned',
+  'ready',
+  'in_progress',
+  'submitted',
+  'official',
+  'complete',
+  'delayed',
+  'void',
+];
+export type ResultMethod =
+  'score' | 'time' | 'placement' | 'technical_score' | 'forfeit' | 'disqualification';
+export const RESULT_METHODS: ResultMethod[] = [
+  'score',
+  'time',
+  'placement',
+  'technical_score',
+  'forfeit',
+  'disqualification',
+];
 export type ResultStatus = 'draft' | 'submitted' | 'official' | 'returned' | 'disputed' | 'void';
 export type StageType = 'pool' | 'elimination' | 'consolation' | 'heat' | 'placement' | 'final';
-export const STAGE_TYPES: StageType[] = ['pool', 'elimination', 'consolation', 'heat', 'placement', 'final'];
-export type SourceType = 'seed' | 'pool_rank' | 'winner_of_match' | 'loser_of_match' | 'wild_card' | 'manual';
+export const STAGE_TYPES: StageType[] = [
+  'pool',
+  'elimination',
+  'consolation',
+  'heat',
+  'placement',
+  'final',
+];
+export type SourceType =
+  'seed' | 'pool_rank' | 'winner_of_match' | 'loser_of_match' | 'wild_card' | 'manual';
 export type CheckInStatus = 'registered' | 'checked_in' | 'no_show' | 'withdrawn';
 
 export interface Profile {

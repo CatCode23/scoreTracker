@@ -49,7 +49,8 @@ export function parseDuration(input: string): number | null {
   if (v === '') return null;
   if (/^\d+(\.\d+)?$/.test(v)) return Number(v);
   const parts = v.split(':');
-  if (parts.length < 2 || parts.length > 3 || parts.some((p) => !/^\d+(\.\d+)?$/.test(p))) return NaN;
+  if (parts.length < 2 || parts.length > 3 || parts.some((p) => !/^\d+(\.\d+)?$/.test(p)))
+    return NaN;
   const nums = parts.map(Number);
   if (nums.slice(1).some((n) => n >= 60)) return NaN;
   return nums.reduce((acc, n) => acc * 60 + n, 0);

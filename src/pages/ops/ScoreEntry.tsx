@@ -28,16 +28,28 @@ export function ScoreEntry() {
   const matches = useMemo(
     () =>
       L.matches
-        .filter((m) => m.event_id === activeEvent && hasMatchRole(auth, m.event_id, L.venueOf(m), SUBMIT_ROLES))
+        .filter(
+          (m) =>
+            m.event_id === activeEvent &&
+            hasMatchRole(auth, m.event_id, L.venueOf(m), SUBMIT_ROLES),
+        )
         .filter((m) => OPEN.has(m.status) || m.status === 'submitted')
-        .sort((a, b) => `${a.match_date}${a.start_time}${a.match_code}`.localeCompare(`${b.match_date}${b.start_time}${b.match_code}`)),
+        .sort((a, b) =>
+          `${a.match_date}${a.start_time}${a.match_code}`.localeCompare(
+            `${b.match_date}${b.start_time}${b.match_code}`,
+          ),
+        ),
     [L, activeEvent, auth],
   );
   const match = matches.find((m) => m.id === matchId);
   const participants = (mps.data ?? [])
     .filter((p) => p.match_id === matchId && p.participant_id)
     .sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }))
-    .map((p) => ({ participant_id: p.participant_id!, slot: p.slot, label: L.team(p.participant_id) }));
+    .map((p) => ({
+      participant_id: p.participant_id!,
+      slot: p.slot,
+      label: L.team(p.participant_id),
+    }));
 
   const submit = useOpsMutation(async (payload: ResultPayload) => {
     await db.insert('match_results', {
@@ -51,18 +63,24 @@ export function ScoreEntry() {
   if (L.loading) return <Loading />;
   if (L.error) return <ErrorState error={L.error} />;
 
-  const myResults = (mine.data ?? []).filter((r) => r.submitted_by === auth.session?.user.id).slice(0, 15);
+  const myResults = (mine.data ?? [])
+    .filter((r) => r.submitted_by === auth.session?.user.id)
+    .slice(0, 15);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageHeader title="Score Entry" actions={<SyncButton />} />
       <Notice tone="info" title="Field-use guide">
-        <p className="text-base font-semibold">1. Select Match. 2. Enter result. 3. Confirm referee approval. 4. Submit.</p>
+        <p className="text-base font-semibold">
+          1. Select Match. 2. Enter result. 3. Confirm referee approval. 4. Submit.
+        </p>
         <p className="mt-1">{OFFLINE_CONTINGENCY}</p>
       </Notice>
 
       {myEvents.length === 0 ? (
-        <Empty title="You are not assigned to score any event">Ask the operations cell for a scorer assignment.</Empty>
+        <Empty title="You are not assigned to score any event">
+          Ask the operations cell for a scorer assignment.
+        </Empty>
       ) : (
         <Card>
           <Field label="Event" htmlFor="event">
@@ -107,7 +125,9 @@ export function ScoreEntry() {
                         {m.match_code} · {m.round_name ?? `Round ${m.round_order}`}
                       </span>
                       <span className="block text-sm text-slate-700">
-                        {[formatDate(m.match_date), formatTime(m.start_time), m.venue_area].filter(Boolean).join(' · ')}
+                        {[formatDate(m.match_date), formatTime(m.start_time), m.venue_area]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </span>
                     </span>
                     <MatchStatusBadge status={m.status} />
@@ -123,23 +143,38 @@ export function ScoreEntry() {
         <Card title={`2–4. Enter result: ${match.match_code}`}>
           {match.status === 'submitted' ? (
             <Notice tone="warn" title="Awaiting Validation">
-              A result for this match has already been submitted. Use “Request correction” below if it is wrong.
+              A result for this match has already been submitted. Use “Request correction” below if
+              it is wrong.
             </Notice>
           ) : mps.isLoading ? (
             <Loading />
           ) : (
-            <ScoreEntryForm matchType={match.match_type} participants={participants} onSubmit={(p) => submit.mutateAsync(p).then(() => undefined)} />
+            <ScoreEntryForm
+              matchType={match.match_type}
+              participants={participants}
+              onSubmit={(p) => submit.mutateAsync(p).then(() => undefined)}
+            />
           )}
         </Card>
       )}
 
-      <Card title={<span className="flex items-center gap-2"><ClipboardList className="h-5 w-5" aria-hidden /> My recent submissions</span>}>
+      <Card
+        title={
+          <span className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" aria-hidden /> My recent submissions
+          </span>
+        }
+      >
         {myResults.length === 0 ? (
           <Empty title="No submissions yet" />
         ) : (
           <ul className="space-y-2">
             {myResults.map((r) => (
-              <MySubmission key={r.id} result={r} title={L.matchById.get(r.match_id)?.match_code ?? 'Match'} />
+              <MySubmission
+                key={r.id}
+                result={r}
+                title={L.matchById.get(r.match_id)?.match_code ?? 'Match'}
+              />
             ))}
           </ul>
         )}
@@ -183,10 +218,14 @@ function MySubmission({ result, title }: { result: MatchResult; title: string })
           className="mt-3 space-y-3"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (reason.trim().length < 3) return setMsg({ tone: 'error', text: 'A reason is required.' });
+            if (reason.trim().length < 3)
+              return setMsg({ tone: 'error', text: 'A reason is required.' });
             try {
               await request.mutateAsync(undefined);
-              setMsg({ tone: 'success', text: 'Correction requested. The sport manager will review it.' });
+              setMsg({
+                tone: 'success',
+                text: 'Correction requested. The sport manager will review it.',
+              });
               setOpen(false);
               setReason('');
             } catch (err) {
@@ -195,7 +234,11 @@ function MySubmission({ result, title }: { result: MatchResult; title: string })
           }}
         >
           <Field label="Correction type" htmlFor={`ct-${result.id}`}>
-            <Select id={`ct-${result.id}`} value={type} onChange={(e) => setType(e.target.value as Correction['correction_type'])}>
+            <Select
+              id={`ct-${result.id}`}
+              value={type}
+              onChange={(e) => setType(e.target.value as Correction['correction_type'])}
+            >
               <option value="score_correction">Score correction</option>
               <option value="winner_correction">Winner correction</option>
               <option value="placement_correction">Placement correction</option>
@@ -204,8 +247,15 @@ function MySubmission({ result, title }: { result: MatchResult; title: string })
               <option value="administrative">Administrative</option>
             </Select>
           </Field>
-          <Field label="What is wrong and what should it be? (required)" htmlFor={`cr-${result.id}`}>
-            <TextArea id={`cr-${result.id}`} value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Field
+            label="What is wrong and what should it be? (required)"
+            htmlFor={`cr-${result.id}`}
+          >
+            <TextArea
+              id={`cr-${result.id}`}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
           </Field>
           <div className="flex gap-2">
             <Button type="submit" disabled={request.isPending}>

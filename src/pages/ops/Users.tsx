@@ -14,26 +14,40 @@ export function Users() {
   const events = useEvents();
   const [q, setQ] = useState('');
   const confirm = useConfirm();
-  const upd = useOpsMutation(({ id, values }: { id: string; values: object }) => db.update('profiles', id, values));
+  const upd = useOpsMutation(({ id, values }: { id: string; values: object }) =>
+    db.update('profiles', id, values),
+  );
   const addA = useOpsMutation((values: object) => db.insert('user_assignments', values));
   const delA = useOpsMutation((id: string) => db.remove('user_assignments', id));
   const err = upd.error ?? addA.error ?? delA.error;
 
   if (profiles.isLoading || assignments.isLoading) return <Loading />;
   if (profiles.error) return <ErrorState error={profiles.error} />;
-  const list = (profiles.data ?? []).filter((p) => `${p.display_name} ${p.email}`.toLowerCase().includes(q.toLowerCase()));
-  const evName = (id: string | null) => (id ? events.data?.find((e) => e.id === id)?.event_name ?? '?' : 'All events');
+  const list = (profiles.data ?? []).filter((p) =>
+    `${p.display_name} ${p.email}`.toLowerCase().includes(q.toLowerCase()),
+  );
+  const evName = (id: string | null) =>
+    id ? (events.data?.find((e) => e.id === id)?.event_name ?? '?') : 'All events';
   const venues = [...new Set((events.data ?? []).map((e) => e.venue).filter(Boolean))] as string[];
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Users & Assignments" subtitle="Activate staff, set roles, and assign events/venues." />
+      <PageHeader
+        title="Users & Assignments"
+        subtitle="Activate staff, set roles, and assign events/venues."
+      />
       <Notice tone="info">
-        Create accounts with Supabase Dashboard → Authentication → Invite user. New sign-ins appear here as <strong>inactive</strong>. Scorers,
-        venue leads and sport managers also need an event assignment.
+        Create accounts with Supabase Dashboard → Authentication → Invite user. New sign-ins appear
+        here as <strong>inactive</strong>. Scorers, venue leads and sport managers also need an
+        event assignment.
       </Notice>
       {err && <Notice tone="error">{friendlyError(err)}</Notice>}
-      <Input aria-label="Search users" placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} />
+      <Input
+        aria-label="Search users"
+        placeholder="Search name or email"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
       {list.length === 0 ? (
         <Empty title="No users" />
       ) : (
@@ -47,17 +61,25 @@ export function Users() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <span>
                       <span className="block font-bold">
-                        {p.display_name || '(no name)'} {self && <span className="text-sm font-normal">(you)</span>}
+                        {p.display_name || '(no name)'}{' '}
+                        {self && <span className="text-sm font-normal">(you)</span>}
                       </span>
                       <span className="text-sm text-slate-700">{p.email}</span>
                     </span>
-                    {p.active ? <Badge className="bg-green-700 text-white">Active</Badge> : <Badge className="bg-amber-300">Inactive</Badge>}
+                    {p.active ? (
+                      <Badge className="bg-green-700 text-white">Active</Badge>
+                    ) : (
+                      <Badge className="bg-amber-300">Inactive</Badge>
+                    )}
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
                     <Input
                       aria-label="Display name"
                       defaultValue={p.display_name ?? ''}
-                      onBlur={(e) => e.target.value.trim() !== (p.display_name ?? '') && upd.mutate({ id: p.id, values: { display_name: e.target.value.trim() } })}
+                      onBlur={(e) =>
+                        e.target.value.trim() !== (p.display_name ?? '') &&
+                        upd.mutate({ id: p.id, values: { display_name: e.target.value.trim() } })
+                      }
                     />
                     <Select
                       aria-label="Primary role"
@@ -65,8 +87,12 @@ export function Users() {
                       disabled={self}
                       onChange={(e) => {
                         const role = e.target.value as Role;
-                        confirm.ask({ title: `Change ${p.email} to ${ROLE_LABELS[role]}?`, confirmLabel: 'Change role' }, () =>
-                          upd.mutateAsync({ id: p.id, values: { role } }),
+                        confirm.ask(
+                          {
+                            title: `Change ${p.email} to ${ROLE_LABELS[role]}?`,
+                            confirmLabel: 'Change role',
+                          },
+                          () => upd.mutateAsync({ id: p.id, values: { role } }),
                         );
                       }}
                     >
@@ -81,7 +107,11 @@ export function Users() {
                       disabled={self}
                       onClick={() =>
                         confirm.ask(
-                          { title: `${p.active ? 'Deactivate' : 'Activate'} ${p.email}?`, danger: p.active, confirmLabel: p.active ? 'Deactivate' : 'Activate' },
+                          {
+                            title: `${p.active ? 'Deactivate' : 'Activate'} ${p.email}?`,
+                            danger: p.active,
+                            confirmLabel: p.active ? 'Deactivate' : 'Activate',
+                          },
                           () => upd.mutateAsync({ id: p.id, values: { active: !p.active } }),
                         )
                       }
@@ -94,11 +124,28 @@ export function Users() {
                     {mine.length === 0 && <p className="text-sm text-slate-600">None</p>}
                     <ul className="mt-1 space-y-1">
                       {mine.map((a) => (
-                        <li key={a.id} className="flex items-center justify-between gap-2 rounded bg-slate-50 px-2 py-1 text-sm">
+                        <li
+                          key={a.id}
+                          className="flex items-center justify-between gap-2 rounded bg-slate-50 px-2 py-1 text-sm"
+                        >
                           <span>
-                            <strong>{ROLE_LABELS[a.assignment_role]}</strong> · {evName(a.event_id)} · {a.venue ?? 'All venues'}
+                            <strong>{ROLE_LABELS[a.assignment_role]}</strong> · {evName(a.event_id)}{' '}
+                            · {a.venue ?? 'All venues'}
                           </span>
-                          <Button variant="ghost" className="min-h-[36px] text-red-700" onClick={() => confirm.ask({ title: 'Remove assignment?', danger: true, confirmLabel: 'Remove' }, () => delA.mutateAsync(a.id))}>
+                          <Button
+                            variant="ghost"
+                            className="min-h-[36px] text-red-700"
+                            onClick={() =>
+                              confirm.ask(
+                                {
+                                  title: 'Remove assignment?',
+                                  danger: true,
+                                  confirmLabel: 'Remove',
+                                },
+                                () => delA.mutateAsync(a.id),
+                              )
+                            }
+                          >
                             Remove
                           </Button>
                         </li>
@@ -133,7 +180,12 @@ export function Users() {
                           </option>
                         ))}
                       </Select>
-                      <Input name="venue" aria-label="Venue (blank = all)" placeholder="Venue (blank = all)" list="venue-list" />
+                      <Input
+                        name="venue"
+                        aria-label="Venue (blank = all)"
+                        placeholder="Venue (blank = all)"
+                        list="venue-list"
+                      />
                       <Button type="submit" variant="secondary">
                         Add assignment
                       </Button>

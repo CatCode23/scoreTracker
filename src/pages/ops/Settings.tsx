@@ -3,7 +3,17 @@ import { db, useEvents, useOpsMutation, usePointsMatrix, useSettings } from '../
 import { FORMAT_LABELS, type EventRow, type FormatType } from '../../lib/types';
 import { friendlyError, supabase } from '../../lib/supabase';
 import { humanize } from '../../lib/domain/format';
-import { Button, Card, Checkbox, Field, Input, Notice, PageHeader, Select, TextArea } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  Input,
+  Notice,
+  PageHeader,
+  Select,
+  TextArea,
+} from '../../components/ui';
 import { ErrorState, Loading } from '../../components/states';
 import { useConfirm } from '../../components/ConfirmDialog';
 
@@ -14,13 +24,19 @@ export function Settings() {
   const confirm = useConfirm();
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [msg, setMsg] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
-  const updSetting = useOpsMutation(({ id, values }: { id: string; values: object }) => db.update('scoring_settings', id, values));
+  const updSetting = useOpsMutation(({ id, values }: { id: string; values: object }) =>
+    db.update('scoring_settings', id, values),
+  );
   const updMatrix = useOpsMutation(async ({ place, points }: { place: number; points: number }) => {
     const { error } = await supabase.from('points_matrix').update({ points }).eq('place', place);
     if (error) throw error;
   });
-  const addPlace = useOpsMutation((v: { place: number; points: number }) => db.insert('points_matrix', { ...v, description: `${v.place}th place` }));
-  const loadSchedule = useOpsMutation((replace: boolean) => db.rpc<number>('load_preliminary_schedule', { p_year: Number(year), p_replace: replace }));
+  const addPlace = useOpsMutation((v: { place: number; points: number }) =>
+    db.insert('points_matrix', { ...v, description: `${v.place}th place` }),
+  );
+  const loadSchedule = useOpsMutation((replace: boolean) =>
+    db.rpc<number>('load_preliminary_schedule', { p_year: Number(year), p_replace: replace }),
+  );
 
   if (settings.isLoading || matrix.isLoading || events.isLoading) return <Loading />;
   if (settings.error) return <ErrorState error={settings.error} />;
@@ -33,23 +49,39 @@ export function Settings() {
     <div className="space-y-4">
       <PageHeader title="Settings" subtitle="Operations admin only. All changes are audited." />
       {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
-      {(updSetting.error || updMatrix.error) && <Notice tone="error">{friendlyError(updSetting.error ?? updMatrix.error)}</Notice>}
+      {(updSetting.error || updMatrix.error) && (
+        <Notice tone="error">{friendlyError(updSetting.error ?? updMatrix.error)}</Notice>
+      )}
 
       <Card title="Preliminary schedule">
         <p className="text-sm text-slate-700">
-          Loads the known preliminary sessions (Dec 7–9) for the selected tournament year. Sessions remain editable on Match Setup. Current
-          year setting: <strong>{tYear?.numeric_value ?? 'not set'}</strong>.
+          Loads the known preliminary sessions (Dec 7–9) for the selected tournament year. Sessions
+          remain editable on Match Setup. Current year setting:{' '}
+          <strong>{tYear?.numeric_value ?? 'not set'}</strong>.
         </p>
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <Field label="Tournament year" htmlFor="year">
-            <Input id="year" inputMode="numeric" className="w-28" value={year} onChange={(e) => setYear(e.target.value)} />
+            <Input
+              id="year"
+              inputMode="numeric"
+              className="w-28"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            />
           </Field>
           <Button
             onClick={() =>
-              confirm.ask({ title: `Load preliminary schedule for ${year}?`, body: 'Events that already have sessions are skipped.', confirmLabel: 'Load' }, async () => {
-                const n = await loadSchedule.mutateAsync(false);
-                setMsg({ tone: 'success', text: `${n} sessions created.` });
-              })
+              confirm.ask(
+                {
+                  title: `Load preliminary schedule for ${year}?`,
+                  body: 'Events that already have sessions are skipped.',
+                  confirmLabel: 'Load',
+                },
+                async () => {
+                  const n = await loadSchedule.mutateAsync(false);
+                  setMsg({ tone: 'success', text: `${n} sessions created.` });
+                },
+              )
             }
           >
             Load schedule
@@ -58,7 +90,12 @@ export function Settings() {
             variant="danger"
             onClick={() =>
               confirm.ask(
-                { title: `Replace ALL sessions with the ${year} preliminary schedule?`, body: 'Existing sessions are deleted; matches keep their data but lose their session link.', danger: true, confirmLabel: 'Replace' },
+                {
+                  title: `Replace ALL sessions with the ${year} preliminary schedule?`,
+                  body: 'Existing sessions are deleted; matches keep their data but lose their session link.',
+                  danger: true,
+                  confirmLabel: 'Replace',
+                },
                 async () => {
                   const n = await loadSchedule.mutateAsync(true);
                   setMsg({ tone: 'success', text: `${n} sessions created (replaced).` });
@@ -81,7 +118,8 @@ export function Settings() {
                 defaultValue={penalty.numeric_value ?? ''}
                 onBlur={(e) => {
                   const n = Number(e.target.value);
-                  if (Number.isFinite(n) && n !== penalty.numeric_value) updSetting.mutate({ id: penalty.id, values: { numeric_value: n } });
+                  if (Number.isFinite(n) && n !== penalty.numeric_value)
+                    updSetting.mutate({ id: penalty.id, values: { numeric_value: n } });
                 }}
               />
             </Field>
@@ -102,7 +140,12 @@ export function Settings() {
               label="Overall (Commander's Cup) scoring enabled"
               description="When off, the public leaderboard is hidden."
               checked={overall.enabled && overall.text_value !== 'false'}
-              onChange={(v) => updSetting.mutate({ id: overall.id, values: { enabled: v, text_value: v ? 'true' : 'false' } })}
+              onChange={(v) =>
+                updSetting.mutate({
+                  id: overall.id,
+                  values: { enabled: v, text_value: v ? 'true' : 'false' },
+                })
+              }
             />
           </div>
         )}
@@ -112,14 +155,18 @@ export function Settings() {
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(matrix.data ?? []).map((m) => (
             <li key={m.place}>
-              <Field label={`${m.place}${['st', 'nd', 'rd'][m.place - 1] ?? 'th'} place`} htmlFor={`pm-${m.place}`}>
+              <Field
+                label={`${m.place}${['st', 'nd', 'rd'][m.place - 1] ?? 'th'} place`}
+                htmlFor={`pm-${m.place}`}
+              >
                 <Input
                   id={`pm-${m.place}`}
                   inputMode="numeric"
                   defaultValue={m.points}
                   onBlur={(e) => {
                     const n = Number(e.target.value);
-                    if (Number.isFinite(n) && n !== Number(m.points)) updMatrix.mutate({ place: m.place, points: n });
+                    if (Number.isFinite(n) && n !== Number(m.points))
+                      updMatrix.mutate({ place: m.place, points: n });
                   }}
                 />
               </Field>
@@ -136,7 +183,9 @@ export function Settings() {
         >
           Add place
         </Button>
-        <p className="mt-2 text-sm text-slate-700">Changing the matrix recalculates all non-overridden placement points.</p>
+        <p className="mt-2 text-sm text-slate-700">
+          Changing the matrix recalculates all non-overridden placement points.
+        </p>
       </Card>
 
       <Card title="Events">
@@ -160,10 +209,12 @@ function EventEditor({ event }: { event: EventRow }) {
       <div className="flex items-center justify-between gap-2">
         <span>
           <span className="block font-bold">
-            {event.event_name} <span className="text-sm font-normal text-slate-600">({event.event_code})</span>
+            {event.event_name}{' '}
+            <span className="text-sm font-normal text-slate-600">({event.event_code})</span>
           </span>
           <span className="text-sm text-slate-700">
-            {FORMAT_LABELS[event.format_type]} · {event.venue} · {humanize(event.status)} · {event.public_visible ? 'Public' : 'Hidden'}
+            {FORMAT_LABELS[event.format_type]} · {event.venue} · {humanize(event.status)} ·{' '}
+            {event.public_visible ? 'Public' : 'Hidden'}
           </span>
         </span>
         <Button variant="secondary" onClick={() => setOpen((v) => !v)}>
@@ -179,7 +230,8 @@ function EventEditor({ event }: { event: EventRow }) {
             const fd = new FormData(e.currentTarget);
             const s = (k: string) => String(fd.get(k) ?? '').trim();
             const target = s('target_team_count');
-            if (target && (!Number.isInteger(Number(target)) || Number(target) < 0)) return setErr('Target team count must be a whole number.');
+            if (target && (!Number.isInteger(Number(target)) || Number(target) < 0))
+              return setErr('Target team count must be a whole number.');
             try {
               await save.mutateAsync({
                 event_name: s('event_name'),
@@ -201,7 +253,12 @@ function EventEditor({ event }: { event: EventRow }) {
           }}
         >
           <Field label="Name" htmlFor={`en-${event.id}`}>
-            <Input id={`en-${event.id}`} name="event_name" defaultValue={event.event_name} required />
+            <Input
+              id={`en-${event.id}`}
+              name="event_name"
+              defaultValue={event.event_name}
+              required
+            />
           </Field>
           <Field label="Format" htmlFor={`ef-${event.id}`}>
             <Select id={`ef-${event.id}`} name="format_type" defaultValue={event.format_type}>
@@ -216,16 +273,35 @@ function EventEditor({ event }: { event: EventRow }) {
             <Input id={`ev-${event.id}`} name="venue" defaultValue={event.venue ?? ''} />
           </Field>
           <Field label="Responsible unit" htmlFor={`eu-${event.id}`}>
-            <Input id={`eu-${event.id}`} name="responsible_unit" defaultValue={event.responsible_unit ?? ''} />
+            <Input
+              id={`eu-${event.id}`}
+              name="responsible_unit"
+              defaultValue={event.responsible_unit ?? ''}
+            />
           </Field>
           <Field label="Start date" htmlFor={`es-${event.id}`}>
-            <Input id={`es-${event.id}`} name="start_date" type="date" defaultValue={event.start_date ?? ''} />
+            <Input
+              id={`es-${event.id}`}
+              name="start_date"
+              type="date"
+              defaultValue={event.start_date ?? ''}
+            />
           </Field>
           <Field label="End date" htmlFor={`ee-${event.id}`}>
-            <Input id={`ee-${event.id}`} name="end_date" type="date" defaultValue={event.end_date ?? ''} />
+            <Input
+              id={`ee-${event.id}`}
+              name="end_date"
+              type="date"
+              defaultValue={event.end_date ?? ''}
+            />
           </Field>
           <Field label="Target team count" htmlFor={`et-${event.id}`}>
-            <Input id={`et-${event.id}`} name="target_team_count" inputMode="numeric" defaultValue={event.target_team_count ?? ''} />
+            <Input
+              id={`et-${event.id}`}
+              name="target_team_count"
+              inputMode="numeric"
+              defaultValue={event.target_team_count ?? ''}
+            />
           </Field>
           <Field label="Status" htmlFor={`est-${event.id}`}>
             <Select id={`est-${event.id}`} name="status" defaultValue={event.status}>
@@ -237,17 +313,35 @@ function EventEditor({ event }: { event: EventRow }) {
             </Select>
           </Field>
           <label className="flex min-h-touch items-center gap-2">
-            <input type="checkbox" name="counts_toward_overall" defaultChecked={event.counts_toward_overall} className="h-6 w-6 accent-brand" />
+            <input
+              type="checkbox"
+              name="counts_toward_overall"
+              defaultChecked={event.counts_toward_overall}
+              className="h-6 w-6 accent-brand"
+            />
             Counts toward overall
           </label>
           <label className="flex min-h-touch items-center gap-2">
-            <input type="checkbox" name="public_visible" defaultChecked={event.public_visible} className="h-6 w-6 accent-brand" />
+            <input
+              type="checkbox"
+              name="public_visible"
+              defaultChecked={event.public_visible}
+              className="h-6 w-6 accent-brand"
+            />
             Visible on public site
           </label>
-          <Field label="Internal notes (never public)" htmlFor={`eno-${event.id}`} className="sm:col-span-2">
+          <Field
+            label="Internal notes (never public)"
+            htmlFor={`eno-${event.id}`}
+            className="sm:col-span-2"
+          >
             <TextArea id={`eno-${event.id}`} name="notes" defaultValue={event.notes ?? ''} />
           </Field>
-          {err && <Notice tone="error" className="sm:col-span-2">{err}</Notice>}
+          {err && (
+            <Notice tone="error" className="sm:col-span-2">
+              {err}
+            </Notice>
+          )}
           <div className="sm:col-span-2">
             <Button type="submit" disabled={save.isPending}>
               Save event

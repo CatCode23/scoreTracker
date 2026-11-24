@@ -1,8 +1,19 @@
 import { useState } from 'react';
 import { useAuth } from '../../lib/auth';
 import { useLookups } from '../../lib/api/lookups';
-import { db, useCorrections, useOperatorNames, useOpsMutation, useResults } from '../../lib/api/ops';
-import { canManageEvent, hasMatchRole, MANAGE_ROLES, VALIDATE_ROLES } from '../../lib/domain/permissions';
+import {
+  db,
+  useCorrections,
+  useOperatorNames,
+  useOpsMutation,
+  useResults,
+} from '../../lib/api/ops';
+import {
+  canManageEvent,
+  hasMatchRole,
+  MANAGE_ROLES,
+  VALIDATE_ROLES,
+} from '../../lib/domain/permissions';
 import { formatDateTime, humanize } from '../../lib/domain/format';
 import type { Correction, MatchResult } from '../../lib/types';
 import { ResultValidationCard, type ValidationAction } from '../../components/ResultValidationCard';
@@ -23,21 +34,26 @@ export function Validation() {
   const [tab, setTab] = useState<Tab>('pending');
   const [eventFilter, setEventFilter] = useState('');
 
-  const act = useOpsMutation(({ id, action, reason }: { id: string; action: ValidationAction; reason: string | null }) =>
-    db.update('match_results', id, { status: action, status_reason: reason }),
+  const act = useOpsMutation(
+    ({ id, action, reason }: { id: string; action: ValidationAction; reason: string | null }) =>
+      db.update('match_results', id, { status: action, status_reason: reason }),
   );
 
   if (L.loading || results.isLoading) return <Loading />;
   if (L.error || results.error) return <ErrorState error={L.error ?? results.error} />;
 
-  const all = (results.data ?? []).filter((r) => !eventFilter || L.matchById.get(r.match_id)?.event_id === eventFilter);
+  const all = (results.data ?? []).filter(
+    (r) => !eventFilter || L.matchById.get(r.match_id)?.event_id === eventFilter,
+  );
   const can = (r: MatchResult, roles = VALIDATE_ROLES) => {
     const m = L.matchById.get(r.match_id);
     return m ? hasMatchRole(auth, m.event_id, L.venueOf(m), roles) : false;
   };
   const title = (r: MatchResult) => {
     const m = L.matchById.get(r.match_id);
-    return m ? `${L.eventById.get(m.event_id)?.event_code} · ${m.match_code} · ${m.round_name ?? ''}` : 'Match';
+    return m
+      ? `${L.eventById.get(m.event_id)?.event_code} · ${m.match_code} · ${m.round_name ?? ''}`
+      : 'Match';
   };
   const pending = all.filter((r) => r.status === 'submitted' || r.status === 'disputed');
   const recent = all.filter((r) => !['submitted', 'disputed'].includes(r.status)).slice(0, 40);
@@ -58,8 +74,17 @@ export function Validation() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Result Validation" subtitle="Venue leads, sport managers and operations admins." actions={<SyncButton />} />
-      <Select aria-label="Filter by event" value={eventFilter} onChange={(e) => setEventFilter(e.target.value)} className="max-w-sm">
+      <PageHeader
+        title="Result Validation"
+        subtitle="Venue leads, sport managers and operations admins."
+        actions={<SyncButton />}
+      />
+      <Select
+        aria-label="Filter by event"
+        value={eventFilter}
+        onChange={(e) => setEventFilter(e.target.value)}
+        className="max-w-sm"
+      >
         <option value="">All my events</option>
         {L.events.map((e) => (
           <option key={e.id} value={e.id}>
@@ -77,12 +102,26 @@ export function Validation() {
         ]}
       />
       {tab === 'pending' &&
-        (pending.length === 0 ? <Empty title="No results awaiting validation" /> : <div className="grid gap-3 lg:grid-cols-2">{pending.map(card)}</div>)}
+        (pending.length === 0 ? (
+          <Empty title="No results awaiting validation" />
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">{pending.map(card)}</div>
+        ))}
       {tab === 'recent' &&
-        (recent.length === 0 ? <Empty title="Nothing yet" /> : <div className="grid gap-3 lg:grid-cols-2">{recent.map(card)}</div>)}
+        (recent.length === 0 ? (
+          <Empty title="Nothing yet" />
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">{recent.map(card)}</div>
+        ))}
       {tab === 'corrections' && (
         <CorrectionsList
-          corrections={(corrections.data ?? []).filter((c) => !eventFilter || L.matchById.get(all.find((r) => r.id === c.result_id)?.match_id ?? '')?.event_id === eventFilter)}
+          corrections={(corrections.data ?? []).filter(
+            (c) =>
+              !eventFilter ||
+              L.matchById.get(
+                (results.data ?? []).find((r) => r.id === c.result_id)?.match_id ?? '',
+              )?.event_id === eventFilter,
+          )}
           results={results.data ?? []}
           title={title}
           names={names.data ?? {}}
@@ -111,13 +150,32 @@ function CorrectionsList({
 }) {
   const confirm = useConfirm();
   const decide = useOpsMutation(
-    async ({ c, r, approve, notes }: { c: Correction; r: MatchResult | undefined; approve: boolean; notes: string }) => {
-      await db.update('corrections', c.id, { decision: approve ? 'approved' : 'denied', decision_notes: notes });
+    async ({
+      c,
+      r,
+      approve,
+      notes,
+    }: {
+      c: Correction;
+      r: MatchResult | undefined;
+      approve: boolean;
+      notes: string;
+    }) => {
+      await db.update('corrections', c.id, {
+        decision: approve ? 'approved' : 'denied',
+        decision_notes: notes,
+      });
       if (approve && r) {
         if (r.status === 'official') {
-          await db.update('match_results', r.id, { status: 'void', status_reason: `Correction approved: ${notes}` });
+          await db.update('match_results', r.id, {
+            status: 'void',
+            status_reason: `Correction approved: ${notes}`,
+          });
         } else if (r.status === 'submitted' || r.status === 'disputed') {
-          await db.update('match_results', r.id, { status: 'returned', status_reason: `Correction approved: ${notes}` });
+          await db.update('match_results', r.id, {
+            status: 'returned',
+            status_reason: `Correction approved: ${notes}`,
+          });
         }
       }
     },
@@ -126,15 +184,20 @@ function CorrectionsList({
   return (
     <div className="space-y-3">
       <Notice tone="info">
-        Approving a correction voids an Official result (or returns a pending one) and reopens the match so a corrected
-        result can be submitted and validated.
+        Approving a correction voids an Official result (or returns a pending one) and reopens the
+        match so a corrected result can be submitted and validated.
       </Notice>
       {corrections.map((c) => {
         const r = results.find((x) => x.id === c.result_id);
         return (
-          <Card key={c.id} title={r ? title(r) : 'Result'} actions={r && <ResultStatusBadge status={r.status} />}>
+          <Card
+            key={c.id}
+            title={r ? title(r) : 'Result'}
+            actions={r && <ResultStatusBadge status={r.status} />}
+          >
             <p className="text-sm text-slate-700">
-              {humanize(c.correction_type)} · requested by {(c.requested_by && names[c.requested_by]) || 'Unknown'} at{' '}
+              {humanize(c.correction_type)} · requested by{' '}
+              {(c.requested_by && names[c.requested_by]) || 'Unknown'} at{' '}
               {formatDateTime(c.requested_at)}
             </p>
             <p className="mt-1">
@@ -150,7 +213,15 @@ function CorrectionsList({
                   variant="success"
                   onClick={() =>
                     confirm.ask(
-                      { title: 'Approve correction?', body: r?.status === 'official' ? 'The Official result will be voided and removed from public pages.' : undefined, reasonLabel: 'Decision notes (required)', confirmLabel: 'Approve' },
+                      {
+                        title: 'Approve correction?',
+                        body:
+                          r?.status === 'official'
+                            ? 'The Official result will be voided and removed from public pages.'
+                            : undefined,
+                        reasonLabel: 'Decision notes (required)',
+                        confirmLabel: 'Approve',
+                      },
                       (notes) => decide.mutateAsync({ c, r, approve: true, notes }),
                     )
                   }
@@ -160,8 +231,13 @@ function CorrectionsList({
                 <Button
                   variant="secondary"
                   onClick={() =>
-                    confirm.ask({ title: 'Deny correction?', reasonLabel: 'Decision notes (required)', confirmLabel: 'Deny' }, (notes) =>
-                      decide.mutateAsync({ c, r, approve: false, notes }),
+                    confirm.ask(
+                      {
+                        title: 'Deny correction?',
+                        reasonLabel: 'Decision notes (required)',
+                        confirmLabel: 'Deny',
+                      },
+                      (notes) => decide.mutateAsync({ c, r, approve: false, notes }),
                     )
                   }
                 >

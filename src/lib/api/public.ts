@@ -17,7 +17,8 @@ const opts = { refetchInterval: 60_000, staleTime: 15_000 };
 export function usePublicEvents() {
   return useQuery({
     queryKey: ['public', 'events'],
-    queryFn: () => rows<PublicEvent>(supabase.from('public_events').select('*').order('display_order')),
+    queryFn: () =>
+      rows<PublicEvent>(supabase.from('public_events').select('*').order('display_order')),
     ...opts,
   });
 }
@@ -38,7 +39,9 @@ export function usePublicLeaderboard() {
   return useQuery({
     queryKey: ['public', 'leaderboard'],
     queryFn: () =>
-      rows<LeaderboardRow>(supabase.from('public_overall_leaderboard').select('*').order('rank').order('team_name')),
+      rows<LeaderboardRow>(
+        supabase.from('public_overall_leaderboard').select('*').order('rank').order('team_name'),
+      ),
     ...opts,
   });
 }
@@ -47,7 +50,9 @@ export function usePublicLastUpdate() {
   return useQuery({
     queryKey: ['public', 'last-update'],
     queryFn: () =>
-      one<{ last_updated_at: string | null }>(supabase.from('public_last_update').select('*').maybeSingle()),
+      one<{ last_updated_at: string | null }>(
+        supabase.from('public_last_update').select('*').maybeSingle(),
+      ),
     ...opts,
   });
 }
@@ -60,10 +65,19 @@ export function usePublicEventDetail(eventId?: string) {
       const [matches, standings, placements] = await Promise.all([
         rows<PublicMatch>(supabase.from('public_matches').select('*').eq('event_id', eventId!)),
         rows<PublicPoolStanding>(
-          supabase.from('public_pool_standings').select('*').eq('event_id', eventId!).order('pool_name').order('pool_rank'),
+          supabase
+            .from('public_pool_standings')
+            .select('*')
+            .eq('event_id', eventId!)
+            .order('pool_name')
+            .order('pool_rank'),
         ),
         rows<PublicPlacement>(
-          supabase.from('public_event_placements').select('*').eq('event_id', eventId!).order('final_place'),
+          supabase
+            .from('public_event_placements')
+            .select('*')
+            .eq('event_id', eventId!)
+            .order('final_place'),
         ),
       ]);
       const participants = await fetchParticipants(matches.map((m) => m.id));
@@ -90,7 +104,10 @@ async function fetchParticipants(matchIds: string[]): Promise<PublicMatchPartici
 export function usePublicAllPlacements() {
   return useQuery({
     queryKey: ['public', 'placements'],
-    queryFn: () => rows<PublicPlacement>(supabase.from('public_event_placements').select('*').order('final_place')),
+    queryFn: () =>
+      rows<PublicPlacement>(
+        supabase.from('public_event_placements').select('*').order('final_place'),
+      ),
     ...opts,
   });
 }

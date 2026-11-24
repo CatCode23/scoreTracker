@@ -1,14 +1,37 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
-import { db, useMatchParticipants, useMatches, useOpsMutation, useParticipants, useResults, useStages, useEvents } from '../../lib/api/ops';
+import {
+  db,
+  useMatchParticipants,
+  useMatches,
+  useOpsMutation,
+  useParticipants,
+  useResults,
+  useStages,
+  useEvents,
+} from '../../lib/api/ops';
 import { canManageEvent, hasGlobalRead } from '../../lib/domain/permissions';
 import { checkDestinationSlot, suggestSlot, winnerAndLoser } from '../../lib/domain/advancement';
 import { groupBracket } from '../../lib/domain/bracket';
 import { formatSeconds, formatTime, humanize } from '../../lib/domain/format';
-import { MATCH_STATUSES, type Match, type MatchParticipant, type MatchStatus } from '../../lib/types';
+import {
+  MATCH_STATUSES,
+  type Match,
+  type MatchParticipant,
+  type MatchStatus,
+} from '../../lib/types';
 import { friendlyError } from '../../lib/supabase';
-import { Button, Card, Checkbox, Field, Input, Notice, PageHeader, Select } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  Input,
+  Notice,
+  PageHeader,
+  Select,
+} from '../../components/ui';
 import { Empty, ErrorState, Loading, Unauthorized } from '../../components/states';
 import { MatchStatusBadge, UnofficialBadge } from '../../components/status';
 import { SyncButton } from '../../components/SyncButton';
@@ -31,10 +54,16 @@ export function MatchManagement() {
   const results = useResults({ eventId: eventId || undefined, statuses: ['official'] });
   const [advance, setAdvance] = useState<AdvanceTarget | null>(null);
   const confirm = useConfirm();
-  const setStatus = useOpsMutation(({ id, status }: { id: string; status: MatchStatus }) => db.update('matches', id, { status }));
-  const flag = useOpsMutation(({ id, values }: { id: string; values: Partial<MatchParticipant> }) => db.update('match_participants', id, values));
+  const setStatus = useOpsMutation(({ id, status }: { id: string; status: MatchStatus }) =>
+    db.update('matches', id, { status }),
+  );
+  const flag = useOpsMutation(({ id, values }: { id: string; values: Partial<MatchParticipant> }) =>
+    db.update('match_participants', id, values),
+  );
 
-  const visible = (events.data ?? []).filter((e) => canManageEvent(auth, e.id) || hasGlobalRead(auth));
+  const visible = (events.data ?? []).filter(
+    (e) => canManageEvent(auth, e.id) || hasGlobalRead(auth),
+  );
   const canManage = eventId ? canManageEvent(auth, eventId) : false;
   const team = (pid: string | null) => {
     const p = participants.data?.find((x) => x.id === pid);
@@ -59,7 +88,11 @@ export function MatchManagement() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Match Management" subtitle="Status, manual winner/loser advancement, eliminations." actions={<SyncButton />} />
+      <PageHeader
+        title="Match Management"
+        subtitle="Status, manual winner/loser advancement, eliminations."
+        actions={<SyncButton />}
+      />
       <Card>
         <Field label="Event" htmlFor="mm-event">
           <Select id="mm-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -72,8 +105,14 @@ export function MatchManagement() {
           </Select>
         </Field>
       </Card>
-      {eventId && !canManage && <Notice tone="info">Read-only view. Only the event's sport manager can make changes.</Notice>}
-      {(setStatus.error || flag.error) && <Notice tone="error">{friendlyError(setStatus.error ?? flag.error)}</Notice>}
+      {eventId && !canManage && (
+        <Notice tone="info">
+          Read-only view. Only the event's sport manager can make changes.
+        </Notice>
+      )}
+      {(setStatus.error || flag.error) && (
+        <Notice tone="error">{friendlyError(setStatus.error ?? flag.error)}</Notice>
+      )}
 
       {eventId &&
         (matches.isLoading || mps.isLoading ? (
@@ -86,48 +125,86 @@ export function MatchManagement() {
               <h2 className="text-xl font-bold">{st.stage_name}</h2>
               {st.rounds.map((r) => (
                 <div key={r.key} className="space-y-2">
-                  <h3 className="rounded bg-slate-200 px-2 py-1 text-sm font-bold uppercase">{r.round_name}</h3>
+                  <h3 className="rounded bg-slate-200 px-2 py-1 text-sm font-bold uppercase">
+                    {r.round_name}
+                  </h3>
                   <div className="grid gap-3 lg:grid-cols-2">
                     {r.matches.map((m) => {
-                      const slots = (mps.data ?? []).filter((p) => p.match_id === m.id).sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }));
+                      const slots = (mps.data ?? [])
+                        .filter((p) => p.match_id === m.id)
+                        .sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }));
                       const result = (results.data ?? []).find((x) => x.match_id === m.id);
                       const ids = slots.map((s) => s.participant_id).filter(Boolean) as string[];
                       const { winner, loser } = winnerAndLoser(result, ids);
                       return (
-                        <article key={m.id} className="rounded-xl border border-slate-300 bg-white p-3">
+                        <article
+                          key={m.id}
+                          className="rounded-xl border border-slate-300 bg-white p-3"
+                        >
                           <div className="flex items-start justify-between gap-2">
                             <span>
                               <span className="block font-bold">{m.match_code}</span>
                               <span className="text-sm text-slate-700">
-                                {[humanize(m.match_type), formatTime(m.start_time), m.venue_area].filter(Boolean).join(' · ')}
+                                {[humanize(m.match_type), formatTime(m.start_time), m.venue_area]
+                                  .filter(Boolean)
+                                  .join(' · ')}
                               </span>
                             </span>
                             <span className="flex flex-col items-end gap-1">
                               <MatchStatusBadge status={m.status} />
-                              {m.status !== 'official' && m.status !== 'complete' && <UnofficialBadge />}
+                              {m.status !== 'official' && m.status !== 'complete' && (
+                                <UnofficialBadge />
+                              )}
                             </span>
                           </div>
                           <ul className="mt-2 space-y-1">
                             {slots.map((s) => (
-                              <li key={s.id} className={`flex flex-wrap items-center justify-between gap-2 rounded px-2 py-1 text-sm ${s.participant_id === winner ? 'bg-green-100 font-bold' : 'bg-slate-50'}`}>
+                              <li
+                                key={s.id}
+                                className={`flex flex-wrap items-center justify-between gap-2 rounded px-2 py-1 text-sm ${s.participant_id === winner ? 'bg-green-100 font-bold' : 'bg-slate-50'}`}
+                              >
                                 <span>
                                   <strong>{s.slot}</strong> · {team(s.participant_id)}
-                                  {s.advanced && <span className="ml-1 text-green-800">· advanced</span>}
-                                  {s.eliminated && <span className="ml-1 text-red-800">· eliminated</span>}
+                                  {s.advanced && (
+                                    <span className="ml-1 text-green-800">· advanced</span>
+                                  )}
+                                  {s.eliminated && (
+                                    <span className="ml-1 text-red-800">· eliminated</span>
+                                  )}
                                 </span>
                                 <span className="flex items-center gap-2">
                                   <span className="tabular-nums">
-                                    {s.score ?? (s.time_seconds != null ? formatSeconds(s.time_seconds) : s.placement != null ? `#${s.placement}` : '')}
+                                    {s.score ??
+                                      (s.time_seconds != null
+                                        ? formatSeconds(s.time_seconds)
+                                        : s.placement != null
+                                          ? `#${s.placement}`
+                                          : '')}
                                   </span>
                                   {canManage && s.participant_id && (
                                     <>
-                                      <Button variant="ghost" className="min-h-[36px] px-2 text-xs" onClick={() => flag.mutate({ id: s.id, values: { eliminated: !s.eliminated } })}>
+                                      <Button
+                                        variant="ghost"
+                                        className="min-h-[36px] px-2 text-xs"
+                                        onClick={() =>
+                                          flag.mutate({
+                                            id: s.id,
+                                            values: { eliminated: !s.eliminated },
+                                          })
+                                        }
+                                      >
                                         {s.eliminated ? 'Un-eliminate' : 'Eliminate'}
                                       </Button>
                                       <Button
                                         variant="ghost"
                                         className="min-h-[36px] px-2 text-xs"
-                                        onClick={() => setAdvance({ from: m, participantId: s.participant_id!, kind: 'manual' })}
+                                        onClick={() =>
+                                          setAdvance({
+                                            from: m,
+                                            participantId: s.participant_id!,
+                                            kind: 'manual',
+                                          })
+                                        }
                                       >
                                         Move…
                                       </Button>
@@ -136,24 +213,45 @@ export function MatchManagement() {
                                 </span>
                               </li>
                             ))}
-                            {slots.length === 0 && <li className="text-sm italic text-slate-600">No teams assigned</li>}
+                            {slots.length === 0 && (
+                              <li className="text-sm italic text-slate-600">No teams assigned</li>
+                            )}
                           </ul>
                           {(m.next_winner_match_id || m.next_loser_match_id) && (
                             <p className="mt-1 text-xs text-slate-700">
-                              {m.next_winner_match_id && `Winner → ${matches.data?.find((x) => x.id === m.next_winner_match_id)?.match_code} ${m.next_winner_slot ?? ''}`}
+                              {m.next_winner_match_id &&
+                                `Winner → ${matches.data?.find((x) => x.id === m.next_winner_match_id)?.match_code} ${m.next_winner_slot ?? ''}`}
                               {m.next_winner_match_id && m.next_loser_match_id && ' · '}
-                              {m.next_loser_match_id && `Loser → ${matches.data?.find((x) => x.id === m.next_loser_match_id)?.match_code} ${m.next_loser_slot ?? ''}`}
+                              {m.next_loser_match_id &&
+                                `Loser → ${matches.data?.find((x) => x.id === m.next_loser_match_id)?.match_code} ${m.next_loser_slot ?? ''}`}
                             </p>
                           )}
                           {canManage && (
                             <div className="mt-3 flex flex-wrap gap-2">
                               {winner && (
-                                <Button onClick={() => setAdvance({ from: m, participantId: winner, kind: 'winner_of_match' })}>
+                                <Button
+                                  onClick={() =>
+                                    setAdvance({
+                                      from: m,
+                                      participantId: winner,
+                                      kind: 'winner_of_match',
+                                    })
+                                  }
+                                >
                                   <ArrowRight className="h-4 w-4" aria-hidden /> Advance winner
                                 </Button>
                               )}
                               {loser && (
-                                <Button variant="secondary" onClick={() => setAdvance({ from: m, participantId: loser, kind: 'loser_of_match' })}>
+                                <Button
+                                  variant="secondary"
+                                  onClick={() =>
+                                    setAdvance({
+                                      from: m,
+                                      participantId: loser,
+                                      kind: 'loser_of_match',
+                                    })
+                                  }
+                                >
                                   <ArrowRight className="h-4 w-4" aria-hidden /> Route loser
                                 </Button>
                               )}
@@ -165,14 +263,22 @@ export function MatchManagement() {
                                   const status = e.target.value as MatchStatus;
                                   if (status === 'void' || status === 'complete') {
                                     confirm.ask(
-                                      { title: `Mark ${m.match_code} ${humanize(status)}?`, danger: status === 'void', confirmLabel: `Mark ${humanize(status)}` },
+                                      {
+                                        title: `Mark ${m.match_code} ${humanize(status)}?`,
+                                        danger: status === 'void',
+                                        confirmLabel: `Mark ${humanize(status)}`,
+                                      },
                                       () => setStatus.mutateAsync({ id: m.id, status }),
                                     );
                                   } else setStatus.mutate({ id: m.id, status });
                                 }}
                               >
                                 {MATCH_STATUSES.map((s) => (
-                                  <option key={s} value={s} disabled={s === 'official' || s === 'submitted'}>
+                                  <option
+                                    key={s}
+                                    value={s}
+                                    disabled={s === 'official' || s === 'submitted'}
+                                  >
                                     {humanize(s)}
                                     {(s === 'official' || s === 'submitted') && ' (via results)'}
                                   </option>
@@ -218,9 +324,17 @@ export function AdvanceDialog({
   onClose: () => void;
 }) {
   const defaultDest =
-    target.kind === 'winner_of_match' ? target.from.next_winner_match_id : target.kind === 'loser_of_match' ? target.from.next_loser_match_id : null;
+    target.kind === 'winner_of_match'
+      ? target.from.next_winner_match_id
+      : target.kind === 'loser_of_match'
+        ? target.from.next_loser_match_id
+        : null;
   const defaultSlot =
-    target.kind === 'winner_of_match' ? target.from.next_winner_slot : target.kind === 'loser_of_match' ? target.from.next_loser_slot : null;
+    target.kind === 'winner_of_match'
+      ? target.from.next_winner_slot
+      : target.kind === 'loser_of_match'
+        ? target.from.next_loser_slot
+        : null;
   const [dest, setDest] = useState(defaultDest ?? '');
   const destSlots = slots.filter((s) => s.match_id === dest);
   const [slot, setSlot] = useState(defaultSlot ?? suggestSlot(destSlots));
@@ -239,13 +353,31 @@ export function AdvanceDialog({
       p_reason: `${humanize(target.kind)} from ${target.from.match_code}`,
     }),
   );
-  const blocked = !dest || !slot.trim() || !confirmed || check?.kind === 'already_in_match' || (check?.kind === 'occupied' && !overwrite);
+  const blocked =
+    !dest ||
+    !slot.trim() ||
+    !confirmed ||
+    check?.kind === 'already_in_match' ||
+    (check?.kind === 'occupied' && !overwrite);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="adv-title" className="w-full max-w-lg rounded-t-2xl bg-white p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adv-title"
+        className="w-full max-w-lg rounded-t-2xl bg-white p-5 sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 id="adv-title" className="text-xl font-bold">
-          {target.kind === 'winner_of_match' ? 'Advance winner' : target.kind === 'loser_of_match' ? 'Route loser' : 'Move team'}
+          {target.kind === 'winner_of_match'
+            ? 'Advance winner'
+            : target.kind === 'loser_of_match'
+              ? 'Route loser'
+              : 'Move team'}
         </h2>
         <p className="mt-1 text-slate-800">
           <strong>{team(target.participantId)}</strong> from {target.from.match_code}
@@ -272,25 +404,52 @@ export function AdvanceDialog({
             </Select>
           </Field>
           <Field label="Destination slot" htmlFor="adv-slot">
-            <Input id="adv-slot" value={slot} onChange={(e) => { setSlot(e.target.value); setOverwrite(false); }} />
+            <Input
+              id="adv-slot"
+              value={slot}
+              onChange={(e) => {
+                setSlot(e.target.value);
+                setOverwrite(false);
+              }}
+            />
           </Field>
           {dest && (
             <div className="text-sm">
               Current slots:{' '}
-              {destSlots.length === 0 ? 'none' : destSlots.map((s) => `${s.slot}: ${team(s.participant_id)}`).join(' · ')}
+              {destSlots.length === 0
+                ? 'none'
+                : destSlots.map((s) => `${s.slot}: ${team(s.participant_id)}`).join(' · ')}
             </div>
           )}
           {check?.kind === 'occupied' && (
             <Notice tone="warn" title="Slot already occupied">
-              Slot {slot} currently holds <strong>{team(check.occupantParticipantId)}</strong>. Advancing will overwrite it.
+              Slot {slot} currently holds <strong>{team(check.occupantParticipantId)}</strong>.
+              Advancing will overwrite it.
               <div className="mt-2">
-                <Checkbox id="adv-overwrite" label="Yes, overwrite this slot" checked={overwrite} onChange={setOverwrite} />
+                <Checkbox
+                  id="adv-overwrite"
+                  label="Yes, overwrite this slot"
+                  checked={overwrite}
+                  onChange={setOverwrite}
+                />
               </div>
             </Notice>
           )}
-          {check?.kind === 'already_in_match' && <Notice tone="error">This team is already in slot {check.existingSlot} of that match.</Notice>}
-          {check?.kind === 'same' && <Notice tone="info">This team is already in that slot. Nothing will change.</Notice>}
-          <Checkbox id="adv-confirm" label="I confirm this advancement" description="Recorded in the audit log." checked={confirmed} onChange={setConfirmed} />
+          {check?.kind === 'already_in_match' && (
+            <Notice tone="error">
+              This team is already in slot {check.existingSlot} of that match.
+            </Notice>
+          )}
+          {check?.kind === 'same' && (
+            <Notice tone="info">This team is already in that slot. Nothing will change.</Notice>
+          )}
+          <Checkbox
+            id="adv-confirm"
+            label="I confirm this advancement"
+            description="Recorded in the audit log."
+            checked={confirmed}
+            onChange={setConfirmed}
+          />
           {err && <Notice tone="error">{err}</Notice>}
         </div>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

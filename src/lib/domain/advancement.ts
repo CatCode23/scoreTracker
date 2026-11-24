@@ -20,13 +20,17 @@ export function checkDestinationSlot(
   if (existing?.participant_id === participantId) return { kind: 'same' };
   const elsewhere = destination.find((d) => d.participant_id === participantId && d.slot !== slot);
   if (elsewhere) return { kind: 'already_in_match', existingSlot: elsewhere.slot };
-  if (existing?.participant_id) return { kind: 'occupied', occupantParticipantId: existing.participant_id };
+  if (existing?.participant_id)
+    return { kind: 'occupied', occupantParticipantId: existing.participant_id };
   return { kind: 'empty' };
 }
 
 /** Winner and loser of an Official head-to-head result, if determinable. */
 export function winnerAndLoser(
-  result: Pick<MatchResult, 'winner_participant_id' | 'loser_participant_id' | 'status'> | null | undefined,
+  result:
+    | Pick<MatchResult, 'winner_participant_id' | 'loser_participant_id' | 'status'>
+    | null
+    | undefined,
   participantIds: string[],
 ): { winner: string | null; loser: string | null } {
   if (!result || result.status !== 'official' || !result.winner_participant_id) {
@@ -35,12 +39,15 @@ export function winnerAndLoser(
   const winner = result.winner_participant_id;
   const loser =
     result.loser_participant_id ??
-    (participantIds.length === 2 ? participantIds.find((p) => p !== winner) ?? null : null);
+    (participantIds.length === 2 ? (participantIds.find((p) => p !== winner) ?? null) : null);
   return { winner, loser };
 }
 
 /** Next empty slot name for a destination (A, B, then Lane 3...). */
-export function suggestSlot(destination: Pick<MatchParticipant, 'slot' | 'participant_id'>[], preferred?: string | null): string {
+export function suggestSlot(
+  destination: Pick<MatchParticipant, 'slot' | 'participant_id'>[],
+  preferred?: string | null,
+): string {
   if (preferred) return preferred;
   for (const s of ['A', 'B']) {
     const e = destination.find((d) => d.slot === s);
@@ -57,7 +64,8 @@ export function inferWinnerFromScores(
 ): { winner: string | null; loser: string | null } {
   if (values.length !== 2) return { winner: null, loser: null };
   const [a, b] = values;
-  if (a.score == null || b.score == null || a.score === b.score) return { winner: null, loser: null };
+  if (a.score == null || b.score == null || a.score === b.score)
+    return { winner: null, loser: null };
   return a.score > b.score
     ? { winner: a.participant_id, loser: b.participant_id }
     : { winner: b.participant_id, loser: a.participant_id };

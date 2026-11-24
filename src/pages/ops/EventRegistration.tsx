@@ -24,19 +24,27 @@ export function EventRegistration() {
   const confirm = useConfirm();
 
   const add = useOpsMutation(() =>
-    db.insert('event_participants', { event_id: eventId, team_id: teamId, seed: seed ? Number(seed) : null }),
+    db.insert('event_participants', {
+      event_id: eventId,
+      team_id: teamId,
+      seed: seed ? Number(seed) : null,
+    }),
   );
-  const update = useOpsMutation(({ id, values }: { id: string; values: Partial<EventParticipant> }) =>
-    db.update('event_participants', id, values),
+  const update = useOpsMutation(
+    ({ id, values }: { id: string; values: Partial<EventParticipant> }) =>
+      db.update('event_participants', id, values),
   );
   const remove = useOpsMutation((id: string) => db.remove('event_participants', id));
 
   if (events.isLoading || teams.isLoading) return <Loading />;
   if (events.error) return <ErrorState error={events.error} />;
   const manageable = (events.data ?? []).filter((e) => canManageEvent(auth, e.id));
-  if (manageable.length === 0) return <Unauthorized message="Only sport managers and operations admins can register teams into events." />;
+  if (manageable.length === 0)
+    return (
+      <Unauthorized message="Only sport managers and operations admins can register teams into events." />
+    );
   const event = manageable.find((e) => e.id === eventId);
-  const regs = eventId ? participants.data ?? [] : [];
+  const regs = eventId ? (participants.data ?? []) : [];
   const registered = new Set(regs.map((r) => r.team_id));
   const available = (teams.data ?? []).filter((t: Team) => t.active && !registered.has(t.id));
   const activeCount = regs.filter((r) => r.active && r.check_in_status !== 'withdrawn').length;
@@ -44,7 +52,10 @@ export function EventRegistration() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Event Registration" subtitle="Add existing teams to a sport. Team records are never duplicated per sport." />
+      <PageHeader
+        title="Event Registration"
+        subtitle="Add existing teams to a sport. Team records are never duplicated per sport."
+      />
       <Card>
         <Field label="Event" htmlFor="reg-event">
           <Select id="reg-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -68,7 +79,8 @@ export function EventRegistration() {
                 e.preventDefault();
                 setErr(null);
                 if (!teamId) return setErr('Select a team.');
-                if (seed && (!Number.isInteger(Number(seed)) || Number(seed) < 1)) return setErr('Seed must be a whole number of 1 or more.');
+                if (seed && (!Number.isInteger(Number(seed)) || Number(seed) < 1))
+                  return setErr('Seed must be a whole number of 1 or more.');
                 try {
                   await add.mutateAsync(undefined);
                   setTeamId('');
@@ -89,17 +101,32 @@ export function EventRegistration() {
                 </Select>
               </Field>
               <Field label="Seed" htmlFor="reg-seed">
-                <Input id="reg-seed" inputMode="numeric" value={seed} onChange={(e) => setSeed(e.target.value)} />
+                <Input
+                  id="reg-seed"
+                  inputMode="numeric"
+                  value={seed}
+                  onChange={(e) => setSeed(e.target.value)}
+                />
               </Field>
               <Button type="submit" disabled={add.isPending}>
                 Register
               </Button>
             </form>
-            {available.length === 0 && <p className="mt-2 text-sm text-slate-700">All active teams are registered. Create teams on the Teams page.</p>}
-            {err && <Notice tone="error" className="mt-2">{err}</Notice>}
+            {available.length === 0 && (
+              <p className="mt-2 text-sm text-slate-700">
+                All active teams are registered. Create teams on the Teams page.
+              </p>
+            )}
+            {err && (
+              <Notice tone="error" className="mt-2">
+                {err}
+              </Notice>
+            )}
           </Card>
 
-          <Card title={`Registered teams (${activeCount}${event.target_team_count != null ? ` / target ${event.target_team_count}` : ''})`}>
+          <Card
+            title={`Registered teams (${activeCount}${event.target_team_count != null ? ` / target ${event.target_team_count}` : ''})`}
+          >
             {participants.isLoading ? (
               <Loading />
             ) : regs.length === 0 ? (
@@ -107,7 +134,10 @@ export function EventRegistration() {
             ) : (
               <ul className="space-y-2">
                 {regs.map((r) => (
-                  <li key={r.id} className="grid gap-2 rounded-lg border border-slate-300 p-3 sm:grid-cols-[1fr_100px_170px_auto] sm:items-center">
+                  <li
+                    key={r.id}
+                    className="grid gap-2 rounded-lg border border-slate-300 p-3 sm:grid-cols-[1fr_100px_170px_auto] sm:items-center"
+                  >
                     <span>
                       <span className="block font-bold">{r.teams?.team_name}</span>
                       <span className="text-sm text-slate-700">
@@ -122,13 +152,19 @@ export function EventRegistration() {
                       onBlur={(e) => {
                         const v = e.target.value.trim();
                         const n = v === '' ? null : Number(v);
-                        if (n !== r.seed && (n === null || (Number.isInteger(n) && n >= 1))) update.mutate({ id: r.id, values: { seed: n } });
+                        if (n !== r.seed && (n === null || (Number.isInteger(n) && n >= 1)))
+                          update.mutate({ id: r.id, values: { seed: n } });
                       }}
                     />
                     <Select
                       aria-label={`Check-in status for ${r.teams?.team_name}`}
                       value={r.check_in_status}
-                      onChange={(e) => update.mutate({ id: r.id, values: { check_in_status: e.target.value as CheckInStatus } })}
+                      onChange={(e) =>
+                        update.mutate({
+                          id: r.id,
+                          values: { check_in_status: e.target.value as CheckInStatus },
+                        })
+                      }
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>
@@ -139,7 +175,12 @@ export function EventRegistration() {
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"
-                        onClick={() => update.mutate({ id: r.id, values: { eligible_for_points: !r.eligible_for_points } })}
+                        onClick={() =>
+                          update.mutate({
+                            id: r.id,
+                            values: { eligible_for_points: !r.eligible_for_points },
+                          })
+                        }
                       >
                         {r.eligible_for_points ? 'Exclude pts' : 'Include pts'}
                       </Button>
@@ -148,7 +189,12 @@ export function EventRegistration() {
                         className="text-red-700"
                         onClick={() =>
                           confirm.ask(
-                            { title: `Remove ${r.teams?.team_name} from ${event.event_name}?`, body: 'Only possible before the team is placed in matches. Consider marking it Withdrawn instead.', danger: true, confirmLabel: 'Remove' },
+                            {
+                              title: `Remove ${r.teams?.team_name} from ${event.event_name}?`,
+                              body: 'Only possible before the team is placed in matches. Consider marking it Withdrawn instead.',
+                              danger: true,
+                              confirmLabel: 'Remove',
+                            },
                             () => remove.mutateAsync(r.id),
                           )
                         }
@@ -160,9 +206,14 @@ export function EventRegistration() {
                 ))}
               </ul>
             )}
-            {update.error && <Notice tone="error" className="mt-2">{friendlyError(update.error)}</Notice>}
+            {update.error && (
+              <Notice tone="error" className="mt-2">
+                {friendlyError(update.error)}
+              </Notice>
+            )}
             <p className="mt-3 text-sm text-slate-700">
-              Marking a team “No show” does not apply a penalty. Penalties are applied only by explicit action on the Placements page.
+              Marking a team “No show” does not apply a penalty. Penalties are applied only by
+              explicit action on the Placements page.
             </p>
           </Card>
         </>

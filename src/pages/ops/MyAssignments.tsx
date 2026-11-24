@@ -8,21 +8,29 @@ import { isOpsAdmin } from '../../lib/domain/permissions';
 export function MyAssignments() {
   const auth = useAuth();
   const events = useEvents();
-  const name = (id: string | null) => (id ? events.data?.find((e) => e.id === id)?.event_name ?? 'Unknown event' : 'All events');
+  const name = (id: string | null) =>
+    id ? (events.data?.find((e) => e.id === id)?.event_name ?? 'Unknown event') : 'All events';
   return (
     <div className="space-y-4">
-      <PageHeader title="My Assignments" subtitle={`${auth.profile?.display_name ?? ''} · ${auth.profile?.email ?? ''}`} />
+      <PageHeader
+        title="My Assignments"
+        subtitle={`${auth.profile?.display_name ?? ''} · ${auth.profile?.email ?? ''}`}
+      />
       <Card title="Account">
         <p>
           Primary role: <strong>{auth.profile ? ROLE_LABELS[auth.profile.role] : '—'}</strong>
         </p>
-        {isOpsAdmin(auth) && <p className="text-sm text-slate-700">Operations admins have full operational access.</p>}
+        {isOpsAdmin(auth) && (
+          <p className="text-sm text-slate-700">Operations admins have full operational access.</p>
+        )}
       </Card>
       <Card title="Event / venue assignments">
         {events.isLoading ? (
           <Loading />
         ) : auth.assignments.length === 0 ? (
-          <Empty title="No assignments">Ask the operations cell to assign you to an event and venue.</Empty>
+          <Empty title="No assignments">
+            Ask the operations cell to assign you to an event and venue.
+          </Empty>
         ) : (
           <ul className="space-y-2">
             {auth.assignments.map((a) => (

@@ -47,7 +47,13 @@ describe('validateResult', () => {
   });
   it('rejects negative scores and times', () => {
     const errs = validateResult(
-      { ...base, participant_values: [{ participant_id: A, score: -1 }, { participant_id: B, time_seconds: -3 }] },
+      {
+        ...base,
+        participant_values: [
+          { participant_id: A, score: -1 },
+          { participant_id: B, time_seconds: -3 },
+        ],
+      },
       'head_to_head',
       [A, B],
     );
@@ -55,29 +61,52 @@ describe('validateResult', () => {
   });
   it('rejects negative or zero placements', () => {
     const errs = validateResult(
-      { ...base, result_method: 'placement', winner_participant_id: null, participant_values: [{ participant_id: A, placement: 0 }] },
+      {
+        ...base,
+        result_method: 'placement',
+        winner_participant_id: null,
+        participant_values: [{ participant_id: A, placement: 0 }],
+      },
       'heat',
       [A, B],
     );
     expect(errs).toContain('Placements must be whole numbers starting at 1.');
   });
   it('flags a winner with the lower score', () => {
-    const errs = validateResult({ ...base, winner_participant_id: B, loser_participant_id: A }, 'head_to_head', [A, B]);
+    const errs = validateResult(
+      { ...base, winner_participant_id: B, loser_participant_id: A },
+      'head_to_head',
+      [A, B],
+    );
     expect(errs.join(' ')).toMatch(/lower score/);
   });
   it('requires a winner for head-to-head unless scores tie', () => {
-    expect(validateResult({ ...base, winner_participant_id: null }, 'head_to_head', [A, B])).toContain('Select the winner.');
+    expect(
+      validateResult({ ...base, winner_participant_id: null }, 'head_to_head', [A, B]),
+    ).toContain('Select the winner.');
     const tie = validateResult(
-      { ...base, winner_participant_id: null, loser_participant_id: null, participant_values: [{ participant_id: A, score: 1 }, { participant_id: B, score: 1 }] },
+      {
+        ...base,
+        winner_participant_id: null,
+        loser_participant_id: null,
+        participant_values: [
+          { participant_id: A, score: 1 },
+          { participant_id: B, score: 1 },
+        ],
+      },
       'pool_game',
       [A, B],
     );
     expect(tie).toEqual([]);
   });
   it('requires two teams for head-to-head', () => {
-    expect(validateResult({ ...base, loser_participant_id: null, participant_values: [] }, 'head_to_head', [A])).toContain(
-      'This match needs two teams before a result can be entered.',
-    );
+    expect(
+      validateResult(
+        { ...base, loser_participant_id: null, participant_values: [] },
+        'head_to_head',
+        [A],
+      ),
+    ).toContain('This match needs two teams before a result can be entered.');
   });
   it('rejects duplicate placements in a heat', () => {
     const errs = validateResult(
@@ -123,9 +152,27 @@ describe('warnings', () => {
   });
   it('detects a team in overlapping matches', () => {
     const w = overlappingMatchWarnings([
-      { match_id: '1', match_code: 'M1', match_date: '2026-12-08', start_time: '09:00:00', participant_ids: [A, B] },
-      { match_id: '2', match_code: 'M2', match_date: '2026-12-08', start_time: '09:00', participant_ids: [A, C] },
-      { match_id: '3', match_code: 'M3', match_date: '2026-12-08', start_time: '10:00', participant_ids: [A] },
+      {
+        match_id: '1',
+        match_code: 'M1',
+        match_date: '2026-12-08',
+        start_time: '09:00:00',
+        participant_ids: [A, B],
+      },
+      {
+        match_id: '2',
+        match_code: 'M2',
+        match_date: '2026-12-08',
+        start_time: '09:00',
+        participant_ids: [A, C],
+      },
+      {
+        match_id: '3',
+        match_code: 'M3',
+        match_date: '2026-12-08',
+        start_time: '10:00',
+        participant_ids: [A],
+      },
     ]);
     expect(w).toHaveLength(1);
     expect(w[0]).toContain('M1 and M2');
@@ -134,8 +181,32 @@ describe('warnings', () => {
 
 describe('teamSchema', () => {
   it('rejects negative player counts and blank names', () => {
-    expect(teamSchema.safeParse({ team_name: '', unit: 'U', player_count: 5, captain_name: null, active: true }).success).toBe(false);
-    expect(teamSchema.safeParse({ team_name: 'T', unit: 'U', player_count: -1, captain_name: null, active: true }).success).toBe(false);
-    expect(teamSchema.safeParse({ team_name: 'T', unit: 'U', player_count: 10, captain_name: null, active: true }).success).toBe(true);
+    expect(
+      teamSchema.safeParse({
+        team_name: '',
+        unit: 'U',
+        player_count: 5,
+        captain_name: null,
+        active: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      teamSchema.safeParse({
+        team_name: 'T',
+        unit: 'U',
+        player_count: -1,
+        captain_name: null,
+        active: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      teamSchema.safeParse({
+        team_name: 'T',
+        unit: 'U',
+        player_count: 10,
+        captain_name: null,
+        active: true,
+      }).success,
+    ).toBe(true);
   });
 });

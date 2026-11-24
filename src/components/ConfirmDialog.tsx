@@ -48,10 +48,14 @@ export function ConfirmDialog({
 
   if (!open) return null;
   const needsReason = Boolean(options.reasonLabel);
-  const reasonError = needsReason && touched && reason.trim().length < 3 ? 'A reason is required.' : undefined;
+  const reasonError =
+    needsReason && touched && reason.trim().length < 3 ? 'A reason is required.' : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onCancel}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
+      onClick={onCancel}
+    >
       <div
         ref={ref}
         role="dialog"
@@ -65,7 +69,12 @@ export function ConfirmDialog({
         </h2>
         {options.body && <div className="mt-2 text-slate-800">{options.body}</div>}
         {needsReason && (
-          <Field label={options.reasonLabel} htmlFor={`${id}-reason`} error={reasonError} className="mt-4">
+          <Field
+            label={options.reasonLabel}
+            htmlFor={`${id}-reason`}
+            error={reasonError}
+            className="mt-4"
+          >
             <TextArea
               id={`${id}-reason`}
               value={reason}
@@ -92,7 +101,7 @@ export function ConfirmDialog({
               onConfirm(reason.trim());
             }}
           >
-            {busy ? 'Working…' : options.confirmLabel ?? 'Confirm'}
+            {busy ? 'Working…' : (options.confirmLabel ?? 'Confirm')}
           </Button>
         </div>
       </div>
@@ -102,7 +111,10 @@ export function ConfirmDialog({
 
 /** Hook: const confirm = useConfirm(); confirm.ask({...}, async (reason) => ...) ; render {confirm.dialog} */
 export function useConfirm() {
-  const [state, setState] = useState<{ options: ConfirmOptions; run: (reason: string) => unknown } | null>(null);
+  const [state, setState] = useState<{
+    options: ConfirmOptions;
+    run: (reason: string) => unknown;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = (

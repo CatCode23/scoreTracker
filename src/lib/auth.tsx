@@ -29,7 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       if (event === 'SIGNED_IN' && window.location.search.includes('code=')) {
         // Strip the PKCE ?code= from the URL, keep the hash route.
-        window.history.replaceState(null, '', window.location.pathname + (window.location.hash || '#/ops'));
+        window.history.replaceState(
+          null,
+          '',
+          window.location.pathname + (window.location.hash || '#/ops'),
+        );
       }
       if (event === 'SIGNED_OUT') qc.removeQueries({ queryKey: ['ops'] });
     });
@@ -47,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
       if (p.error) throw p.error;
       if (a.error) throw a.error;
-      return { profile: (p.data as Profile | null) ?? null, assignments: (a.data as Assignment[]) ?? [] };
+      return {
+        profile: (p.data as Profile | null) ?? null,
+        assignments: (a.data as Assignment[]) ?? [],
+      };
     },
   });
 
@@ -75,7 +82,13 @@ export function useAuth(): AuthState {
 }
 
 /** For tests / storybook-like rendering with a fixed identity. */
-export function TestAuthProvider({ value, children }: { value: Partial<AuthState>; children: ReactNode }) {
+export function TestAuthProvider({
+  value,
+  children,
+}: {
+  value: Partial<AuthState>;
+  children: ReactNode;
+}) {
   const v: AuthState = {
     session: null,
     profile: null,

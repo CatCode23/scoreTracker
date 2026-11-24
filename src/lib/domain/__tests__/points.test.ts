@@ -2,7 +2,9 @@ import { computeLeaderboard, DEFAULT_POINTS_MATRIX, pointsForPlace } from '../po
 
 describe('pointsForPlace', () => {
   it('awards 8 through 1 for places 1 through 8', () => {
-    expect([1, 2, 3, 4, 5, 6, 7, 8].map((p) => pointsForPlace(p))).toEqual([8, 7, 6, 5, 4, 3, 2, 1]);
+    expect([1, 2, 3, 4, 5, 6, 7, 8].map((p) => pointsForPlace(p))).toEqual([
+      8, 7, 6, 5, 4, 3, 2, 1,
+    ]);
   });
   it('awards 0 for places above 8, invalid and missing places', () => {
     expect(pointsForPlace(9)).toBe(0);
@@ -55,7 +57,9 @@ describe('computeLeaderboard', () => {
   });
 
   it('includes penalty-only teams', () => {
-    const rows = computeLeaderboard([], [{ team_id: 'x', points: -6 }], { x: { team_name: 'X', unit: 'U' } });
+    const rows = computeLeaderboard([], [{ team_id: 'x', points: -6 }], {
+      x: { team_name: 'X', unit: 'U' },
+    });
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ team_name: 'X', total_points: -6, rank: 1 });
   });

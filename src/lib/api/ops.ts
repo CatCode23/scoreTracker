@@ -67,7 +67,10 @@ export function useStages(eventId?: string) {
   return useQuery({
     queryKey: ['ops', 'stages', eventId],
     enabled: Boolean(eventId),
-    queryFn: () => rows<Stage>(supabase.from('stages').select('*').eq('event_id', eventId!).order('stage_order')),
+    queryFn: () =>
+      rows<Stage>(
+        supabase.from('stages').select('*').eq('event_id', eventId!).order('stage_order'),
+      ),
   });
 }
 
@@ -77,7 +80,11 @@ export function usePools(eventId?: string) {
     enabled: Boolean(eventId),
     queryFn: () =>
       rows<Pool & { stages: { event_id: string } }>(
-        supabase.from('pools').select('*, stages!inner(event_id)').eq('stages.event_id', eventId!).order('pool_name'),
+        supabase
+          .from('pools')
+          .select('*, stages!inner(event_id)')
+          .eq('stages.event_id', eventId!)
+          .order('pool_name'),
       ),
   });
 }
@@ -86,7 +93,8 @@ export function usePoolAssignments(poolIds: string[]) {
   return useQuery({
     queryKey: ['ops', 'pool-assignments', poolIds],
     enabled: poolIds.length > 0,
-    queryFn: () => rows<PoolAssignment>(supabase.from('pool_assignments').select('*').in('pool_id', poolIds)),
+    queryFn: () =>
+      rows<PoolAssignment>(supabase.from('pool_assignments').select('*').in('pool_id', poolIds)),
   });
 }
 
@@ -171,7 +179,8 @@ export function usePointsMatrix() {
 export function useSettings() {
   return useQuery({
     queryKey: ['ops', 'settings'],
-    queryFn: () => rows<ScoringSetting>(supabase.from('scoring_settings').select('*').order('setting_key')),
+    queryFn: () =>
+      rows<ScoringSetting>(supabase.from('scoring_settings').select('*').order('setting_key')),
   });
 }
 
@@ -182,7 +191,9 @@ export function useOperatorNames() {
       const list = await rows<{ id: string; display_name: string | null }>(
         supabase.from('operator_names').select('*'),
       );
-      return Object.fromEntries(list.map((p) => [p.id, p.display_name ?? 'Unnamed user'])) as Record<string, string>;
+      return Object.fromEntries(
+        list.map((p) => [p.id, p.display_name ?? 'Unnamed user']),
+      ) as Record<string, string>;
     },
     staleTime: 60_000,
   });
@@ -192,7 +203,10 @@ export function useProfiles(enabled: boolean) {
   return useQuery({
     queryKey: ['ops', 'profiles'],
     enabled,
-    queryFn: () => rows<Profile>(supabase.from('profiles').select('*').order('created_at', { ascending: false })),
+    queryFn: () =>
+      rows<Profile>(
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+      ),
   });
 }
 
@@ -252,12 +266,14 @@ export const db = {
   update: async (table: string, id: string, values: object) => {
     const { data, error } = await supabase.from(table).update(values).eq('id', id).select('id');
     if (error) throw error;
-    if (!data?.length) throw new Error('Not saved: record not found or you are not authorized to change it.');
+    if (!data?.length)
+      throw new Error('Not saved: record not found or you are not authorized to change it.');
   },
   remove: async (table: string, id: string) => {
     const { data, error } = await supabase.from(table).delete().eq('id', id).select('id');
     if (error) throw error;
-    if (!data?.length) throw new Error('Not deleted: record not found or you are not authorized to delete it.');
+    if (!data?.length)
+      throw new Error('Not deleted: record not found or you are not authorized to delete it.');
   },
   rpc: async <T = unknown>(fn: string, args: object): Promise<T> => {
     const { data, error } = await supabase.rpc(fn, args);

@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Send } from 'lucide-react';
-import { defaultResultMethod, fieldsForMethod, isHeadToHead, validateResult } from '../lib/domain/validation';
+import {
+  defaultResultMethod,
+  fieldsForMethod,
+  isHeadToHead,
+  validateResult,
+} from '../lib/domain/validation';
 import { inferWinnerFromScores } from '../lib/domain/advancement';
 import { parseDuration, humanize } from '../lib/domain/format';
 import { friendlyError } from '../lib/supabase';
-import { RESULT_METHODS, type MatchType, type ParticipantValue, type ResultMethod } from '../lib/types';
+import {
+  RESULT_METHODS,
+  type MatchType,
+  type ParticipantValue,
+  type ResultMethod,
+} from '../lib/types';
 import { Button, Checkbox, Field, Input, Notice, Select, TextArea } from './ui';
 
 export interface EntryParticipant {
@@ -46,7 +56,13 @@ const FIELD_LABEL: Record<string, string> = {
   technical_score: 'Technical score',
   placement: 'Place (1 = first)',
 };
-const ROW_KEY = { score: 'score', time_seconds: 'time', penalty_seconds: 'penalty', technical_score: 'technical', placement: 'placement' } as const;
+const ROW_KEY = {
+  score: 'score',
+  time_seconds: 'time',
+  penalty_seconds: 'penalty',
+  technical_score: 'technical',
+  placement: 'placement',
+} as const;
 
 function toNumber(v: string): number | null {
   const t = v.trim();
@@ -56,7 +72,11 @@ function toNumber(v: string): number | null {
 }
 
 /** Convert form values into the submission payload. Exported for tests. */
-export function buildPayload(values: FormValues, matchType: MatchType, participants: EntryParticipant[]): ResultPayload {
+export function buildPayload(
+  values: FormValues,
+  matchType: MatchType,
+  participants: EntryParticipant[],
+): ResultPayload {
   const fields = fieldsForMethod(values.result_method);
   const participant_values: ParticipantValue[] = values.rows.map((r) => {
     const v: ParticipantValue = { participant_id: r.participant_id };
@@ -70,7 +90,8 @@ export function buildPayload(values: FormValues, matchType: MatchType, participa
   let winner: string | null = values.winner || null;
   let loser: string | null = null;
   if (isHeadToHead(matchType)) {
-    if (winner && participants.length === 2) loser = participants.find((p) => p.participant_id !== winner)?.participant_id ?? null;
+    if (winner && participants.length === 2)
+      loser = participants.find((p) => p.participant_id !== winner)?.participant_id ?? null;
   } else {
     // Multi-team: winner = 1st place, if entered.
     const first = participant_values.find((v) => v.placement === 1);
@@ -103,7 +124,14 @@ export function ScoreEntryForm({
   const { register, handleSubmit, control, setValue, reset, formState } = useForm<FormValues>({
     defaultValues: {
       result_method: defaultResultMethod(matchType),
-      rows: participants.map((p) => ({ participant_id: p.participant_id, score: '', time: '', penalty: '', technical: '', placement: '' })),
+      rows: participants.map((p) => ({
+        participant_id: p.participant_id,
+        score: '',
+        time: '',
+        penalty: '',
+        technical: '',
+        placement: '',
+      })),
       winner: '',
       referee_confirmed: false,
       notes: '',
@@ -115,7 +143,14 @@ export function ScoreEntryForm({
   useEffect(() => {
     reset({
       result_method: defaultResultMethod(matchType),
-      rows: participants.map((p) => ({ participant_id: p.participant_id, score: '', time: '', penalty: '', technical: '', placement: '' })),
+      rows: participants.map((p) => ({
+        participant_id: p.participant_id,
+        score: '',
+        time: '',
+        penalty: '',
+        technical: '',
+        placement: '',
+      })),
       winner: '',
       referee_confirmed: false,
       notes: '',
@@ -135,7 +170,9 @@ export function ScoreEntryForm({
   // Convenience: suggest the winner from scores (scorer can still change it).
   useEffect(() => {
     if (!h2h || method !== 'score' || !rows) return;
-    const inferred = inferWinnerFromScores(rows.map((r) => ({ participant_id: r.participant_id, score: toNumber(r.score) })));
+    const inferred = inferWinnerFromScores(
+      rows.map((r) => ({ participant_id: r.participant_id, score: toNumber(r.score) })),
+    );
     if (inferred.winner && !formState.dirtyFields.winner) setValue('winner', inferred.winner);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(rows?.map((r) => r.score)), method, h2h]);
@@ -148,10 +185,17 @@ export function ScoreEntryForm({
       matchType,
       participants.map((p) => p.participant_id),
     );
-    if (fields.includes('time_seconds') && payload.participant_values.some((v) => Number.isNaN(v.time_seconds as number))) {
+    if (
+      fields.includes('time_seconds') &&
+      payload.participant_values.some((v) => Number.isNaN(v.time_seconds as number))
+    ) {
       problems.unshift('Enter times as mm:ss (for example 12:34.5) or as seconds.');
     }
-    if (payload.participant_values.some((v) => Object.values(v).some((x) => typeof x === 'number' && Number.isNaN(x)))) {
+    if (
+      payload.participant_values.some((v) =>
+        Object.values(v).some((x) => typeof x === 'number' && Number.isNaN(x)),
+      )
+    ) {
       problems.unshift('One of the values is not a valid number.');
     }
     setErrors([...new Set(problems)]);
@@ -165,7 +209,11 @@ export function ScoreEntryForm({
   });
 
   if (participants.length === 0) {
-    return <Notice tone="warn">No teams are assigned to this match yet. Contact the sport manager.</Notice>;
+    return (
+      <Notice tone="warn">
+        No teams are assigned to this match yet. Contact the sport manager.
+      </Notice>
+    );
   }
   if (done) {
     return (
@@ -177,7 +225,9 @@ export function ScoreEntryForm({
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate aria-label="Submit result">
-      {h2h && participants.length < 2 && <Notice tone="warn">Head-to-head match has fewer than two teams assigned.</Notice>}
+      {h2h && participants.length < 2 && (
+        <Notice tone="warn">Head-to-head match has fewer than two teams assigned.</Notice>
+      )}
 
       <Field label="Result type" htmlFor="result_method">
         <Select id="result_method" {...register('result_method')}>
@@ -192,7 +242,10 @@ export function ScoreEntryForm({
       <fieldset className="space-y-3">
         <legend className="mb-1 text-sm font-semibold">Teams (read-only)</legend>
         {participants.map((p, i) => (
-          <div key={p.participant_id} className="rounded-lg border border-slate-300 bg-slate-50 p-3">
+          <div
+            key={p.participant_id}
+            className="rounded-lg border border-slate-300 bg-slate-50 p-3"
+          >
             <p className="font-bold">
               <span className="mr-2 rounded bg-slate-700 px-1.5 text-xs text-white">{p.slot}</span>
               {p.label}
@@ -226,19 +279,36 @@ export function ScoreEntryForm({
           <legend className="mb-1 text-sm font-semibold">Winner</legend>
           <div className="grid gap-2">
             {participants.map((p) => (
-              <label key={p.participant_id} className="flex min-h-touch cursor-pointer items-center gap-3 rounded-lg border border-slate-400 bg-white p-3">
-                <input type="radio" value={p.participant_id} className="h-6 w-6 accent-brand" {...register('winner')} />
+              <label
+                key={p.participant_id}
+                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-lg border border-slate-400 bg-white p-3"
+              >
+                <input
+                  type="radio"
+                  value={p.participant_id}
+                  className="h-6 w-6 accent-brand"
+                  {...register('winner')}
+                />
                 <span className="font-semibold">{p.label}</span>
               </label>
             ))}
             {method === 'score' && (
               <label className="flex min-h-touch cursor-pointer items-center gap-3 rounded-lg border border-slate-400 bg-white p-3">
-                <input type="radio" value="" className="h-6 w-6 accent-brand" {...register('winner')} />
+                <input
+                  type="radio"
+                  value=""
+                  className="h-6 w-6 accent-brand"
+                  {...register('winner')}
+                />
                 <span>Tie / no winner (pool play only)</span>
               </label>
             )}
           </div>
-          {winner && <p className="mt-1 text-sm text-slate-700">Selected winner: {participants.find((p) => p.participant_id === winner)?.label}</p>}
+          {winner && (
+            <p className="mt-1 text-sm text-slate-700">
+              Selected winner: {participants.find((p) => p.participant_id === winner)?.label}
+            </p>
+          )}
         </fieldset>
       )}
 
@@ -266,7 +336,8 @@ export function ScoreEntryForm({
       {serverError && <Notice tone="error">{serverError}</Notice>}
 
       <Button type="submit" block variant="success" disabled={formState.isSubmitting}>
-        <Send className="h-5 w-5" aria-hidden /> {formState.isSubmitting ? 'Submitting…' : 'Submit Result'}
+        <Send className="h-5 w-5" aria-hidden />{' '}
+        {formState.isSubmitting ? 'Submitting…' : 'Submit Result'}
       </Button>
     </form>
   );

@@ -31,7 +31,14 @@ export const participantValueSchema = z.object({
 
 export const resultSubmissionSchema = z.object({
   match_id: z.string().uuid(),
-  result_method: z.enum(['score', 'time', 'placement', 'technical_score', 'forfeit', 'disqualification']),
+  result_method: z.enum([
+    'score',
+    'time',
+    'placement',
+    'technical_score',
+    'forfeit',
+    'disqualification',
+  ]),
   winner_participant_id: z.string().uuid().nullable(),
   loser_participant_id: z.string().uuid().nullable(),
   participant_values: z.array(participantValueSchema),
@@ -56,7 +63,9 @@ export function defaultResultMethod(t: MatchType): ResultMethod {
 }
 
 /** Which value fields to show for a result method. */
-export function fieldsForMethod(m: ResultMethod): Array<keyof Omit<ParticipantValue, 'participant_id'>> {
+export function fieldsForMethod(
+  m: ResultMethod,
+): Array<keyof Omit<ParticipantValue, 'participant_id'>> {
   switch (m) {
     case 'score':
       return ['score'];
@@ -90,24 +99,24 @@ export function validateResult(
   if (input.loser_participant_id && !inMatch.has(input.loser_participant_id)) {
     errors.push('The loser must be a team assigned to this match.');
   }
-  if (
-    input.winner_participant_id &&
-    input.winner_participant_id === input.loser_participant_id
-  ) {
+  if (input.winner_participant_id && input.winner_participant_id === input.loser_participant_id) {
     errors.push('Winner and loser cannot be the same team.');
   }
   for (const v of input.participant_values) {
-    if (!inMatch.has(v.participant_id)) errors.push('A result row references a team not in this match.');
+    if (!inMatch.has(v.participant_id))
+      errors.push('A result row references a team not in this match.');
     for (const k of ['score', 'time_seconds', 'penalty_seconds', 'technical_score'] as const) {
       const n = v[k];
-      if (n != null && (Number.isNaN(n) || n < 0)) errors.push('Scores, times and penalties cannot be negative.');
+      if (n != null && (Number.isNaN(n) || n < 0))
+        errors.push('Scores, times and penalties cannot be negative.');
     }
     if (v.placement != null && (!Number.isInteger(v.placement) || v.placement < 1)) {
       errors.push('Placements must be whole numbers starting at 1.');
     }
   }
   if (isHeadToHead(matchType)) {
-    if (matchParticipantIds.length < 2) errors.push('This match needs two teams before a result can be entered.');
+    if (matchParticipantIds.length < 2)
+      errors.push('This match needs two teams before a result can be entered.');
     if (!input.winner_participant_id) {
       const tie =
         input.result_method === 'score' &&
@@ -117,21 +126,29 @@ export function validateResult(
       if (!tie) errors.push('Select the winner.');
     }
     if (input.result_method === 'score' && input.winner_participant_id) {
-      const w = input.participant_values.find((v) => v.participant_id === input.winner_participant_id);
-      const l = input.participant_values.find((v) => v.participant_id !== input.winner_participant_id);
+      const w = input.participant_values.find(
+        (v) => v.participant_id === input.winner_participant_id,
+      );
+      const l = input.participant_values.find(
+        (v) => v.participant_id !== input.winner_participant_id,
+      );
       if (w?.score != null && l?.score != null && w.score < l.score) {
         errors.push('The selected winner has the lower score. Check the winner or the scores.');
       }
     }
   } else {
     const placements = input.participant_values.map((v) => v.placement).filter((p) => p != null);
-    if (new Set(placements).size !== placements.length) errors.push('Two teams cannot share the same placement.');
+    if (new Set(placements).size !== placements.length)
+      errors.push('Two teams cannot share the same placement.');
   }
   return [...new Set(errors)];
 }
 
 /** Warning when registered team count differs from the configured target. */
-export function participantCountWarning(count: number, target: number | null | undefined): string | null {
+export function participantCountWarning(
+  count: number,
+  target: number | null | undefined,
+): string | null {
   if (target == null || target === count) return null;
   return `This event has ${count} registered team${count === 1 ? '' : 's'}; the target is ${target}.`;
 }

@@ -39,7 +39,10 @@ export function hasEventRole(a: Access, eventId: string, roles: Role[]): boolean
   if (!isActive(a)) return false;
   if (isOpsAdmin(a)) return true;
   return a.assignments.some(
-    (x) => x.active && roles.includes(x.assignment_role) && (x.event_id === null || x.event_id === eventId),
+    (x) =>
+      x.active &&
+      roles.includes(x.assignment_role) &&
+      (x.event_id === null || x.event_id === eventId),
   );
 }
 
@@ -49,7 +52,7 @@ export function matchVenue(
   event: Pick<EventRow, 'venue'> | undefined,
   sessionVenue?: string | null,
 ): string {
-  return norm(match.session_id ? sessionVenue ?? event?.venue : event?.venue);
+  return norm(match.session_id ? (sessionVenue ?? event?.venue) : event?.venue);
 }
 
 export function hasMatchRole(a: Access, eventId: string, venue: string, roles: Role[]): boolean {
@@ -69,17 +72,30 @@ export function canManageEvent(a: Access, eventId: string): boolean {
 }
 
 export function canRegisterTeams(a: Access): boolean {
-  return isOpsAdmin(a) || (isActive(a) && a.assignments.some((x) => x.active && x.assignment_role === 'sport_manager'));
+  return (
+    isOpsAdmin(a) ||
+    (isActive(a) && a.assignments.some((x) => x.active && x.assignment_role === 'sport_manager'))
+  );
 }
 
 export function canValidateAnything(a: Access): boolean {
-  return isOpsAdmin(a) || (isActive(a) && a.assignments.some((x) => x.active && VALIDATE_ROLES.includes(x.assignment_role)));
+  return (
+    isOpsAdmin(a) ||
+    (isActive(a) &&
+      a.assignments.some((x) => x.active && VALIDATE_ROLES.includes(x.assignment_role)))
+  );
 }
 
 export function canSubmitAnything(a: Access): boolean {
-  return isOpsAdmin(a) || (isActive(a) && a.assignments.some((x) => x.active && SUBMIT_ROLES.includes(x.assignment_role)));
+  return (
+    isOpsAdmin(a) ||
+    (isActive(a) && a.assignments.some((x) => x.active && SUBMIT_ROLES.includes(x.assignment_role)))
+  );
 }
 
 export function canManageAnything(a: Access): boolean {
-  return isOpsAdmin(a) || (isActive(a) && a.assignments.some((x) => x.active && MANAGE_ROLES.includes(x.assignment_role)));
+  return (
+    isOpsAdmin(a) ||
+    (isActive(a) && a.assignments.some((x) => x.active && MANAGE_ROLES.includes(x.assignment_role)))
+  );
 }

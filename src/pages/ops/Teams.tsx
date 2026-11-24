@@ -21,7 +21,9 @@ function TeamForm({ team, onDone }: { team?: Team; onDone: () => void }) {
       active: team?.active ?? true,
     },
   });
-  const save = useOpsMutation((v: TeamInput) => (team ? db.update('teams', team.id, v) : db.insert('teams', v)));
+  const save = useOpsMutation((v: TeamInput) =>
+    team ? db.update('teams', team.id, v) : db.insert('teams', v),
+  );
   const e = formState.errors;
   return (
     <form
@@ -47,16 +49,31 @@ function TeamForm({ team, onDone }: { team?: Team; onDone: () => void }) {
         <Input
           id="player_count"
           inputMode="numeric"
-          {...register('player_count', { setValueAs: (v) => (v === '' || v == null ? null : Number(v)) })}
+          {...register('player_count', {
+            setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+          })}
         />
       </Field>
-      <Field label="Captain name (restricted — staff only)" htmlFor="captain_name" error={e.captain_name?.message}>
+      <Field
+        label="Captain name (restricted — staff only)"
+        htmlFor="captain_name"
+        error={e.captain_name?.message}
+      >
         <Input id="captain_name" {...register('captain_name')} />
       </Field>
       <div className="sm:col-span-2">
-        <Checkbox id="team-active" label="Active" checked={watch('active')} onChange={(v) => setValue('active', v)} />
+        <Checkbox
+          id="team-active"
+          label="Active"
+          checked={watch('active')}
+          onChange={(v) => setValue('active', v)}
+        />
       </div>
-      {err && <Notice tone="error" className="sm:col-span-2">{err}</Notice>}
+      {err && (
+        <Notice tone="error" className="sm:col-span-2">
+          {err}
+        </Notice>
+      )}
       <div className="flex gap-2 sm:col-span-2">
         <Button type="submit" disabled={formState.isSubmitting}>
           {team ? 'Save team' : 'Create team'}
@@ -75,7 +92,9 @@ export function Teams() {
   const [q, setQ] = useState('');
   if (teams.isLoading) return <Loading />;
   if (teams.error) return <ErrorState error={teams.error} />;
-  const list = (teams.data ?? []).filter((t) => `${t.team_name} ${t.unit}`.toLowerCase().includes(q.toLowerCase()));
+  const list = (teams.data ?? []).filter((t) =>
+    `${t.team_name} ${t.unit}`.toLowerCase().includes(q.toLowerCase()),
+  );
   return (
     <div className="space-y-4">
       <PageHeader
@@ -87,29 +106,51 @@ export function Teams() {
           </Button>
         }
       />
-      <Notice tone="warn">Captain names are restricted operational data. Do not enter CUI or unnecessary personal data.</Notice>
+      <Notice tone="warn">
+        Captain names are restricted operational data. Do not enter CUI or unnecessary personal
+        data.
+      </Notice>
       {editing && (
         <Card title={editing === 'new' ? 'New team' : `Edit ${editing.team_name}`}>
-          <TeamForm key={editing === 'new' ? 'new' : editing.id} team={editing === 'new' ? undefined : editing} onDone={() => setEditing(null)} />
+          <TeamForm
+            key={editing === 'new' ? 'new' : editing.id}
+            team={editing === 'new' ? undefined : editing}
+            onDone={() => setEditing(null)}
+          />
         </Card>
       )}
-      <Input aria-label="Search teams" placeholder="Search teams or units" value={q} onChange={(e) => setQ(e.target.value)} />
+      <Input
+        aria-label="Search teams"
+        placeholder="Search teams or units"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
       {list.length === 0 ? (
         <Empty title="No teams yet" />
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((t) => (
-            <li key={t.id} className="flex items-start justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3">
+            <li
+              key={t.id}
+              className="flex items-start justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3"
+            >
               <span>
                 <span className="block font-bold">
-                  {t.team_name} {!t.active && <span className="text-sm text-red-700">(inactive)</span>}
+                  {t.team_name}{' '}
+                  {!t.active && <span className="text-sm text-red-700">(inactive)</span>}
                 </span>
                 <span className="block text-sm text-slate-700">
                   {t.unit} · {t.player_count ?? '?'} players
                 </span>
-                <span className="block text-sm text-slate-700">Captain: {t.captain_name || '—'}</span>
+                <span className="block text-sm text-slate-700">
+                  Captain: {t.captain_name || '—'}
+                </span>
               </span>
-              <Button variant="ghost" aria-label={`Edit ${t.team_name}`} onClick={() => setEditing(t)}>
+              <Button
+                variant="ghost"
+                aria-label={`Edit ${t.team_name}`}
+                onClick={() => setEditing(t)}
+              >
                 <Pencil className="h-5 w-5" aria-hidden />
               </Button>
             </li>

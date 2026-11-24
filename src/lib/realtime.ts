@@ -8,19 +8,31 @@ import { supabase, isConfigured } from './supabase';
  */
 export function usePublicRealtime(): 'live' | 'connecting' | 'polling' {
   const qc = useQueryClient();
-  const [state, setState] = useState<'live' | 'connecting' | 'polling'>(isConfigured ? 'connecting' : 'polling');
+  const [state, setState] = useState<'live' | 'connecting' | 'polling'>(
+    isConfigured ? 'connecting' : 'polling',
+  );
 
   useEffect(() => {
     if (!isConfigured) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const channel = supabase
       .channel('public-updates')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'public_updates' }, () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => void qc.invalidateQueries({ queryKey: ['public'] }), 400);
-      })
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'public_updates' },
+        () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => void qc.invalidateQueries({ queryKey: ['public'] }), 400);
+        },
+      )
       .subscribe((status) => {
-        setState(status === 'SUBSCRIBED' ? 'live' : status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'polling' : 'connecting');
+        setState(
+          status === 'SUBSCRIBED'
+            ? 'live'
+            : status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'
+              ? 'polling'
+              : 'connecting',
+        );
       });
     return () => {
       clearTimeout(timer);

@@ -12,11 +12,14 @@ export function Roster() {
   if (events.isLoading) return <Loading />;
   if (events.error) return <ErrorState error={events.error} />;
   const event = events.data?.find((e) => e.id === eventId);
-  const list = eventId ? participants.data ?? [] : [];
+  const list = eventId ? (participants.data ?? []) : [];
   const active = list.filter((p) => p.active && p.check_in_status !== 'withdrawn');
   return (
     <div className="space-y-4">
-      <PageHeader title="Roster / Registration Review" subtitle="Restricted: visible to authenticated staff only." />
+      <PageHeader
+        title="Roster / Registration Review"
+        subtitle="Restricted: visible to authenticated staff only."
+      />
       <Card>
         <Field label="Event" htmlFor="roster-event">
           <Select id="roster-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -30,7 +33,9 @@ export function Roster() {
         </Field>
       </Card>
       {event && participantCountWarning(active.length, event.target_team_count) && (
-        <Notice tone="warn">{participantCountWarning(active.length, event.target_team_count)}</Notice>
+        <Notice tone="warn">
+          {participantCountWarning(active.length, event.target_team_count)}
+        </Notice>
       )}
       {eventId &&
         (participants.isLoading ? (
@@ -44,7 +49,11 @@ export function Roster() {
             {list.map((p) => (
               <li key={p.id} className="rounded-lg border border-slate-300 bg-white p-3">
                 <p className="font-bold">
-                  {p.seed != null && <span className="mr-2 rounded bg-slate-700 px-1.5 text-xs text-white">#{p.seed}</span>}
+                  {p.seed != null && (
+                    <span className="mr-2 rounded bg-slate-700 px-1.5 text-xs text-white">
+                      #{p.seed}
+                    </span>
+                  )}
                   {p.teams?.team_name}
                 </p>
                 <p className="text-sm text-slate-700">Unit: {p.teams?.unit}</p>

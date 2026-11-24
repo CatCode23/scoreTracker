@@ -5,8 +5,32 @@ import type { AuditEntry } from '../../lib/types';
 import { Button, Card, Field, Input, PageHeader, Select } from '../../components/ui';
 import { Empty, ErrorState, Loading } from '../../components/states';
 
-const TABLES = ['matches', 'match_participants', 'match_results', 'corrections', 'event_placements', 'point_adjustments', 'event_participants', 'teams', 'user_assignments', 'profiles', 'scoring_settings', 'events'];
-const ACTIONS = ['insert', 'update', 'delete', 'submit', 'validate', 'approve', 'return', 'dispute', 'void', 'publish'];
+const TABLES = [
+  'matches',
+  'match_participants',
+  'match_results',
+  'corrections',
+  'event_placements',
+  'point_adjustments',
+  'event_participants',
+  'teams',
+  'user_assignments',
+  'profiles',
+  'scoring_settings',
+  'events',
+];
+const ACTIONS = [
+  'insert',
+  'update',
+  'delete',
+  'submit',
+  'validate',
+  'approve',
+  'return',
+  'dispute',
+  'void',
+  'publish',
+];
 
 function changedKeys(e: AuditEntry): string[] {
   if (!e.old_data || !e.new_data) return [];
@@ -22,11 +46,15 @@ export function AuditLog() {
   const [filter, setFilter] = useState<AuditFilter>({});
   const log = useAuditLog(filter, true);
   const [open, setOpen] = useState<string | null>(null);
-  const set = (k: keyof AuditFilter) => (e: { target: { value: string } }) => setDraft((d) => ({ ...d, [k]: e.target.value || undefined }));
+  const set = (k: keyof AuditFilter) => (e: { target: { value: string } }) =>
+    setDraft((d) => ({ ...d, [k]: e.target.value || undefined }));
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Audit Log" subtitle="Append-only record of submissions, validations, corrections, voids and placement changes." />
+      <PageHeader
+        title="Audit Log"
+        subtitle="Append-only record of submissions, validations, corrections, voids and placement changes."
+      />
       <Card>
         <form
           className="grid gap-3 sm:grid-cols-3"
@@ -76,11 +104,21 @@ export function AuditLog() {
             </Select>
           </Field>
           <Field label="Record ID" htmlFor="af-record">
-            <Input id="af-record" onChange={set('recordId')} value={draft.recordId ?? ''} placeholder="uuid" />
+            <Input
+              id="af-record"
+              onChange={set('recordId')}
+              value={draft.recordId ?? ''}
+              placeholder="uuid"
+            />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field label="From" htmlFor="af-from">
-              <Input id="af-from" type="datetime-local" onChange={set('from')} value={draft.from ?? ''} />
+              <Input
+                id="af-from"
+                type="datetime-local"
+                onChange={set('from')}
+                value={draft.from ?? ''}
+              />
             </Field>
             <Field label="To" htmlFor="af-to">
               <Input id="af-to" type="datetime-local" onChange={set('to')} value={draft.to ?? ''} />
@@ -88,7 +126,13 @@ export function AuditLog() {
           </div>
           <div className="flex gap-2 sm:col-span-3">
             <Button type="submit">Apply filters</Button>
-            <Button variant="ghost" onClick={() => { setDraft({}); setFilter({}); }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraft({});
+                setFilter({});
+              }}
+            >
               Clear
             </Button>
           </div>
@@ -113,11 +157,16 @@ export function AuditLog() {
                   <span className="text-sm text-slate-700">{formatDateTime(e.created_at)}</span>
                 </div>
                 <p className="text-sm text-slate-700">
-                  By {(e.actor_profile_id && names.data?.[e.actor_profile_id]) || 'System / SQL'} · record {e.record_id.slice(0, 8)}…
+                  By {(e.actor_profile_id && names.data?.[e.actor_profile_id]) || 'System / SQL'} ·
+                  record {e.record_id.slice(0, 8)}…
                   {keys.length > 0 && ` · changed: ${keys.join(', ')}`}
                 </p>
                 {e.reason && <p className="text-sm">Reason: {e.reason}</p>}
-                <Button variant="ghost" className="mt-1 min-h-[36px] px-2 text-sm" onClick={() => setOpen(open === e.id ? null : e.id)}>
+                <Button
+                  variant="ghost"
+                  className="mt-1 min-h-[36px] px-2 text-sm"
+                  onClick={() => setOpen(open === e.id ? null : e.id)}
+                >
                   {open === e.id ? 'Hide details' : 'Show details'}
                 </Button>
                 {open === e.id && (

@@ -6,7 +6,13 @@ import { Loading, Unauthorized } from '../../components/states';
 import { Card, Notice } from '../../components/ui';
 
 /** Route guard for operations pages. UI only: the database enforces access via RLS. */
-export function RequireAccess({ check, children }: { check?: (a: Access) => boolean; children: ReactNode }) {
+export function RequireAccess({
+  check,
+  children,
+}: {
+  check?: (a: Access) => boolean;
+  children: ReactNode;
+}) {
   const auth = useAuth();
   const loc = useLocation();
   if (auth.loading) return <Loading label="Checking your access…" />;
@@ -15,8 +21,8 @@ export function RequireAccess({ check, children }: { check?: (a: Access) => bool
     return (
       <Card>
         <Notice tone="warn" title="Account pending activation">
-          You are signed in as <strong>{auth.session.user.email}</strong>, but an operations admin has not activated your
-          account or assigned you a role yet. Give them this email address.
+          You are signed in as <strong>{auth.session.user.email}</strong>, but an operations admin
+          has not activated your account or assigned you a role yet. Give them this email address.
         </Notice>
       </Card>
     );

@@ -77,12 +77,20 @@ describe('ResultValidationCard', () => {
   it('requires a reason to dispute and to void', async () => {
     const { onAction, user } = setup();
     await user.click(screen.getByRole('button', { name: /Mark Disputed/ }));
-    await user.type(within(screen.getByRole('dialog')).getByLabelText('Reason (required)'), 'Coach protest');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark Disputed' }));
+    await user.type(
+      within(screen.getByRole('dialog')).getByLabelText('Reason (required)'),
+      'Coach protest',
+    );
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark Disputed' }),
+    );
     expect(onAction).toHaveBeenCalledWith('disputed', 'Coach protest');
 
     await user.click(screen.getByRole('button', { name: /^Void$/ }));
-    await user.type(within(screen.getByRole('dialog')).getByLabelText('Reason (required)'), 'Duplicate entry');
+    await user.type(
+      within(screen.getByRole('dialog')).getByLabelText('Reason (required)'),
+      'Duplicate entry',
+    );
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Void' }));
     expect(onAction).toHaveBeenLastCalledWith('void', 'Duplicate entry');
   });
@@ -99,10 +107,16 @@ describe('ResultValidationCard', () => {
   });
 
   it('shows the server error inside the dialog', async () => {
-    const onAction = vi.fn().mockRejectedValue(new Error('Cannot change a result from official to official'));
+    const onAction = vi
+      .fn()
+      .mockRejectedValue(new Error('Cannot change a result from official to official'));
     const { user } = setup({ onAction });
     await user.click(screen.getByRole('button', { name: /Mark Official/ }));
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark Official' }));
-    expect(await within(screen.getByRole('dialog')).findByText(/Cannot change a result/)).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark Official' }),
+    );
+    expect(
+      await within(screen.getByRole('dialog')).findByText(/Cannot change a result/),
+    ).toBeInTheDocument();
   });
 });

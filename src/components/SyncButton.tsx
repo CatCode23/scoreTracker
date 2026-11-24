@@ -4,7 +4,13 @@ import { useState } from 'react';
 import { Button, cx } from './ui';
 
 /** Prominent manual refresh for field users. */
-export function SyncButton({ scope = 'all', className }: { scope?: 'public' | 'ops' | 'all'; className?: string }) {
+export function SyncButton({
+  scope = 'all',
+  className,
+}: {
+  scope?: 'public' | 'ops' | 'all';
+  className?: string;
+}) {
   const qc = useQueryClient();
   const fetching = useIsFetching() > 0;
   const [last, setLast] = useState<Date | null>(null);

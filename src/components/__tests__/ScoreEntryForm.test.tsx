@@ -48,7 +48,9 @@ describe('ScoreEntryForm', () => {
     await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '1');
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText('Referee confirmation is required before submitting.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Referee confirmation is required before submitting.'),
+    ).toBeInTheDocument();
   });
 
   it('rejects negative scores', async () => {
@@ -57,7 +59,9 @@ describe('ScoreEntryForm', () => {
     render(<ScoreEntryForm matchType="head_to_head" participants={teams} onSubmit={onSubmit} />);
     await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '-2');
     await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '1');
-    await user.click(screen.getByLabelText('Raptors (1-2 SBCT)', { selector: 'input[type=radio]' }));
+    await user.click(
+      screen.getByLabelText('Raptors (1-2 SBCT)', { selector: 'input[type=radio]' }),
+    );
     await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     expect(onSubmit).not.toHaveBeenCalled();
@@ -66,7 +70,9 @@ describe('ScoreEntryForm', () => {
 
   it('shows server errors and stays on the form', async () => {
     const user = userEvent.setup();
-    const onSubmit = vi.fn().mockRejectedValue({ code: '42501', message: 'new row violates row-level security policy' });
+    const onSubmit = vi
+      .fn()
+      .mockRejectedValue({ code: '42501', message: 'new row violates row-level security policy' });
     render(<ScoreEntryForm matchType="head_to_head" participants={teams} onSubmit={onSubmit} />);
     await user.type(screen.getByLabelText('Score for Raptors (1-2 SBCT)'), '3');
     await user.type(screen.getByLabelText('Score for Lancers (2-2 SBCT)'), '0');
@@ -79,20 +85,34 @@ describe('ScoreEntryForm', () => {
   it('collects times, penalties and places for a timed heat', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const heat: EntryParticipant[] = [...teams, { participant_id: C, slot: 'Lane 3', label: 'Hawks (16th CAB)' }];
+    const heat: EntryParticipant[] = [
+      ...teams,
+      { participant_id: C, slot: 'Lane 3', label: 'Hawks (16th CAB)' },
+    ];
     render(<ScoreEntryForm matchType="heat" participants={heat} onSubmit={onSubmit} />);
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText('Time (mm:ss or seconds) for Raptors (1-2 SBCT)'), '12:30');
+    await user.type(
+      screen.getByLabelText('Time (mm:ss or seconds) for Raptors (1-2 SBCT)'),
+      '12:30',
+    );
     await user.type(screen.getByLabelText('Penalty (seconds) for Raptors (1-2 SBCT)'), '10');
     await user.type(screen.getByLabelText('Place (1 = first) for Raptors (1-2 SBCT)'), '1');
-    await user.type(screen.getByLabelText('Time (mm:ss or seconds) for Lancers (2-2 SBCT)'), '13:00');
+    await user.type(
+      screen.getByLabelText('Time (mm:ss or seconds) for Lancers (2-2 SBCT)'),
+      '13:00',
+    );
     await user.type(screen.getByLabelText('Place (1 = first) for Lancers (2-2 SBCT)'), '2');
     await user.click(screen.getByLabelText(/Referee \/ official has approved/));
     await user.click(screen.getByRole('button', { name: /Submit Result/ }));
     const payload = onSubmit.mock.calls[0][0];
     expect(payload.result_method).toBe('time');
     expect(payload.winner_participant_id).toBe(A);
-    expect(payload.participant_values[0]).toEqual({ participant_id: A, time_seconds: 750, penalty_seconds: 10, placement: 1 });
+    expect(payload.participant_values[0]).toEqual({
+      participant_id: A,
+      time_seconds: 750,
+      penalty_seconds: 10,
+      placement: 1,
+    });
   });
 
   it('warns when no teams are assigned', () => {

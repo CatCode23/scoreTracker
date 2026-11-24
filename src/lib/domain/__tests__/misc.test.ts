@@ -17,7 +17,12 @@ describe('groupBracket', () => {
     match_code: id,
   });
   it('groups by stage, round and match number', () => {
-    const g = groupBracket([m('c', 2, 1, 1, '3rd Place'), m('b', 1, 2, 1, 'Final'), m('a2', 1, 1, 2), m('a1', 1, 1, 1)]);
+    const g = groupBracket([
+      m('c', 2, 1, 1, '3rd Place'),
+      m('b', 1, 2, 1, 'Final'),
+      m('a2', 1, 1, 2),
+      m('a1', 1, 1, 1),
+    ]);
     expect(g.map((s) => s.stage_id)).toEqual(['s1', 's2']);
     expect(g[0].rounds.map((r) => r.round_name)).toEqual(['Round 1', 'Final']);
     expect(g[0].rounds[0].matches.map((x) => x.id)).toEqual(['a1', 'a2']);
@@ -51,11 +56,28 @@ describe('parseCsv', () => {
 });
 
 describe('permissions (UI mirror of RLS)', () => {
-  const profile = (role: Profile['role'], active = true): Profile => ({ id: 'u', display_name: 'U', email: 'u@x', role, active, created_at: '' });
-  const asg = (a: Partial<Assignment>): Assignment => ({ id: 'a', profile_id: 'u', event_id: 'e1', venue: null, assignment_role: 'scorer', active: true, ...a });
+  const profile = (role: Profile['role'], active = true): Profile => ({
+    id: 'u',
+    display_name: 'U',
+    email: 'u@x',
+    role,
+    active,
+    created_at: '',
+  });
+  const asg = (a: Partial<Assignment>): Assignment => ({
+    id: 'a',
+    profile_id: 'u',
+    event_id: 'e1',
+    venue: null,
+    assignment_role: 'scorer',
+    active: true,
+    ...a,
+  });
 
   it('inactive users have no access', () => {
-    expect(isOpsAdmin({ profile: profile('operations_admin', false), assignments: [] })).toBe(false);
+    expect(isOpsAdmin({ profile: profile('operations_admin', false), assignments: [] })).toBe(
+      false,
+    );
   });
   it('venue-scoped scorer only matches that venue (case-insensitive)', () => {
     const a = { profile: profile('scorer'), assignments: [asg({ venue: 'Wilson Gym' })] };

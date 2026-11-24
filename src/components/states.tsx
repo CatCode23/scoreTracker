@@ -43,7 +43,8 @@ export function Unauthorized({ message }: { message?: string }) {
       <Lock className="h-8 w-8 text-slate-600" aria-hidden />
       <p className="text-lg font-bold">Not authorized</p>
       <p className="text-slate-700">
-        {message ?? 'Your account does not have access to this page. Contact the operations cell if you need access.'}
+        {message ??
+          'Your account does not have access to this page. Contact the operations cell if you need access.'}
       </p>
     </div>
   );
@@ -54,7 +55,8 @@ export function NotConfigured() {
     <Notice tone="warn" title="Data connection not configured">
       <p className="flex items-start gap-2">
         <Settings className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-        VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY were not set when this site was built. See docs/DEPLOYMENT.md.
+        VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY were not set when this site was built. See
+        docs/DEPLOYMENT.md.
       </p>
     </Notice>
   );
@@ -64,11 +66,14 @@ export function OfflineBanner() {
   const online = useOnline();
   if (online) return null;
   return (
-    <div role="alert" className="flex items-start gap-2 bg-red-800 px-4 py-2 text-sm font-semibold text-white">
+    <div
+      role="alert"
+      className="flex items-start gap-2 bg-red-800 px-4 py-2 text-sm font-semibold text-white"
+    >
       <WifiOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <span>
-        You are offline. Results shown may be out of date. If connectivity is unavailable, complete the venue paper
-        scorecard and report to the designated sport manager or operations cell.
+        You are offline. Results shown may be out of date. If connectivity is unavailable, complete
+        the venue paper scorecard and report to the designated sport manager or operations cell.
       </span>
     </div>
   );

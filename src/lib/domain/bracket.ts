@@ -40,7 +40,8 @@ export function groupBracket<M extends BracketMatchLike>(matches: M[]): BracketS
       };
       stages.set(m.stage_id, st);
     }
-    const roundName = m.round_name || (m.pool_name ? `Pool ${m.pool_name}` : `Round ${m.round_order}`);
+    const roundName =
+      m.round_name || (m.pool_name ? `Pool ${m.pool_name}` : `Round ${m.round_order}`);
     const key = `${m.round_order}|${roundName}`;
     let r = st.rounds.find((x) => x.key === key);
     if (!r) {
@@ -51,12 +52,14 @@ export function groupBracket<M extends BracketMatchLike>(matches: M[]): BracketS
   }
   const out = [...stages.values()].sort((a, b) => a.stage_order - b.stage_order);
   for (const st of out) {
-    st.rounds.sort((a, b) => a.round_order - b.round_order || a.round_name.localeCompare(b.round_name));
+    st.rounds.sort(
+      (a, b) => a.round_order - b.round_order || a.round_name.localeCompare(b.round_name),
+    );
     for (const r of st.rounds) {
       r.matches.sort(
         (a, b) =>
-          (a.match_number ?? Number.MAX_SAFE_INTEGER) - (b.match_number ?? Number.MAX_SAFE_INTEGER) ||
-          a.match_code.localeCompare(b.match_code),
+          (a.match_number ?? Number.MAX_SAFE_INTEGER) -
+            (b.match_number ?? Number.MAX_SAFE_INTEGER) || a.match_code.localeCompare(b.match_code),
       );
     }
   }
