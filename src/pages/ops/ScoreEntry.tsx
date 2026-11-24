@@ -117,7 +117,7 @@ export function ScoreEntry() {
                     aria-pressed={m.id === matchId}
                     className={cx(
                       'flex min-h-touch w-full items-center justify-between gap-2 rounded-lg border-2 p-3 text-left',
-                      m.id === matchId ? 'border-brand bg-green-50' : 'border-slate-300 bg-white',
+                      m.id === matchId ? 'border-brand bg-red-50' : 'border-slate-300 bg-white',
                     )}
                   >
                     <span>

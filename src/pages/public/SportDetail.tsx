@@ -238,7 +238,7 @@ function PoolsTab({ standings }: { standings: PublicPoolStanding[] }) {
                   <span className="min-w-0 flex-1 truncate font-semibold">
                     {r.team_name}
                     {r.advanced && (
-                      <span className="ml-2 rounded bg-green-700 px-1.5 text-xs text-white">
+                      <span className="ml-2 rounded bg-field px-1.5 text-xs text-white">
                         {humanize(r.advancement_type) || 'Advanced'}
                       </span>
                     )}

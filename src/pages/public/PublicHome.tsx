@@ -10,7 +10,7 @@ import { usePublicRealtime } from '../../lib/realtime';
 import { isConfigured } from '../../lib/supabase';
 import { formatDate, formatDateTime, formatTime, humanize } from '../../lib/domain/format';
 import { FORMAT_LABELS } from '../../lib/types';
-import { Card, PageHeader, cx } from '../../components/ui';
+import { Card, cx } from '../../components/ui';
 import { Empty, ErrorState, Loading, NotConfigured } from '../../components/states';
 import { Leaderboard } from '../../components/Leaderboard';
 import { SyncButton } from '../../components/SyncButton';
@@ -55,15 +55,36 @@ export function PublicHome() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="WOTB Tournament"
-        subtitle="Official schedule, results, brackets and Commander's Cup standings."
-        actions={<SyncButton scope="public" />}
-      />
+      <section
+        aria-label="WOTB Tournament"
+        className="overflow-hidden rounded-2xl bg-ink text-white shadow"
+      >
+        <div className="flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:text-left">
+          <img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt="WOTB Tournament logo"
+            width={128}
+            height={128}
+            className="h-28 w-28 shrink-0 drop-shadow-lg sm:h-32 sm:w-32"
+          />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl font-extrabold leading-tight">WOTB Tournament</h1>
+            <p className="mt-1 text-steel">
+              Official schedule, results, brackets and Commander&apos;s Cup standings.
+            </p>
+          </div>
+          <SyncButton scope="public" className="border-white" />
+        </div>
+        <div className="flex h-2" aria-hidden>
+          <div className="flex-1 bg-field" />
+          <div className="flex-[2] bg-brand-bright" />
+          <div className="flex-1 bg-field" />
+        </div>
+      </section>
       {!isConfigured && <NotConfigured />}
       <LiveIndicator />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr] [&>*]:min-w-0">
         <Card title="Commander's Cup: Unit Standings">
           <p className="mb-3 text-sm text-slate-700">
             Unit standings. Each unit's teams earn points in their sports: 1st = 8 pts through 8th =

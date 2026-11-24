@@ -30,8 +30,8 @@ export const PUBLIC_STATUS_LABEL: Record<PublicStatus, string> = {
 };
 
 const color: Record<string, string> = {
-  official: 'bg-green-700 text-white',
-  complete: 'bg-green-800 text-white',
+  official: 'bg-field text-white',
+  complete: 'bg-field-light text-white',
   submitted: 'bg-amber-300 text-amber-950',
   awaiting: 'bg-amber-300 text-amber-950',
   returned: 'bg-orange-200 text-orange-950',

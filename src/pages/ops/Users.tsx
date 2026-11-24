@@ -70,7 +70,7 @@ export function Users() {
                       <span className="text-sm text-slate-700">{p.email}</span>
                     </span>
                     {p.active ? (
-                      <Badge className="bg-green-700 text-white">Active</Badge>
+                      <Badge className="bg-field text-white">Active</Badge>
                     ) : (
                       <Badge className="bg-amber-300">Inactive</Badge>
                     )}

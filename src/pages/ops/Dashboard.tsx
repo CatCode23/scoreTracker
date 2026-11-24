@@ -94,7 +94,7 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
         <Card
           title={
             <span className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export function Dashboard() {
                     </span>
                   </div>
                   <div className="mt-1 h-2 overflow-hidden rounded bg-slate-200" aria-hidden>
-                    <div className="h-full bg-green-700" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-field" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="mt-1 text-xs text-slate-700">
                     Teams {regs}
