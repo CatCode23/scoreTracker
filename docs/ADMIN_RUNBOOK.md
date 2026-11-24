@@ -13,8 +13,8 @@ the **Audit Log**.
    - Check the **points matrix**: 1st=8 … 8th=1.
    - Edit each **event**: name, format, venue, responsible unit, dates, target team count,
      counts toward overall, and public visibility.
-3. Configure custom SMTP in Supabase, and add `{{ .Token }}` to the magic-link email
-   template.
+3. Create staff accounts (see section 5). Optional: configure custom SMTP in Supabase if
+   you want the backup email-link sign-in to work reliably.
 
 ## 2. Register teams
 
@@ -61,9 +61,15 @@ the **Audit Log**.
 
 ## 5. Assign scorers and managers
 
-The person must already have a Supabase account: *Authentication → Users → Invite user*.
+**Create the account in Supabase:** *Authentication → Users → Add user → Create new
+user*. Enter their email and a temporary password, and tick **Auto Confirm User**. Don't
+use *Invite user*.
 
-**Ops → Users**:
+Give them the temporary password directly (in person or by phone, not in a group chat).
+They change it in the app under **Change Password**. To reset a forgotten password, open
+the user in Supabase and set a new one.
+
+**Then in the app, Ops → Users**:
 
 1. Find the person.
 2. **Activate** the account.

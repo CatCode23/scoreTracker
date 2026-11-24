@@ -37,9 +37,12 @@ export function Users() {
         subtitle="Activate staff, set roles, and assign events/venues."
       />
       <Notice tone="info">
-        Create accounts with Supabase Dashboard → Authentication → Invite user. New sign-ins appear
-        here as <strong>inactive</strong>. Scorers, venue leads and sport managers also need an
-        event assignment.
+        Create accounts in Supabase: Authentication → Users → Add user →{' '}
+        <strong>Create new user</strong>, with a temporary password and{' '}
+        <strong>Auto Confirm User</strong> ticked. Give the person their password directly; they
+        change it under <strong>Change Password</strong>. New accounts appear here as{' '}
+        <strong>inactive</strong>. Scorers, venue leads and sport managers also need an event
+        assignment. To reset a forgotten password, set a new one on the user in Supabase.
       </Notice>
       {err && <Notice tone="error">{friendlyError(err)}</Notice>}
       <Input

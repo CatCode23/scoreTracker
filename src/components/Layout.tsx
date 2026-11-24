@@ -56,6 +56,7 @@ export function Layout() {
     { to: '/ops/users', label: 'Users', show: isOpsAdmin(auth) },
     { to: '/ops/settings', label: 'Settings', show: isOpsAdmin(auth) },
     { to: '/ops/audit', label: 'Audit Log', show: isOpsAdmin(auth) },
+    { to: '/ops/password', label: 'Change Password', show: Boolean(auth.session) },
   ].filter((n) => n.show);
 
   return (
@@ -150,8 +151,8 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-slate-300 bg-white px-4 py-4 text-center text-xs text-slate-700">
-        Unclassified. Official results only on public pages. QR codes are navigation aids only and
-        never grant access.
+        Official results only on public pages. QR codes are navigation aids only and never grant
+        access.
       </footer>
     </div>
   );

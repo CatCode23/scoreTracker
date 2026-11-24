@@ -8,15 +8,19 @@ import { Card, Notice } from '../../components/ui';
 /** Route guard for operations pages. UI only: the database enforces access via RLS. */
 export function RequireAccess({
   check,
+  allowInactive,
   children,
 }: {
   check?: (a: Access) => boolean;
+  /** Signed-in but not-yet-activated users may still open this page (e.g. change password). */
+  allowInactive?: boolean;
   children: ReactNode;
 }) {
   const auth = useAuth();
   const loc = useLocation();
   if (auth.loading) return <Loading label="Checking your access…" />;
   if (!auth.session) return <Navigate to="/signin" replace state={{ from: loc.pathname }} />;
+  if (allowInactive) return <>{children}</>;
   if (!auth.profile || !auth.profile.active) {
     return (
       <Card>

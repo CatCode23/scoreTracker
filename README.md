@@ -6,7 +6,7 @@ Cup overall leaderboard.
 
 - **Frontend:** a static React + TypeScript + Vite site, deployed to **GitHub Pages**. It
   uses hash routes (`/#/public`, `/#/sport/SOC`, `/#/ops`).
-- **Backend:** **Supabase**. It provides Postgres, magic-link Auth, Row Level Security
+- **Backend:** **Supabase**. It provides Postgres, Auth (email + password), Row Level Security
   (RLS), and Realtime. No server runs on GitHub Pages.
 
 > **Security operating guidance (read first)**
@@ -18,10 +18,11 @@ Cup overall leaderboard.
 > - The Supabase **anon key** is in the browser bundle by design. That is safe only
 >   because **all sensitive access is enforced by tested RLS policies**, not by hidden
 >   buttons in the interface.
-> - **Do not enter** CUI, classified information, protected health information,
->   passwords, personally sensitive notes or unnecessary personal data. Captain names and
->   staff emails are restricted. Only authenticated, activated staff can see them.
+> - **Do not enter** protected health information, passwords, personally sensitive notes
+>   or unnecessary personal data. Captain names and staff emails are restricted. Only
+>   authenticated, activated staff can see them.
 > - **Use named accounts.** Every score submission is tied to an authenticated person.
+>   Each person gets their own account and password; accounts must not be shared.
 > - **QR codes are navigation aids only.** They open the site or a sport page. They never
 >   sign anyone in and never authorize score entry.
 > - Organization approval, data-handling, access, records and release policies still
@@ -33,13 +34,13 @@ Cup overall leaderboard.
 flowchart LR
   subgraph Phone["Phones / browsers"]
     P[Public viewer<br/>no login]
-    S[Staff<br/>magic-link login]
+    S[Staff<br/>email + password]
   end
   subgraph GH["GitHub Pages (static)"]
     SPA[React SPA<br/>HashRouter]
   end
   subgraph SB["Supabase"]
-    AUTH[Auth<br/>magic link / OTP]
+    AUTH[Auth<br/>password / email link]
     REST[PostgREST API]
     RT[Realtime]
     subgraph PG["Postgres + RLS"]
@@ -175,13 +176,20 @@ The preliminary Dec 7–9 schedule needs a year. Load it in either of two ways:
 
 ### 4. Auth settings
 
-- *Authentication → Providers → Email*: enable it, and keep **magic link / OTP** on.
-- *Authentication → Sign In / Providers*: **disable "Allow new users to sign up"**.
-  Staff accounts are created by invitation (*Authentication → Users → Invite user*).
-  Even if sign-ups are left on, new accounts start **inactive** with no access.
-- *Authentication → Email Templates → Magic Link*: add `{{ .Token }}` to the template,
-  for example `Or enter this code: {{ .Token }}`. Phone email apps often open links in a
-  different browser. The code lets staff sign in anyway.
+Staff sign in with **email + password**. Supabase stores and checks the passwords; the
+app never stores them. Admins create every account, so no emails are needed to sign in.
+
+- *Authentication → Sign In / Providers → Email*: make sure the Email provider is
+  **enabled**. Password sign-in is part of it.
+- On the same page, **disable "Allow new users to sign up"**. Even if sign-ups are left
+  on, new accounts start **inactive** with no access.
+- Set a **minimum password length** of at least 10 (in the Email provider or password
+  settings). The app's Change Password page also requires 10 characters.
+- Optional backup sign-in by email link: the sign-in page also offers "Sign in with an
+  email link instead". It uses Supabase's built-in email sender, which allows only a few
+  emails per hour. If you want to rely on it, configure custom SMTP (*Authentication →
+  Emails → SMTP Settings*) and add `{{ .Token }}` to the **Magic Link** email template, for
+  example `Or enter this code: {{ .Token }}`.
 - **Redirect URLs** (*Authentication → URL Configuration*):
   - Site URL: `https://<owner>.github.io/<REPOSITORY_NAME>/`
   - Additional Redirect URLs:
@@ -193,19 +201,39 @@ The preliminary Dec 7–9 schedule needs a year. Load it in either of two ways:
 
 ### 5. Create the first operations admin (bootstrap)
 
-1. In Supabase, go to *Authentication → Users → Invite user* and enter your own email.
-2. Open the invite or magic link. That creates the `auth.users` row, and a trigger
-   creates an inactive `profiles` row.
-3. In the **SQL Editor** (which runs with owner rights), run:
+1. In Supabase, go to *Authentication → Users → Add user → **Create new user***. Enter
+   your email and a password, and tick **Auto Confirm User**. A trigger creates an
+   inactive `profiles` row.
+2. In the **SQL Editor** (which runs with owner rights), run this with your email in the
+   last line. It also creates the profile if your account existed before the migrations:
 
    ```sql
-   update public.profiles
-   set role = 'operations_admin', active = true, display_name = 'Your Name'
-   where email = 'you@example.com';
+   insert into public.profiles (id, email, display_name, role, active)
+   select id, lower(email), split_part(email, '@', 1), 'operations_admin', true
+   from auth.users
+   where lower(email) = lower('you@example.com')
+   on conflict (id) do update set role = 'operations_admin', active = true
+   returning id, email, role, active;
    ```
 
-4. Reload the app. You now see the full **Operations** menu. Invite and activate the
-   other staff from **Ops → Users**.
+   It should return one row. If it returns none, check the spelling against
+   `select email from auth.users;`.
+3. Open the app, tap **Staff sign in**, and sign in with your email and password. You now
+   see the full **Operations** menu.
+
+### Adding staff
+
+For each person:
+
+1. Supabase: *Authentication → Users → Add user → Create new user*, with their email, a
+   temporary password, and **Auto Confirm User** ticked. Don't use **Invite user**: the
+   invite link doesn't work with this app's page routing, and it sends an email.
+2. App: **Ops → Users** → activate them and add their event/venue assignment.
+3. Give them the temporary password directly (in person or by phone, not in a group
+   chat). They change it under **Change Password** after signing in.
+
+To reset a forgotten password, open the user in Supabase (*Authentication → Users*) and
+set a new password.
 
 ### 6. Realtime
 
@@ -252,13 +280,16 @@ If you rename the repository, update `.env.local` and the redirect URLs in Supab
   lost (this is stated on the score-entry screen).
 - **No automatic bracket generation or auto-advancement.** Advancement is manual, with
   overwrite warnings, by design. Brackets are entered by hand or through CSV import.
-- **Magic links need the same browser.** PKCE links must be opened in the browser that
-  requested them. The emailed code works around this, once the template includes
-  `{{ .Token }}`.
+- **Password resets are done by an admin** in Supabase. There is no self-service
+  "forgot password" email, because that would depend on email delivery.
+- **The backup email link needs the same browser.** It must be opened in the browser that
+  requested it, or the emailed code used instead (once the template includes
+  `{{ .Token }}`).
 - **Hand-written database types.** The TypeScript row types in `src/lib/types.ts` are
   maintained by hand. Generating them with `supabase gen types` is a follow-on.
-- **Supabase's free-tier email limits.** The built-in email sender is rate-limited.
-  Configure custom SMTP (*Authentication → SMTP*) before the event.
+- **Supabase's built-in email limits.** Only the backup email-link sign-in sends email,
+  and the built-in sender allows a few emails per hour. Configure custom SMTP if you plan
+  to use it.
 - **Expected linter warning.** The public views are owner-rights ("security definer")
   views on purpose. Supabase's linter will flag them, and this is expected. Each view
   selects only safe columns (see the migration header).

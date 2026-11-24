@@ -5,10 +5,13 @@
 ## Sign in (once per device)
 
 1. Tap **Staff sign in**.
-2. Enter your email and tap **Email me a sign-in link**.
-3. Open the email **on the same phone**. Either tap the link, or type the **code** from
-   the email into the app.
+2. Enter your email and the password the operations cell gave you, then tap **Sign in**.
+3. The first time, open the menu (☰), tap **Change Password**, and set your own password
+   (at least 10 characters).
 4. If you see "Account pending activation", give your email to the operations cell.
+5. Forgot your password? Ask the operations cell to reset it.
+
+You stay signed in on that phone, so avoid tapping **Sign out**.
 
 > A QR code only opens the site. It never signs you in.
 
@@ -59,4 +62,4 @@ designated sport manager or operations cell.**
 
 - Do not enter names of individuals, medical information, or anything sensitive in the
   notes.
-- Do not share your sign-in link or code.
+- Do not share your password or let someone else use your account.
