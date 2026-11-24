@@ -64,9 +64,10 @@ export function PublicHome() {
       <LiveIndicator />
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
-        <Card title="Commander's Cup Leaderboard">
+        <Card title="Commander's Cup: Unit Standings">
           <p className="mb-3 text-sm text-slate-700">
-            1st = 8 pts through 8th = 1 pt, from official published placements.
+            Unit standings. Each unit's teams earn points in their sports: 1st = 8 pts through 8th =
+            1 pt, from official published placements.
           </p>
           {board.isLoading ? (
             <Loading />

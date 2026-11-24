@@ -111,6 +111,11 @@ export interface EventRow {
   display_order: number;
   notes: string | null;
 }
+export interface Unit {
+  id: string;
+  name: string;
+  active: boolean;
+}
 export interface Team {
   id: string;
   team_name: string;
@@ -423,10 +428,9 @@ export interface PublicPlacement {
   tiebreak_metric: string | null;
   tiebreak_value: number | null;
 }
+/** Overall Commander's Cup standings are per UNIT. */
 export interface LeaderboardRow {
   rank: number;
-  team_id: string;
-  team_name: string;
   unit: string;
   placement_points: number;
   adjustment_points: number;

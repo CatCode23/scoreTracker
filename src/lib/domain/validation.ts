@@ -9,13 +9,13 @@ const nonNegative = z
 
 export const teamSchema = z.object({
   team_name: z.string().trim().min(1, 'Team name is required').max(80),
-  unit: z.string().trim().min(1, 'Unit is required').max(80),
+  unit: z.string().trim().min(1, 'Choose the unit this team belongs to'),
   player_count: z
     .number({ invalid_type_error: 'Enter a number' })
     .int('Whole number')
     .min(0, 'Cannot be negative')
     .nullable(),
-  captain_name: z.string().trim().max(80).nullable(),
+  event_ids: z.array(z.string()).min(1, 'Choose at least one event this team is playing in'),
   active: z.boolean(),
 });
 export type TeamInput = z.infer<typeof teamSchema>;

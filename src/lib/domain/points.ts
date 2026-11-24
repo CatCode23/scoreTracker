@@ -17,65 +17,62 @@ export function pointsForPlace(
 }
 
 export interface LeaderboardInputPlacement {
-  team_id: string;
-  team_name: string;
   unit: string;
   final_place: number;
   overall_points: number;
 }
 export interface LeaderboardInputAdjustment {
-  team_id: string;
+  unit: string;
   points: number;
 }
 export interface ComputedLeaderboardRow {
   rank: number;
-  team_id: string;
-  team_name: string;
   unit: string;
   placement_points: number;
   adjustment_points: number;
   total_points: number;
+  events_placed: number;
   firsts: number;
   seconds: number;
   thirds: number;
 }
 
 /**
- * Overall leaderboard. Mirrors the public_overall_leaderboard view: total desc, then
- * count of 1sts, 2nds, 3rds. Ties share a rank (standard competition ranking 1,1,3).
+ * Overall Commander's Cup leaderboard, totalled by UNIT. Mirrors the
+ * public_overall_leaderboard view: total desc, then count of 1sts, 2nds, 3rds.
+ * Ties share a rank (standard competition ranking 1,1,3).
  */
 export function computeLeaderboard(
   placements: LeaderboardInputPlacement[],
   adjustments: LeaderboardInputAdjustment[] = [],
-  teamNames: Record<string, { team_name: string; unit: string }> = {},
 ): ComputedLeaderboardRow[] {
   const rows = new Map<string, Omit<ComputedLeaderboardRow, 'rank'>>();
-  const get = (id: string, name?: string, unit?: string) => {
-    let r = rows.get(id);
+  const get = (unit: string) => {
+    let r = rows.get(unit);
     if (!r) {
       r = {
-        team_id: id,
-        team_name: name ?? teamNames[id]?.team_name ?? 'Unknown team',
-        unit: unit ?? teamNames[id]?.unit ?? '',
+        unit,
         placement_points: 0,
         adjustment_points: 0,
         total_points: 0,
+        events_placed: 0,
         firsts: 0,
         seconds: 0,
         thirds: 0,
       };
-      rows.set(id, r);
+      rows.set(unit, r);
     }
     return r;
   };
   for (const p of placements) {
-    const r = get(p.team_id, p.team_name, p.unit);
+    const r = get(p.unit);
     r.placement_points += Number(p.overall_points);
+    r.events_placed++;
     if (p.final_place === 1) r.firsts++;
     if (p.final_place === 2) r.seconds++;
     if (p.final_place === 3) r.thirds++;
   }
-  for (const a of adjustments) get(a.team_id).adjustment_points += Number(a.points);
+  for (const a of adjustments) get(a.unit).adjustment_points += Number(a.points);
   const list = [...rows.values()].map((r) => ({
     ...r,
     total_points: r.placement_points + r.adjustment_points,
@@ -85,7 +82,7 @@ export function computeLeaderboard(
     b.firsts - a.firsts ||
     b.seconds - a.seconds ||
     b.thirds - a.thirds;
-  list.sort((a, b) => cmp(a, b) || a.team_name.localeCompare(b.team_name));
+  list.sort((a, b) => cmp(a, b) || a.unit.localeCompare(b.unit));
   let rank = 0;
   return list.map((r, i) => {
     if (i === 0 || cmp(list[i - 1], r) !== 0) rank = i + 1;

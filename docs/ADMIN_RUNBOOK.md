@@ -16,19 +16,43 @@ the **Audit Log**.
 3. Create staff accounts (see section 5). Optional: configure custom SMTP in Supabase if
    you want the backup email-link sign-in to work reliably.
 
-## 2. Register teams
+## 2. Add units and teams
 
-**Ops → Teams → New team.** Enter the team name, unit, player count and captain name.
+Points are earned by **teams** in each sport and totalled by **unit** on the public
+leaderboard.
 
-- Captain names are restricted and visible only to staff.
-- Create **one record per team**, even if the team plays several sports.
+1. **Ops → Settings → Units:** add every competing unit, e.g. `1-2 SBCT`. Spell each one
+   once, here. Teams pick from this list, so a typo can't split a unit's points.
+   - **Renaming** a unit renames it on all its teams.
+   - **Hide from new teams** keeps it out of the dropdown without touching existing teams.
+   - **Delete** only works once the unit has no teams.
+2. **Ops → Teams → New team:**
+   - Team name, e.g. `1-2 SBCT Soccer`.
+   - Unit, chosen from the list.
+   - The events the team plays in (tick one or more).
+   - Player count, if you want it.
+3. **Edit** a team (pencil) to change its unit or events. Unticking an event removes the
+   team from it, which is refused once the team is in matches.
+4. **Delete** a team (bin, operations admins only). This also removes it from its events.
+   It is refused if the team is already in matches: mark it inactive instead, or remove it
+   from those matches first.
 
-## 3. Register event participants
+Use the unit and event filters at the top of the Teams page to check each sport's entries.
+
+### Events
+
+**Ops → Settings → Events:** edit an event, **Add event** for a new sport, or **Delete**
+one. Deleting asks you to type the event code, and removes everything in the event
+(registrations, sessions, matches, results, placements, penalties) but keeps the teams.
+To take an event off the public site without losing anything, untick "Visible on public
+site" instead.
+
+## 3. Seeds and check-in
 
 **Ops → Event Registration**:
 
-1. Pick the event.
-2. Add teams and set their seeds.
+1. Pick the event. Teams registered on the Teams page are listed here.
+2. Set seeds, or add more teams.
 3. Watch for the **target count warning**.
 4. Check-in status can be Registered, Checked in, No show, or Withdrawn. Setting
    "No show" does **not** apply a penalty (see section 9).

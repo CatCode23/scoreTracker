@@ -4,6 +4,10 @@ A mobile-first tournament tracker for the WOTB sports tournament. It handles the
 schedule, brackets, score entry, result validation, placements, and the Commander's
 Cup overall leaderboard.
 
+**How scoring works:** each competing **unit** enters **teams** in the individual sports.
+A team's final placing in its sport (1st = 8 points … 8th = 1 point) earns points for its
+unit. The public Commander's Cup leaderboard ranks the **units** by their total.
+
 - **Frontend:** a static React + TypeScript + Vite site, deployed to **GitHub Pages**. It
   uses hash routes (`/#/public`, `/#/sport/SOC`, `/#/ops`).
 - **Backend:** **Supabase**. It provides Postgres, Auth (email + password), Row Level Security
@@ -19,8 +23,8 @@ Cup overall leaderboard.
 >   because **all sensitive access is enforced by tested RLS policies**, not by hidden
 >   buttons in the interface.
 > - **Do not enter** protected health information, passwords, personally sensitive notes
->   or unnecessary personal data. Captain names and staff emails are restricted. Only
->   authenticated, activated staff can see them.
+>   or unnecessary personal data. Staff emails are restricted. Only authenticated,
+>   activated staff can see them.
 > - **Use named accounts.** Every score submission is tied to an authenticated person.
 >   Each person gets their own account and password; accounts must not be shared.
 > - **QR codes are navigation aids only.** They open the site or a sport page. They never
@@ -141,6 +145,11 @@ Use one of these two options.
 
 **Option A, SQL Editor (simplest):** paste and run each file in
 `supabase/migrations/` **in filename order**, then run `supabase/seed.sql`.
+
+**Updating an existing project:** run only the migration files you haven't run yet, in
+order. Each new migration is a new file; earlier files are never changed. For example, a
+project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql` and then
+`…0006_units_and_deletes.sql`.
 
 **Option B, Supabase CLI:**
 

@@ -180,33 +180,20 @@ describe('warnings', () => {
 });
 
 describe('teamSchema', () => {
-  it('rejects negative player counts and blank names', () => {
-    expect(
-      teamSchema.safeParse({
-        team_name: '',
-        unit: 'U',
-        player_count: 5,
-        captain_name: null,
-        active: true,
-      }).success,
-    ).toBe(false);
-    expect(
-      teamSchema.safeParse({
-        team_name: 'T',
-        unit: 'U',
-        player_count: -1,
-        captain_name: null,
-        active: true,
-      }).success,
-    ).toBe(false);
-    expect(
-      teamSchema.safeParse({
-        team_name: 'T',
-        unit: 'U',
-        player_count: 10,
-        captain_name: null,
-        active: true,
-      }).success,
-    ).toBe(true);
+  const ok = {
+    team_name: 'T',
+    unit: '1-2 SBCT',
+    player_count: 10,
+    event_ids: ['e1'],
+    active: true,
+  };
+  it('accepts a team with a unit and at least one event', () => {
+    expect(teamSchema.safeParse(ok).success).toBe(true);
+  });
+  it('requires a name, a unit and an event; rejects negative player counts', () => {
+    expect(teamSchema.safeParse({ ...ok, team_name: '' }).success).toBe(false);
+    expect(teamSchema.safeParse({ ...ok, unit: '' }).success).toBe(false);
+    expect(teamSchema.safeParse({ ...ok, event_ids: [] }).success).toBe(false);
+    expect(teamSchema.safeParse({ ...ok, player_count: -1 }).success).toBe(false);
   });
 });

@@ -50,9 +50,12 @@ These assumptions were made where the specification left room for interpretation
     operations admins ("approve final results and publish"). Sport managers record them.
 14. **Public match status** maps internal statuses to plain public ones. `submitted`
     shows publicly as "In Progress", so unvalidated results are not hinted at.
-15. **Team names and units are public.** They appear on the bracket. Captain names do not.
-16. **Leaderboard tiebreak:** total points, then number of 1sts, then 2nds, then 3rds.
-    Exact ties share a rank.
+15. **Team names and units are public.** They appear on the bracket.
+16. **The overall leaderboard is per unit.** Each unit fields teams in the individual
+    sports, and a unit's total is the sum of its teams' published placement points plus
+    any penalties. If a unit enters **more than one team in the same sport**, all of those
+    teams' points count. Tiebreak: total points, then number of 1sts, then 2nds, then
+    3rds. Exact ties share a rank.
 17. **Pool standings ranking suggestion:** W=2 and T=1 standing points, then point
     differential, then points for. Managers can override the rank and decide advancement.
 18. **Teams can be created by sport managers** as well as admins ("authorized
@@ -73,3 +76,13 @@ These assumptions were made where the specification left room for interpretation
       `{{ .Token }}` in the email template.
 21. **Realtime** for public clients goes through a non-sensitive `public_updates` table.
     Realtime cannot stream changes from views, and the raw tables are not readable by anon.
+22. **Units are a managed list** (Settings → Units, operations admins only). Teams choose
+    their unit from it, so spelling variations can't split a unit's points. Units are not
+    seeded; admins enter the real list.
+23. **Team captain names are not collected.** The `captain_name` column remains in the
+    database (unused, never public) to avoid a destructive migration.
+24. **Deletes:**
+    - A team can be deleted with its registrations, unless it's already in matches (then
+      it can be marked inactive). Only operations admins delete teams.
+    - Deleting an event removes everything in it but keeps the teams, and requires typing
+      the event code.

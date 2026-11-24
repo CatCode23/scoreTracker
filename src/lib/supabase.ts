@@ -27,6 +27,15 @@ export function friendlyError(err: unknown): string {
   if (e?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
     return 'You are not authorized to do that. Check your assignment with the operations cell.';
   }
+  if (e?.code === '23503' || /violates foreign key constraint/i.test(msg)) {
+    if (/match_participants|match_results/i.test(msg)) {
+      return 'This team is already placed in matches. Remove it from those matches first, or mark it inactive instead.';
+    }
+    if (/teams_unit_fkey|units/i.test(msg)) {
+      return 'This unit still has teams. Move or delete those teams first.';
+    }
+    return 'This record is still used elsewhere, so it cannot be deleted. Mark it inactive instead.';
+  }
   if (e?.code === '23505' || /duplicate key/i.test(msg)) {
     return 'That record already exists (duplicate).';
   }

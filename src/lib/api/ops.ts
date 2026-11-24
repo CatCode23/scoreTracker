@@ -20,6 +20,7 @@ import type {
   ScoringSetting,
   Stage,
   Team,
+  Unit,
 } from '../types';
 
 // Operations data. Every query goes straight to the tables; RLS decides what the
@@ -31,6 +32,13 @@ export function useEvents() {
   return useQuery({
     queryKey: ['ops', 'events'],
     queryFn: () => rows<EventRow>(supabase.from('events').select('*').order('display_order')),
+  });
+}
+
+export function useUnits() {
+  return useQuery({
+    queryKey: ['ops', 'units'],
+    queryFn: () => rows<Unit>(supabase.from('units').select('*').order('name')),
   });
 }
 
