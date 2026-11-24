@@ -6,7 +6,7 @@
 |---|---|---|
 | Unit | `npm test` | Points matrix and unit leaderboard totals/tiebreaks; team save (registrations added/removed); typed confirmation for event delete; result validation (negatives, winner not in match, winner = loser, duplicate placements, lower-score winner); warnings (target count, fewer than 2 teams, overlapping matches); advancement slot checks (empty / occupied / same / already in match); bracket grouping; duration parsing; CSV; UI permission mirror |
 | Component | `npm test` | **Score Entry**: 2–1 submit payload, Official save for admins, edit mode (prefilled, reason required), negative rejected, server error shown, timed-heat fields. **Result Validation**: Official confirm, required reasons for return/dispute/void, actions hidden without authority, error shown in the dialog |
-| Database | `npm run test:db` | Migrations and seed (seed run twice to check it is idempotent). Then 82 assertions covering the manual E2E script below plus RLS negatives: anon cannot read raw tables, scorer at the wrong venue, inactive user, self-elevation, audit-log writes, sport manager publishing, points override, writes through public views, unit list enforcement, unit leaderboard, team and event deletes, and so on |
+| Database | `npm run test:db` | Migrations and seed (seed run twice to check it is idempotent). Then 118 assertions covering the manual E2E script below plus RLS negatives: anon cannot read raw tables, scorer at the wrong venue, inactive user, self-elevation, audit-log writes, sport manager publishing, points override, writes through public views, unit list enforcement, unit leaderboard, team and event deletes, and so on |
 
 All three suites run in CI before every deploy.
 
@@ -22,7 +22,7 @@ Prerequisites: test accounts (see below) and the schedule loaded.
 | 4 | Admin | Score Entry → Soccer → SOC-T1: Raptors 2, Lancers 1, winner Raptors, **Save Official Result** | "Result saved: Official"; no referee step |
 | 5 | Admin | Match Management → SOC-T1 → **Edit result**: change to 3–1, reason "typo" | Saved; the audit log shows the old result voided with "Edited: typo" |
 | 6 | Public (signed out / other phone) | Open `#/sport/SOC` | Within seconds (Realtime) or ≤60 s (polling): Raptors 2 (winner crown), Lancers 1. The Results tab lists it |
-| 7 | Sport manager | Match Management → SOC-T1 → Advance winner → SOC-T2 / A → tick confirm | Raptors appear in SOC-T2 slot A on the public bracket. Trying slot A again with another team shows the **occupied** warning and requires overwrite |
+| 7 | Admin | (after step 4) Check SOC-T2 | Score Entry said "Winner … moved to SOC-T2 (slot A)"; Raptors appear in SOC-T2 slot A on the public bracket without any manual step. Manually advancing another team into slot A shows the **occupied** warning and requires overwrite |
 | 8 | Admin | Ops Dashboard | No Approvals item in the menu; Soccer completion 1/2; audit log shows the result, the edit and the advancement |
 
 Negative checks to repeat manually:

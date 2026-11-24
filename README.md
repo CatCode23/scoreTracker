@@ -152,7 +152,7 @@ Use one of these two options.
 order. Each new migration is a new file; earlier files are never changed. For example, a
 project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql`,
 `…0006_units_and_deletes.sql`, `…0007_fix_cascade_checks.sql` and
-`…0008_direct_results_and_edits.sql`, in that order.
+`…0008_direct_results_and_edits.sql` and `…0009_auto_advance.sql`, in that order.
 
 ### Sample data (optional, for trying the app)
 
@@ -299,8 +299,9 @@ If you rename the repository, update `.env.local` and the redirect URLs in Supab
 
 - **No offline submission queue.** Staff use the paper scorecard when connectivity is
   lost (this is stated on the score-entry screen).
-- **No automatic bracket generation or auto-advancement.** Advancement is manual, with
-  overwrite warnings, by design. Brackets are entered by hand or through CSV import.
+- **No automatic bracket generation.** Brackets are entered by hand or through CSV import.
+  Advancement is automatic along the routing you set up, but never overwrites a filled
+  slot. Anything it skips is moved by hand in Match Management.
 - **Password resets are done by an admin** in Supabase. There is no self-service
   "forgot password" email, because that would depend on email delivery.
 - **The backup email link needs the same browser.** It must be opened in the browser that

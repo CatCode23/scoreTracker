@@ -94,3 +94,8 @@ These assumptions were made where the specification left room for interpretation
     stays in the database, unused.
 27. **Edit result replaces correction requests.** Operations admins and sport managers fix
     an Official result directly; the old version and the reason are kept in the audit log.
+28. **Automatic advancement (changed from the original "manual only" design).** When a
+    result becomes Official, the database places the winner/loser into the match's
+    configured next slots. It never overwrites a slot holding another team, never adds a
+    team to a match that already has a result, and can be turned off per match. Manual
+    Advance winner / Route loser remain for anything it skips.

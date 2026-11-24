@@ -70,3 +70,53 @@ export function inferWinnerFromScores(
     ? { winner: a.participant_id, loser: b.participant_id }
     : { winner: b.participant_id, loser: a.participant_id };
 }
+
+export interface AdvanceNote {
+  tone: 'success' | 'warn';
+  text: string;
+}
+
+/**
+ * Describe what automatic advancement did after a result became Official, by comparing
+ * the match's routing with the teams now placed downstream.
+ */
+export function describeAutoAdvance(
+  match: {
+    auto_advance: boolean;
+    next_winner_match_id: string | null;
+    next_winner_slot: string | null;
+    next_loser_match_id: string | null;
+    next_loser_slot: string | null;
+  },
+  winner: string | null,
+  loser: string | null,
+  downstream: { match_id: string; participant_id: string | null; slot: string }[],
+  codeOf: (matchId: string) => string,
+  team: (participantId: string) => string,
+): AdvanceNote[] {
+  if (!match.auto_advance) return [];
+  const notes: AdvanceNote[] = [];
+  const check = (
+    who: string | null,
+    to: string | null,
+    slot: string | null,
+    role: 'Winner' | 'Loser',
+  ) => {
+    if (!who || !to || !slot) return;
+    const placed = downstream.find((d) => d.match_id === to && d.participant_id === who);
+    if (placed) {
+      notes.push({
+        tone: 'success',
+        text: `${role} ${team(who)} moved to ${codeOf(to)} (slot ${placed.slot}).`,
+      });
+    } else {
+      notes.push({
+        tone: 'warn',
+        text: `${role} ${team(who)} was not moved to ${codeOf(to)}: slot ${slot} is already taken or that match already has a result. Use ${role === 'Winner' ? 'Advance winner' : 'Route loser'} in Match Management.`,
+      });
+    }
+  };
+  check(winner, match.next_winner_match_id, match.next_winner_slot, 'Winner');
+  check(loser, match.next_loser_match_id, match.next_loser_slot, 'Loser');
+  return notes;
+}

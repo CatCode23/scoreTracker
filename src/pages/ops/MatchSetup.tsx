@@ -648,6 +648,7 @@ function MatchesTab({ event }: { event: EventRow }) {
           next_loser_match_id: orNull(v.next_loser_match_id),
           next_loser_slot: orNull(v.next_loser_slot),
           public_visible: v.public_visible === 'on',
+          auto_advance: v.auto_advance === 'on',
         };
         const ok = await e.wrap(() =>
           m
@@ -766,6 +767,22 @@ function MatchesTab({ event }: { event: EventRow }) {
             className="h-6 w-6 accent-brand"
           />
           Show on public pages
+        </label>
+      </Field>
+      <Field
+        label="Move teams on"
+        htmlFor="m-auto"
+        hint="When a result is saved, put the winner/loser into the matches below"
+      >
+        <label className="flex min-h-touch items-center gap-2">
+          <input
+            id="m-auto"
+            type="checkbox"
+            name="auto_advance"
+            defaultChecked={m?.auto_advance ?? true}
+            className="h-6 w-6 accent-brand"
+          />
+          Automatically
         </label>
       </Field>
       <Field label="Winner goes to" htmlFor="m-nw">

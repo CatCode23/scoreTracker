@@ -76,8 +76,9 @@ site" instead.
 3. **Matches.** Add each game, bout or heat. Fill in:
    - code (unique, e.g. `BSK-QF1`), stage, round name and order, match number, type,
      date, time, area;
-   - **winner goes to** / **loser goes to**, with slots. These are routing hints for
-     manual advancement.
+   - **winner goes to** / **loser goes to**, with slots. When a result is saved, the
+     winner (and loser) are moved into those slots automatically. Untick **Move teams on:
+     Automatically** for a match if you want to place teams by hand.
 4. **Assign** teams to slots (A/B, or Lane 1…n for heats).
 5. Alternatively, use **Import CSV**. Import matches first, then participants by seed.
    Import never overwrites existing matches.
@@ -146,6 +147,18 @@ one first, or untick the box and move teams by hand.
 Operations admins and the event's sport managers can edit results.
 
 ## 9. Advance winners and losers
+
+**Normally this happens automatically.** When a result is saved (or a Scorer's result is
+approved), the winner goes into the "Winner goes to" slot and the loser into the "Loser
+goes to" slot, as set up for that match. Score Entry tells you where each team went.
+
+A move is **skipped, never forced**, when:
+- that slot already holds a different team;
+- the team is already in that match;
+- the next match already has a result;
+- the match has **Move teams on: Automatically** turned off.
+
+Score Entry then warns you, and you place the team by hand:
 
 **Ops → Match Management.** On an Official match:
 

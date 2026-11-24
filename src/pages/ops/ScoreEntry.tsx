@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { describeAutoAdvance, type AdvanceNote } from '../../lib/domain/advancement';
+import { supabase } from '../../lib/supabase';
 import { ClipboardList } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { useLookups } from '../../lib/api/lookups';
@@ -59,13 +61,32 @@ export function ScoreEntry() {
   const official = match
     ? hasMatchRole(auth, match.event_id, L.venueOf(match), VALIDATE_ROLES)
     : false;
+  const [advanceNotes, setAdvanceNotes] = useState<AdvanceNote[]>([]);
   const submit = useOpsMutation(async (payload: ResultPayload) => {
+    setAdvanceNotes([]);
     await db.insert('match_results', {
       match_id: matchId,
       status: official ? 'official' : 'submitted',
       submitted_by: auth.session!.user.id,
       ...payload,
     });
+    // Official results move teams on automatically (database side). Report what happened.
+    if (official && match) {
+      const { data } = await supabase
+        .from('match_participants')
+        .select('match_id, participant_id, slot')
+        .eq('source_match_id', match.id);
+      setAdvanceNotes(
+        describeAutoAdvance(
+          match,
+          payload.winner_participant_id,
+          payload.loser_participant_id,
+          (data ?? []) as { match_id: string; participant_id: string | null; slot: string }[],
+          (id) => L.matchById.get(id)?.match_code ?? 'the next match',
+          (id) => L.team(id),
+        ),
+      );
+    }
   });
 
   if (L.loading) return <Loading />;
@@ -119,7 +140,10 @@ export function ScoreEntry() {
                 <li key={m.id}>
                   <button
                     type="button"
-                    onClick={() => setMatchId(m.id)}
+                    onClick={() => {
+                      setMatchId(m.id);
+                      setAdvanceNotes([]);
+                    }}
                     aria-pressed={m.id === matchId}
                     className={cx(
                       'flex min-h-touch w-full items-center justify-between gap-2 rounded-lg border-2 p-3 text-left',
@@ -161,6 +185,15 @@ export function ScoreEntry() {
               submitsOfficial={official}
               onSubmit={(p) => submit.mutateAsync(p).then(() => undefined)}
             />
+          )}
+          {advanceNotes.length > 0 && (
+            <div className="mt-3 space-y-2" aria-live="polite">
+              {advanceNotes.map((n) => (
+                <Notice key={n.text} tone={n.tone}>
+                  {n.text}
+                </Notice>
+              ))}
+            </div>
           )}
         </Card>
       )}

@@ -90,6 +90,9 @@ Triggers enforce the following:
   one transaction, optionally swapping the corrected winner/loser into the next matches.
 - Match status follows the result: submitted, then official, then back to ready if the
   result is returned or voided.
+- When a result becomes Official, `auto_advance_from()` places the winner/loser into the
+  match's `next_winner_*` / `next_loser_*` slots (if `matches.auto_advance`). It skips,
+  never overwrites, a slot holding another team, and skips matches that already have a result.
 - Official values are copied onto `match_participants`. They are cleared if that result is
   later voided.
 
