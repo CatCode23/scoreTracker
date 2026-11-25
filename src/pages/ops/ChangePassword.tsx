@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase, friendlyError } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
-import { Button, Card, Field, Input, Notice, PageHeader } from '../../components/ui';
+import { Button, Card, Field, Input, Notice } from '../../components/ui';
 import { displayLogin } from '../../lib/username';
 
 export const MIN_PASSWORD_LENGTH = 10;
@@ -46,13 +46,16 @@ export function ChangePassword() {
     setResult({ tone: 'success', text: 'Password changed. Use it next time you sign in.' });
   });
 
+  // Rendered as a section of the My Account page.
   return (
-    <div className="mx-auto max-w-md space-y-4">
-      <PageHeader title="Change password" subtitle={displayLogin(auth.session?.user.email)} />
-      <Notice tone="info">
+    <section aria-labelledby="change-password-title" className="space-y-3">
+      <h2 id="change-password-title" className="text-lg font-bold">
+        Change password
+      </h2>
+      <p className="text-sm text-slate-700">
         Replace the temporary password you were given. Do not share your account; every result you
-        submit is recorded under your name.
-      </Notice>
+        enter is recorded under your name.
+      </p>
       <Card>
         <form onSubmit={submit} className="space-y-4" noValidate aria-label="Change password">
           {/* Hidden username field helps password managers save the right account. */}
@@ -93,6 +96,6 @@ export function ChangePassword() {
           </Button>
         </form>
       </Card>
-    </div>
+    </section>
   );
 }

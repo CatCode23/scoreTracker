@@ -51,7 +51,7 @@ export function Users() {
           </li>
           <li>
             Give them their username (e.g. <strong>jsmith</strong>) and password directly. They
-            change the password under <strong>Change Password</strong>.
+            change the password under <strong>My Account</strong>.
           </li>
         </ol>
         <p className="mt-2">

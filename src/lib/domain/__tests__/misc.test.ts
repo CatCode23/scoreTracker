@@ -1,7 +1,7 @@
 import { groupBracket } from '../bracket';
 import { formatSeconds, formatTime, parseDuration } from '../format';
 import { parseCsv } from '../csv';
-import { hasMatchRole, isOpsAdmin } from '../permissions';
+import { hasMatchRole, isFieldOnly, isOpsAdmin } from '../permissions';
 import type { Assignment, Profile } from '../../types';
 
 describe('groupBracket', () => {
@@ -85,5 +85,24 @@ describe('permissions (UI mirror of RLS)', () => {
     expect(hasMatchRole(a, 'e1', 'Other Gym', ['scorer'])).toBe(false);
     expect(hasMatchRole(a, 'e2', 'wilson gym', ['scorer'])).toBe(false);
     expect(hasMatchRole(a, 'e1', 'wilson gym', ['venue_lead'])).toBe(false);
+  });
+
+  it('field-only staff are scorers / venue leads without setup or global roles', () => {
+    expect(
+      isFieldOnly({
+        profile: profile('venue_lead'),
+        assignments: [asg({ assignment_role: 'venue_lead' })],
+      }),
+    ).toBe(true);
+    expect(isFieldOnly({ profile: profile('scorer'), assignments: [asg({})] })).toBe(true);
+    expect(
+      isFieldOnly({
+        profile: profile('sport_manager'),
+        assignments: [asg({ assignment_role: 'sport_manager' })],
+      }),
+    ).toBe(false);
+    expect(isFieldOnly({ profile: profile('operations_admin'), assignments: [] })).toBe(false);
+    expect(isFieldOnly({ profile: profile('read_only'), assignments: [] })).toBe(false);
+    expect(isFieldOnly({ profile: profile('scorer', false), assignments: [asg({})] })).toBe(false);
   });
 });

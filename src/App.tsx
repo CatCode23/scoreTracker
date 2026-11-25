@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useAuth } from './lib/auth';
 import { Layout } from './components/Layout';
 import { PublicHome } from './pages/public/PublicHome';
 import { SportDetail } from './pages/public/SportDetail';
@@ -12,6 +13,7 @@ import {
   canValidateAnything,
   hasGlobalRead,
   isOpsAdmin,
+  isFieldOnly,
 } from './lib/domain/permissions';
 import type { Access } from './lib/domain/permissions';
 import { Empty, Loading } from './components/states';
@@ -19,9 +21,6 @@ import { Empty, Loading } from './components/states';
 // Operations pages are code-split so public visitors on phones download less.
 const Dashboard = lazy(() =>
   import('./pages/ops/Dashboard').then((m) => ({ default: m.Dashboard })),
-);
-const MyAssignments = lazy(() =>
-  import('./pages/ops/MyAssignments').then((m) => ({ default: m.MyAssignments })),
 );
 const Validation = lazy(() =>
   import('./pages/ops/Validation').then((m) => ({ default: m.Validation })),
@@ -36,10 +35,16 @@ const Placements = lazy(() =>
 const Teams = lazy(() => import('./pages/ops/Teams').then((m) => ({ default: m.Teams })));
 const Users = lazy(() => import('./pages/ops/Users').then((m) => ({ default: m.Users })));
 const Settings = lazy(() => import('./pages/ops/Settings').then((m) => ({ default: m.Settings })));
-const ChangePassword = lazy(() =>
-  import('./pages/ops/ChangePassword').then((m) => ({ default: m.ChangePassword })),
+const MyAccount = lazy(() =>
+  import('./pages/ops/MyAccount').then((m) => ({ default: m.MyAccount })),
 );
 const AuditLog = lazy(() => import('./pages/ops/AuditLog').then((m) => ({ default: m.AuditLog })));
+
+/** Staff home: field-only users (scorers, venue leads) go straight to Matches. */
+function OpsHome() {
+  const auth = useAuth();
+  return isFieldOnly(auth) ? <Navigate to="/ops/matches" replace /> : <Dashboard />;
+}
 
 const guard = (el: JSX.Element, check?: (a: Access) => boolean) => (
   <RequireAccess check={check}>
@@ -56,18 +61,19 @@ export function AppRoutes() {
         <Route path="sport/:code" element={<SportDetail />} />
         <Route path="signin" element={<SignIn />} />
         <Route path="ops">
-          <Route index element={guard(<Dashboard />)} />
+          <Route index element={guard(<OpsHome />)} />
           <Route
-            path="password"
+            path="account"
             element={
               <RequireAccess allowInactive>
                 <Suspense fallback={<Loading />}>
-                  <ChangePassword />
+                  <MyAccount />
                 </Suspense>
               </RequireAccess>
             }
           />
-          <Route path="assignments" element={guard(<MyAssignments />)} />
+          <Route path="password" element={<Navigate to="/ops/account" replace />} />
+          <Route path="assignments" element={<Navigate to="/ops/account" replace />} />
           <Route path="score" element={<Navigate to="/ops/matches" replace />} />
           <Route
             path="validate"

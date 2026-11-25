@@ -69,7 +69,7 @@ These assumptions were made where the specification left room for interpretation
     - Passwords are stored and checked by Supabase (hashed). The app never stores them,
       so the spec's "no password storage in the application" still holds.
     - Admins create accounts with a temporary password (*Create new user*, Auto Confirm),
-      and staff change it on the **Change Password** page (minimum 10 characters).
+      and staff change it on the **My Account** page (minimum 10 characters).
       Resets are done by an admin in Supabase.
     - Email link sign-in remains as a backup option. It uses PKCE, which is compatible
       with HashRouter, and also accepts the emailed one-time code; that requires
@@ -119,3 +119,7 @@ These assumptions were made where the specification left room for interpretation
     code), the round order, match number and code are suggested from the stage and round:
     next number in the round; code = event + round abbreviation + number (`SOC-QF3`,
     `SOC-R16-4`, `SOC-F`), made unique with `-2`, `-3`… Anything typed by hand is kept.
+34. **Shorter staff menu.** The menu is grouped (Event day, Setup, Admin, Account), and My
+    Assignments and Change Password are one **My Account** page. Field staff (scorers and
+    venue leads with no setup role) land on Matches after signing in and see only Matches,
+    Approvals (when something is waiting) and My Account.

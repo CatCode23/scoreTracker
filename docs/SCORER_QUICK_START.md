@@ -7,7 +7,7 @@
 1. Tap **Staff sign in**.
 2. Enter your **username** (for example `jsmith`) or email, and the password the
    operations cell gave you, then tap **Sign in**.
-3. The first time, open the menu (☰), tap **Change Password**, and set your own password
+3. The first time, open the menu (☰), tap **My Account**, and set your own password
    (at least 10 characters).
 4. If you see "Account pending activation", give your username to the operations cell.
 5. Forgot your password? Ask the operations cell to reset it.
@@ -20,7 +20,7 @@ You stay signed in on that phone, so avoid tapping **Sign out**.
 
 **1. Select match. 2. Enter result. 3. Save.**
 
-1. Open the menu (☰) and tap **Matches**.
+1. After signing in you land on **Matches** (or open the menu ☰ → **Matches**).
 2. Pick your **event**, then tap the **match** (the **To play** tab lists what's left).
    You only see matches at your assigned venue.
 3. Enter the result for each team. Team names are read-only.

@@ -56,6 +56,6 @@ Negative checks to repeat manually:
    - lead: Venue Lead · Soccer · North Fort Athletic Complex
    - manager: Sport Manager · Soccer · (all venues)
 4. Sign in as each one in the app (a private browser window per account works well), and
-   check that **Change Password** works.
+   check that changing the password on **My Account** works.
 5. After testing, **deactivate** the test accounts, or delete them in Supabase Auth.
 6. Delete the `TEST` teams (remove them from matches first, or delete the test matches), then the `TEST` units.
