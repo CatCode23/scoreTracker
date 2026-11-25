@@ -101,7 +101,7 @@ user*. For the email, use their real address, or a username in the form
 tick **Auto Confirm User**. Don't use *Invite user*.
 
 Give them their username and temporary password directly (in person or by phone, not in a group chat).
-They change it in the app under **Change Password**. To reset a forgotten password, open
+They change it in the app under **My Account**. To reset a forgotten password, open
 the user in Supabase and set a new one.
 
 **Then in the app, Ops → Users**:

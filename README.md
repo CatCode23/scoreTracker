@@ -211,7 +211,7 @@ app never stores them. Admins create every account, so no emails are needed to s
   confirmation email that bounces for username accounts, and repeated bounces can get
   Supabase's built-in email sender restricted.
 - Set a **minimum password length** of at least 10 (in the Email provider or password
-  settings). The app's Change Password page also requires 10 characters.
+  settings). The app's My Account page also requires 10 characters.
 - Optional backup sign-in by email link: the sign-in page also offers "Sign in with an
   email link instead". It uses Supabase's built-in email sender, which allows only a few
   emails per hour. If you want to rely on it, configure custom SMTP (*Authentication →
@@ -264,7 +264,7 @@ For each person:
    accounts with that domain instead.
 2. App: **Ops → Users** → activate them and add their event/venue assignment.
 3. Give them the temporary password directly (in person or by phone, not in a group
-   chat). They change it under **Change Password** after signing in.
+   chat). They change it under **My Account** after signing in.
 
 To reset a forgotten password, open the user in Supabase (*Authentication → Users*) and
 set a new password.

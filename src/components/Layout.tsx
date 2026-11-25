@@ -11,6 +11,7 @@ import {
   hasGlobalRead,
   isActive,
   isOpsAdmin,
+  isFieldOnly,
 } from '../lib/domain/permissions';
 import { OfflineBanner } from './states';
 import { cx } from './ui';
@@ -34,31 +35,57 @@ export function Layout() {
   const pending = usePendingApprovalCount(canValidateAnything(auth));
   const pendingCount = pending.data ?? 0;
 
-  const ops: NavItem[] = [
-    { to: '/ops', label: 'Dashboard', show: active },
-    { to: '/ops/assignments', label: 'My Assignments', show: active },
+  const fieldOnly = isFieldOnly(auth);
+  // Grouped by when you use them. Empty groups are hidden, so field staff (scorers,
+  // venue leads) only see Matches and My Account.
+  const groups: { title: string; items: NavItem[] }[] = [
     {
-      to: '/ops/matches',
-      label: 'Matches',
-      show: canSubmitAnything(auth) || canManageAnything(auth) || hasGlobalRead(auth),
+      title: 'Event day',
+      items: [
+        {
+          to: '/ops/matches',
+          label: 'Matches',
+          show: canSubmitAnything(auth) || canManageAnything(auth) || hasGlobalRead(auth),
+        },
+        {
+          to: '/ops/validate',
+          label: `Approvals (${pendingCount})`,
+          show: canValidateAnything(auth) && pendingCount > 0,
+        },
+        {
+          to: '/ops/placements',
+          label: 'Placements',
+          show: canManageAnything(auth) || hasGlobalRead(auth),
+        },
+        { to: '/ops', label: 'Dashboard', show: active && !fieldOnly },
+      ],
     },
     {
-      to: '/ops/validate',
-      label: `Approvals (${pendingCount})`,
-      show: canValidateAnything(auth) && pendingCount > 0,
+      title: 'Setup',
+      items: [
+        { to: '/ops/setup', label: 'Match Setup', show: canManageAnything(auth) },
+        { to: '/ops/teams', label: 'Teams', show: canRegisterTeams(auth) },
+      ],
     },
-    { to: '/ops/setup', label: 'Match Setup', show: canManageAnything(auth) },
     {
-      to: '/ops/placements',
-      label: 'Placements',
-      show: canManageAnything(auth) || hasGlobalRead(auth),
+      title: 'Admin',
+      items: [
+        { to: '/ops/users', label: 'Users', show: isOpsAdmin(auth) },
+        { to: '/ops/settings', label: 'Settings', show: isOpsAdmin(auth) },
+        { to: '/ops/audit', label: 'Audit Log', show: isOpsAdmin(auth) },
+      ],
     },
-    { to: '/ops/teams', label: 'Teams', show: canRegisterTeams(auth) },
-    { to: '/ops/users', label: 'Users', show: isOpsAdmin(auth) },
-    { to: '/ops/settings', label: 'Settings', show: isOpsAdmin(auth) },
-    { to: '/ops/audit', label: 'Audit Log', show: isOpsAdmin(auth) },
-    { to: '/ops/password', label: 'Change Password', show: Boolean(auth.session) },
-  ].filter((n) => n.show);
+    {
+      title: 'Account',
+      items: [
+        { to: '/ops/account', label: 'My Account', show: Boolean(auth.session) },
+        { to: '/public', label: 'Public view', show: true },
+      ],
+    },
+  ]
+    .map((g) => ({ ...g, items: g.items.filter((n) => n.show) }))
+    .filter((g) => g.items.length > 0);
+  const ops = groups.flatMap((g) => g.items);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -120,32 +147,33 @@ export function Layout() {
         </div>
         {auth.session && open && ops.length > 0 && (
           <nav id="ops-nav" aria-label="Operations" className="border-t border-ink-soft bg-ink">
-            <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-1 p-2 sm:grid-cols-4">
-              <li>
-                <NavLink
-                  to="/public"
-                  className="flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-ink-soft"
-                >
-                  Public view
-                </NavLink>
-              </li>
-              {ops.map((n) => (
-                <li key={n.to}>
-                  <NavLink
-                    to={n.to}
-                    end={n.to === '/ops'}
-                    className={({ isActive: a }) =>
-                      cx(
-                        'flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-ink-soft',
-                        a && 'bg-ink-soft ring-2 ring-brand',
-                      )
-                    }
-                  >
-                    {n.label}
-                  </NavLink>
-                </li>
+            <div className="mx-auto max-w-6xl space-y-2 p-2">
+              {groups.map((g) => (
+                <div key={g.title}>
+                  <p className="px-3 pb-1 pt-1 text-xs font-bold uppercase tracking-wide text-steel">
+                    {g.title}
+                  </p>
+                  <ul className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+                    {g.items.map((n) => (
+                      <li key={n.to}>
+                        <NavLink
+                          to={n.to}
+                          end={n.to === '/ops' || n.to === '/public'}
+                          className={({ isActive: a }) =>
+                            cx(
+                              'flex min-h-touch items-center rounded-lg px-3 font-semibold hover:bg-ink-soft',
+                              a && 'bg-ink-soft ring-2 ring-brand',
+                            )
+                          }
+                        >
+                          {n.label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </nav>
         )}
       </header>

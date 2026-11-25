@@ -99,3 +99,11 @@ export function canManageAnything(a: Access): boolean {
     (isActive(a) && a.assignments.some((x) => x.active && MANAGE_ROLES.includes(x.assignment_role)))
   );
 }
+
+/**
+ * Field staff only (scorers / venue leads): no setup, management or global view.
+ * They land on Matches and see a short menu.
+ */
+export function isFieldOnly(a: Access): boolean {
+  return isActive(a) && !isOpsAdmin(a) && !hasGlobalRead(a) && !canManageAnything(a);
+}
