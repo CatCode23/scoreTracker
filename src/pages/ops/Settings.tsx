@@ -30,8 +30,6 @@ export function Settings() {
   const matrix = usePointsMatrix();
   const events = useEvents();
   const confirm = useConfirm();
-  const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [msg, setMsg] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const updSetting = useOpsMutation(({ id, values }: { id: string; values: object }) =>
     db.update('scoring_settings', id, values),
   );
@@ -42,79 +40,19 @@ export function Settings() {
   const addPlace = useOpsMutation((v: { place: number; points: number }) =>
     db.insert('points_matrix', { ...v, description: `${v.place}th place` }),
   );
-  const loadSchedule = useOpsMutation((replace: boolean) =>
-    db.rpc<number>('load_preliminary_schedule', { p_year: Number(year), p_replace: replace }),
-  );
 
   if (settings.isLoading || matrix.isLoading || events.isLoading) return <Loading />;
   if (settings.error) return <ErrorState error={settings.error} />;
   const get = (k: string) => settings.data?.find((s) => s.setting_key === k);
   const penalty = get('no_show_penalty');
   const overall = get('overall_scoring_enabled');
-  const tYear = get('tournament_year');
 
   return (
     <div className="space-y-4">
       <PageHeader title="Settings" subtitle="Operations admin only. All changes are audited." />
-      {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
       {(updSetting.error || updMatrix.error) && (
         <Notice tone="error">{friendlyError(updSetting.error ?? updMatrix.error)}</Notice>
       )}
-
-      <Card title="Preliminary schedule">
-        <p className="text-sm text-slate-700">
-          Loads the known preliminary sessions (Dec 7–9) for the selected tournament year. Sessions
-          remain editable on Match Setup. Current year setting:{' '}
-          <strong>{tYear?.numeric_value ?? 'not set'}</strong>.
-        </p>
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          <Field label="Tournament year" htmlFor="year">
-            <Input
-              id="year"
-              inputMode="numeric"
-              className="w-28"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            />
-          </Field>
-          <Button
-            onClick={() =>
-              confirm.ask(
-                {
-                  title: `Load preliminary schedule for ${year}?`,
-                  body: 'Events that already have sessions are skipped.',
-                  confirmLabel: 'Load',
-                },
-                async () => {
-                  const n = await loadSchedule.mutateAsync(false);
-                  setMsg({ tone: 'success', text: `${n} sessions created.` });
-                },
-              )
-            }
-          >
-            Load schedule
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() =>
-              confirm.ask(
-                {
-                  title: `Replace ALL sessions with the ${year} preliminary schedule?`,
-                  body: 'Existing sessions are deleted; matches keep their data but lose their session link.',
-                  danger: true,
-                  confirmLabel: 'Replace',
-                },
-                async () => {
-                  const n = await loadSchedule.mutateAsync(true);
-                  setMsg({ tone: 'success', text: `${n} sessions created (replaced).` });
-                },
-              )
-            }
-          >
-            Replace schedule
-          </Button>
-        </div>
-      </Card>
 
       <Card title="Scoring">
         {penalty && (

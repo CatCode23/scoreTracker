@@ -4,7 +4,7 @@ import {
   usePublicEvents,
   usePublicLastUpdate,
   usePublicLeaderboard,
-  usePublicSessions,
+  usePublicUpNext,
 } from '../../lib/api/public';
 import { usePublicRealtime } from '../../lib/realtime';
 import { isConfigured } from '../../lib/supabase';
@@ -41,17 +41,9 @@ export function LiveIndicator() {
 export function PublicHome() {
   const events = usePublicEvents();
   const board = usePublicLeaderboard();
-  const sessions = usePublicSessions();
-
-  const today = new Date().toISOString().slice(0, 10);
-  const upcoming = (sessions.data ?? [])
-    .filter(
-      (s) =>
-        s.status !== 'cancelled' &&
-        s.status !== 'complete' &&
-        (!s.session_date || s.session_date >= today),
-    )
-    .slice(0, 8);
+  const upNext = usePublicUpNext();
+  const eventName = (code: string) =>
+    events.data?.find((e) => e.event_code === code)?.event_name ?? code;
 
   return (
     <div className="space-y-5">
@@ -134,35 +126,48 @@ export function PublicHome() {
             )}
           </Card>
 
-          <Card title="Upcoming Sessions">
-            {sessions.isLoading ? (
+          <Card title="Up next">
+            {upNext.isLoading ? (
               <Loading />
-            ) : sessions.error ? (
-              <ErrorState error={sessions.error} />
-            ) : upcoming.length === 0 ? (
-              <Empty title="No upcoming sessions scheduled" />
+            ) : upNext.error ? (
+              <ErrorState error={upNext.error} />
+            ) : (upNext.data?.matches ?? []).length === 0 ? (
+              <Empty title="No upcoming matches scheduled" />
             ) : (
               <ul className="divide-y divide-slate-200">
-                {upcoming.map((s) => (
-                  <li key={s.id} className="flex items-start gap-3 py-2">
-                    <CalendarClock className="mt-1 h-5 w-5 shrink-0 text-brand" aria-hidden />
-                    <span className="min-w-0">
-                      <Link
-                        to={`/sport/${s.event_code}`}
-                        className="font-bold underline-offset-2 hover:underline"
-                      >
-                        {s.event_name}
-                      </Link>
-                      <span className="block text-sm text-slate-700">
-                        {formatDate(s.session_date)} · {formatTime(s.start_time)}–
-                        {formatTime(s.end_time)}
+                {upNext.data!.matches.map((m) => {
+                  const teams = upNext
+                    .data!.participants.filter((p) => p.match_id === m.id)
+                    .sort((a, b) => a.slot.localeCompare(b.slot, undefined, { numeric: true }))
+                    .map((p) => p.team_name ?? 'TBD');
+                  return (
+                    <li key={m.id} className="flex items-start gap-3 py-2">
+                      <CalendarClock className="mt-1 h-5 w-5 shrink-0 text-brand" aria-hidden />
+                      <span className="min-w-0">
+                        <Link
+                          to={`/sport/${m.event_code}`}
+                          className="font-bold underline-offset-2 hover:underline"
+                        >
+                          {eventName(m.event_code)}
+                        </Link>
+                        <span className="text-sm text-slate-700">
+                          {' '}
+                          · {m.round_name ?? m.match_code}
+                        </span>
+                        <span className="block text-sm text-slate-800">
+                          {teams.length ? teams.join(' vs ') : 'Teams to be decided'}
+                        </span>
+                        <span className="block text-sm text-slate-600">
+                          {[formatDate(m.match_date), formatTime(m.start_time), m.venue_area]
+                            .filter(Boolean)
+                            .join(' · ')}
+                          {m.public_status === 'delayed' && ' · Delayed'}
+                          {m.public_status === 'in_progress' && ' · In progress'}
+                        </span>
                       </span>
-                      <span className="block text-sm text-slate-600">
-                        {[s.venue, s.venue_area, s.session_purpose].filter(Boolean).join(' · ')}
-                      </span>
-                    </span>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Card>

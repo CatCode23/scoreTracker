@@ -8,7 +8,6 @@ import type {
   PublicMatchParticipant,
   PublicPlacement,
   PublicPoolStanding,
-  PublicSession,
 } from '../types';
 
 // Public pages read ONLY the public_* views. Polling is a fallback for Realtime.
@@ -23,13 +22,23 @@ export function usePublicEvents() {
   });
 }
 
-export function usePublicSessions(eventId?: string) {
+/** The next scheduled (not yet Official) matches across all sports, with their teams. */
+export function usePublicUpNext(limit = 8) {
   return useQuery({
-    queryKey: ['public', 'sessions', eventId ?? 'all'],
-    queryFn: () => {
-      let q = supabase.from('public_event_sessions').select('*');
-      if (eventId) q = q.eq('event_id', eventId);
-      return rows<PublicSession>(q.order('session_date').order('start_time'));
+    queryKey: ['public', 'up-next', limit],
+    queryFn: async () => {
+      const matches = await rows<PublicMatch>(
+        supabase
+          .from('public_matches')
+          .select('*')
+          .in('public_status', ['scheduled', 'in_progress', 'delayed'])
+          .order('match_date', { nullsFirst: false })
+          .order('start_time', { nullsFirst: false })
+          .order('match_code')
+          .limit(limit),
+      );
+      const participants = matches.length ? await fetchParticipants(matches.map((m) => m.id)) : [];
+      return { matches, participants };
     },
     ...opts,
   });

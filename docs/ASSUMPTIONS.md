@@ -123,3 +123,9 @@ These assumptions were made where the specification left room for interpretation
     Assignments and Change Password are one **My Account** page. Field staff (scorers and
     venue leads with no setup role) land on Matches after signing in and see only Matches,
     Approvals (when something is waiting) and My Account.
+35. **No sessions in the app.** Matches carry their own date, time and court, so the
+    separate Sessions tab was removed. The public home page shows **Up next** (the next
+    scheduled matches) and each sport's Schedule tab shows the event's dates and venue
+    plus its matches. New matches use the event's venue for venue-scoped staff; if a sport
+    is ever played at two venues at once, add a per-match venue field. The
+    `event_sessions` table is kept unchanged.
