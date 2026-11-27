@@ -185,17 +185,17 @@ psql "$(npx supabase db url)" -f supabase/seed.sql
 
 (Or paste `seed.sql` into the SQL Editor.)
 
-### 3. Seed data and the preliminary schedule
+### 3. Seed data
 
 `seed.sql` loads the 8 events, the 1st–8th points matrix (8 down to 1), and the scoring
 settings: a no-show penalty of −6 and overall scoring on.
 
 It creates **no** teams, rosters, seeds, results or users.
 
-The preliminary Dec 7–9 schedule needs a year. Load it in either of two ways:
-
-- **Ops → Settings → Load schedule**, after you create the first admin, or
-- the SQL Editor: `select public.load_preliminary_schedule(2026);`
+Set each event's dates under **Ops → Settings → Events**. Match dates and times are set
+on each match (Match Setup), and the public schedule is built from those. (Optional: the
+SQL Editor command `select public.load_preliminary_schedule(2026);` fills in the
+preliminary Dec 7–9 event dates.)
 
 ### 4. Auth settings
 

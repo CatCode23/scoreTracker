@@ -8,7 +8,7 @@ the **Audit Log**.
 1. Confirm the deployment works: open the public URL on an iPhone and on an Android
    phone.
 2. **Ops → Settings**:
-   - Check the **tournament year** and load the **preliminary schedule**.
+   - Check each **event's dates and venue** under Events.
    - Check the **no-show penalty**. The default is −6. Change it or disable it if needed.
    - Check the **points matrix**: 1st=8 … 8th=1.
    - Edit each **event**: name, format, venue, responsible unit, dates, target team count,
@@ -43,7 +43,7 @@ Use the unit and event filters at the top of the Teams page to check each sport'
 
 **Ops → Settings → Events:** edit an event, **Add event** for a new sport, or **Delete**
 one. Deleting asks you to type the event code, and removes everything in the event
-(registrations, sessions, matches, results, placements, penalties) but keeps the teams.
+(registrations, matches, results, placements, penalties) but keeps the teams.
 To take an event off the public site without losing anything, untick "Visible on public
 site" instead.
 
@@ -75,10 +75,7 @@ To add a team to an event, edit the team (pencil) and tick the event.
    - Combatives: `1 Bouts`. Use the round name for the weight class, e.g. "185 lb".
 
    For pool stages, add the pools and assign teams to them.
-2. **Sessions.** Edit the preliminary sessions or add new ones. A match linked to a
-   session takes that session's **venue**. Venue controls which venue-scoped scorers can
-   see the match.
-3. **Matches.** Add each game, bout or heat. Fill in:
+2. **Matches.** Add each game, bout or heat. Fill in:
    - stage and round name (pick from the list or type one). **Round order, match number
      and match code fill in automatically**, e.g. Basketball → Quarterfinal → match 3 →
      `BSK-QF3`, Final → `BSK-F`. Type in any of them to use your own;
@@ -88,10 +85,10 @@ To add a team to an event, edit the team (pencil) and tick the event.
      Automatically** for a match if you want to place teams by hand.
    - **Decides places** for the Final, 3rd-place and other placement games (e.g. Final →
      1st/2nd). Saving their results fills in Placements (see section 10).
-4. **Assign** teams to slots (A/B, or Lane 1…n for heats).
-5. Alternatively, use **Import CSV**. Import matches first, then participants by seed.
+3. **Assign** teams to slots (A/B, or Lane 1…n for heats).
+4. Alternatively, use **Import CSV**. Import matches first, then participants by seed.
    Import never overwrites existing matches.
-6. Resolve any **schedule overlap** and **fewer than two teams** warnings.
+5. Resolve any **schedule overlap** and **fewer than two teams** warnings.
 
 ## 5. Assign scorers and managers
 

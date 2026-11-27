@@ -10,7 +10,6 @@ import {
   useParticipants,
   usePoolAssignments,
   usePools,
-  useSessions,
   useStages,
 } from '../../lib/api/ops';
 import { canManageEvent } from '../../lib/domain/permissions';
@@ -42,7 +41,7 @@ import { useConfirm } from '../../components/ConfirmDialog';
 import { nextMatchNumber, suggestMatchCode, suggestRoundOrder } from '../../lib/domain/matchCode';
 import { parseCsv } from '../../lib/domain/csv';
 
-type Tab = 'stages' | 'sessions' | 'matches' | 'import';
+type Tab = 'stages' | 'matches' | 'import';
 
 /** Read a form into a plain object of trimmed strings. */
 function formValues(e: FormEvent<HTMLFormElement>): Record<string, string> {
@@ -68,7 +67,7 @@ export function MatchSetup() {
     <div className="space-y-4">
       <PageHeader
         title="Match Setup"
-        subtitle="Stages, pools, sessions, matches and match participants."
+        subtitle="Stages, pools, matches and the teams in each match."
       />
       <Card>
         <Field label="Event" htmlFor="setup-event">
@@ -90,12 +89,10 @@ export function MatchSetup() {
             tabs={[
               { id: 'matches', label: 'Matches' },
               { id: 'stages', label: 'Stages & Pools' },
-              { id: 'sessions', label: 'Sessions' },
               { id: 'import', label: 'Import CSV' },
             ]}
           />
           {tab === 'stages' && <StagesTab event={event} />}
-          {tab === 'sessions' && <SessionsTab event={event} />}
           {tab === 'matches' && <MatchesTab event={event} />}
           {tab === 'import' && <ImportTab event={event} />}
         </>
@@ -454,127 +451,6 @@ function StagesTab({ event }: { event: EventRow }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-function SessionsTab({ event }: { event: EventRow }) {
-  const sessions = useSessions(event.id);
-  const save = useOpsMutation((values: object) => db.insert('event_sessions', values));
-  const upd = useOpsMutation((args: { id: string; values: object }) =>
-    db.update('event_sessions', args.id, args.values),
-  );
-  const del = useOpsMutation((id: string) => db.remove('event_sessions', id));
-  const confirm = useConfirm();
-  const e = useErr();
-  if (sessions.isLoading) return <Loading />;
-  return (
-    <div className="space-y-4">
-      <Notice tone="info">
-        The preliminary schedule is editable. Changes appear on the public schedule.
-      </Notice>
-      <Card title="Add session">
-        <form
-          className="grid gap-3 sm:grid-cols-3"
-          onSubmit={async (ev) => {
-            const v = formValues(ev);
-            const form = ev.currentTarget;
-            if (!v.session_date) return e.setErr('Date is required.');
-            if (v.start_time && v.end_time && v.end_time <= v.start_time)
-              return e.setErr('End time must be after start time.');
-            const ok = await e.wrap(() =>
-              save.mutateAsync({
-                event_id: event.id,
-                session_date: v.session_date,
-                start_time: orNull(v.start_time),
-                end_time: orNull(v.end_time),
-                venue: orNull(v.venue) ?? event.venue,
-                venue_area: orNull(v.venue_area),
-                session_purpose: orNull(v.session_purpose),
-                responsible_unit: orNull(v.responsible_unit) ?? event.responsible_unit,
-              }),
-            )();
-            if (ok) form.reset();
-          }}
-        >
-          <Field label="Date" htmlFor="s-date">
-            <Input id="s-date" name="session_date" type="date" />
-          </Field>
-          <Field label="Start" htmlFor="s-start">
-            <Input id="s-start" name="start_time" type="time" />
-          </Field>
-          <Field label="End" htmlFor="s-end">
-            <Input id="s-end" name="end_time" type="time" />
-          </Field>
-          <Field label="Venue" htmlFor="s-venue">
-            <Input id="s-venue" name="venue" placeholder={event.venue ?? ''} />
-          </Field>
-          <Field label="Area" htmlFor="s-area">
-            <Input id="s-area" name="venue_area" />
-          </Field>
-          <Field label="Purpose" htmlFor="s-purpose">
-            <Input id="s-purpose" name="session_purpose" placeholder="Pool play, Semifinals…" />
-          </Field>
-          <Field label="Responsible unit" htmlFor="s-unit">
-            <Input id="s-unit" name="responsible_unit" placeholder={event.responsible_unit ?? ''} />
-          </Field>
-          <div className="flex items-end sm:col-span-2">
-            <Button type="submit">Add session</Button>
-          </div>
-        </form>
-        {e.node}
-      </Card>
-      {(sessions.data ?? []).length === 0 ? (
-        <Empty title="No sessions. Load the preliminary schedule on Settings, or add sessions here." />
-      ) : (
-        <ul className="space-y-2">
-          {(sessions.data ?? []).map((s) => (
-            <li
-              key={s.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3"
-            >
-              <span>
-                <span className="block font-bold">
-                  {formatDate(s.session_date, true)} · {formatTime(s.start_time)}–
-                  {formatTime(s.end_time)}
-                </span>
-                <span className="text-sm text-slate-700">
-                  {[s.venue, s.venue_area, s.session_purpose, s.responsible_unit]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </span>
-              </span>
-              <span className="flex gap-2">
-                <Select
-                  aria-label="Session status"
-                  value={s.status}
-                  onChange={(ev) => upd.mutate({ id: s.id, values: { status: ev.target.value } })}
-                >
-                  {['planned', 'active', 'complete', 'cancelled'].map((x) => (
-                    <option key={x} value={x}>
-                      {humanize(x)}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  variant="ghost"
-                  aria-label="Delete session"
-                  onClick={() =>
-                    confirm.ask(
-                      { title: 'Delete this session?', danger: true, confirmLabel: 'Delete' },
-                      () => del.mutateAsync(s.id),
-                    )
-                  }
-                >
-                  <Trash2 className="h-5 w-5" aria-hidden />
-                </Button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {confirm.dialog}
-    </div>
-  );
-}
-
 const COMMON_ROUNDS = [
   'Opening Round',
   'Round of 16',
@@ -721,7 +597,6 @@ function MatchIdentityFields({
 function MatchesTab({ event }: { event: EventRow }) {
   const stages = useStages(event.id);
   const pools = usePools(event.id);
-  const sessions = useSessions(event.id);
   const matches = useMatches(event.id);
   const mps = useMatchParticipants(event.id);
   const participants = useParticipants(event.id);
@@ -779,7 +654,6 @@ function MatchesTab({ event }: { event: EventRow }) {
           event_id: event.id,
           stage_id: v.stage_id,
           pool_id: orNull(v.pool_id),
-          session_id: orNull(v.session_id),
           match_code: v.match_code.toUpperCase(),
           round_name: orNull(v.round_name),
           round_order: Number(v.round_order || 1),
@@ -846,16 +720,6 @@ function MatchesTab({ event }: { event: EventRow }) {
           {MATCH_TYPES.map((t) => (
             <option key={t} value={t}>
               {humanize(t)}
-            </option>
-          ))}
-        </Select>
-      </Field>
-      <Field label="Session" htmlFor="m-session" hint="Sets the venue used for scorer access">
-        <Select id="m-session" name="session_id" defaultValue={m?.session_id ?? ''}>
-          <option value="">Event venue</option>
-          {(sessions.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {formatDate(s.session_date)} {formatTime(s.start_time)} · {s.venue}
             </option>
           ))}
         </Select>

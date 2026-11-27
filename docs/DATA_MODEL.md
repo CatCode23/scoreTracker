@@ -39,7 +39,7 @@ erDiagram
 | `units` | The competing units (managed list, operations admin only). The overall leaderboard totals points per unit. |
 | `teams` | One record per team. `unit` must be a name from `units` (renames cascade; a unit with teams can't be deleted). `captain_name` is no longer used by the app and never appears in public views. Deleting a team deletes its registrations, unless it is in matches. |
 | `event_participants` | A team registered in an event: seed, check-in status, eligibility, final place mirror. |
-| `event_sessions` | Editable schedule blocks (date, time, venue, area, purpose, unit). |
+| `event_sessions` | Schedule blocks (date, time, venue). **No longer edited in the app**; kept for history and for matches that were linked to one. Match dates/times are the schedule now. |
 | `stages` | Pool, elimination, consolation, heat, placement, or final, in order. |
 | `pools` / `pool_assignments` | Pool membership and standings: W/L/T, PF/PA, differential, rank, advancement. |
 | `matches` | A game, bout, heat or station. Holds next-winner and next-loser routing pointers and slots. |
@@ -58,7 +58,7 @@ erDiagram
 | View | Contents |
 |---|---|
 | `public_events` | Public events and their participant counts |
-| `public_event_sessions` | The schedule |
+| `public_event_sessions` | Schedule blocks (no longer shown in the app) |
 | `public_matches` | Matches with a *public status*: scheduled, in progress, official, delayed, or void. Submitted and draft are never shown. |
 | `public_match_participants` | Team name and unit. Scores, times and placements appear **only if the match is Official**. |
 | `public_match_results` | Official results only. No submitter or validator. |
@@ -109,7 +109,7 @@ Triggers enforce the following:
 | Approve / return / void Scorer results | – | ✓ (event + venue) | ✓ | ✓ | – |
 | Void Official result | – | – | ✓ | ✓ | – |
 | Edit an Official result | – | – | ✓ | ✓ | – |
-| Stages / pools / sessions / matches / advancement | – | – | ✓ (event) | ✓ | – |
+| Stages / pools / matches / advancement | – | – | ✓ (event) | ✓ | – |
 | Create / edit teams, register participants | – | – | ✓ | ✓ | – |
 | Delete teams, manage units, create / delete events | – | – | – | ✓ | – |
 | Record placements, apply no-show penalty | – | – | ✓ | ✓ | – |

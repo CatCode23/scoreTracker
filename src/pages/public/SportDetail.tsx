@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { usePublicEventDetail, usePublicEvents, usePublicSessions } from '../../lib/api/public';
-import { formatDate, formatTime, humanize, ordinal } from '../../lib/domain/format';
+import { usePublicEventDetail, usePublicEvents } from '../../lib/api/public';
+import { formatDate, humanize, ordinal } from '../../lib/domain/format';
 import {
   FORMAT_LABELS,
   type PublicMatch,
   type PublicMatchParticipant,
   type PublicPoolStanding,
+  type PublicEvent,
 } from '../../lib/types';
 import { Card, PageHeader, Tabs } from '../../components/ui';
 import { Empty, ErrorState, Loading } from '../../components/states';
@@ -22,7 +23,6 @@ export function SportDetail() {
   const events = usePublicEvents();
   const event = events.data?.find((e) => e.event_code === code?.toUpperCase());
   const detail = usePublicEventDetail(event?.id);
-  const sessions = usePublicSessions(event?.id);
   const [tab, setTab] = useState<Tab>('bracket');
 
   if (events.isLoading) return <Loading />;
@@ -81,11 +81,7 @@ export function SportDetail() {
               <BracketBoard matches={d.matches} participants={d.participants} />
             )}
             {tab === 'schedule' && (
-              <ScheduleTab
-                sessions={sessions.data ?? []}
-                matches={d.matches}
-                participants={d.participants}
-              />
+              <ScheduleTab event={event} matches={d.matches} participants={d.participants} />
             )}
             {tab === 'results' && <ResultsTab matches={d.matches} participants={d.participants} />}
             {tab === 'pools' && <PoolsTab standings={d.standings} />}
@@ -124,20 +120,11 @@ export function SportDetail() {
 }
 
 function ScheduleTab({
-  sessions,
+  event,
   matches,
   participants,
 }: {
-  sessions: {
-    id: string;
-    session_date: string | null;
-    start_time: string | null;
-    end_time: string | null;
-    venue: string | null;
-    venue_area: string | null;
-    session_purpose: string | null;
-    status: string;
-  }[];
+  event: PublicEvent;
   matches: PublicMatch[];
   participants: PublicMatchParticipant[];
 }) {
@@ -148,26 +135,19 @@ function ScheduleTab({
         `${b.match_date ?? '9'}${b.start_time ?? ''}`,
       ),
     );
+  const dates =
+    event.start_date && event.end_date && event.start_date !== event.end_date
+      ? `${formatDate(event.start_date)} – ${formatDate(event.end_date)}`
+      : formatDate(event.start_date ?? event.end_date);
   return (
     <div className="space-y-4">
-      <Card title="Sessions">
-        {sessions.length === 0 ? (
-          <Empty title="No sessions scheduled" />
-        ) : (
-          <ul className="divide-y divide-slate-200">
-            {sessions.map((s) => (
-              <li key={s.id} className="py-2">
-                <p className="font-bold">
-                  {formatDate(s.session_date)} · {formatTime(s.start_time)}–{formatTime(s.end_time)}
-                  {s.status === 'cancelled' && <span className="ml-2 text-red-700">Cancelled</span>}
-                </p>
-                <p className="text-sm text-slate-700">
-                  {[s.venue, s.venue_area, s.session_purpose].filter(Boolean).join(' · ')}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
+      <Card title="When and where">
+        <p className="font-bold">{dates || 'Dates to be announced'}</p>
+        <p className="text-sm text-slate-700">
+          {[event.venue, event.responsible_unit && `Run by ${event.responsible_unit}`]
+            .filter(Boolean)
+            .join(' · ') || 'Venue to be announced'}
+        </p>
       </Card>
       <Card title="Upcoming Matches">
         {upcoming.length === 0 ? (
