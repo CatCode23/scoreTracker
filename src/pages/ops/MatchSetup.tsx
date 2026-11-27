@@ -593,6 +593,41 @@ function MatchIdentityFields({
   );
 }
 
+/** "Loser goes to" is only needed for semifinals / consolation, so it hides behind a checkbox. */
+function LoserRouting({ initial, options }: { initial: string | null; options: Match[] }) {
+  const [on, setOn] = useState(Boolean(initial));
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <label className="flex min-h-touch items-center gap-2">
+        <input
+          type="checkbox"
+          className="h-6 w-6 accent-brand"
+          checked={on}
+          onChange={(e) => setOn(e.target.checked)}
+        />
+        Loser plays again (3rd place or consolation)
+      </label>
+      {on && (
+        <Field
+          label="Loser goes to"
+          htmlFor="m-nl"
+          hint="The loser takes the first open slot in that match."
+        >
+          <Select id="m-nl" name="next_loser_match_id" defaultValue={initial ?? ''}>
+            <option value="">— choose a match —</option>
+            {options.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.match_code}
+                {x.round_name ? ` · ${x.round_name}` : ''}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 function MatchesTab({ event }: { event: EventRow }) {
   const stages = useStages(event.id);
@@ -663,9 +698,15 @@ function MatchesTab({ event }: { event: EventRow }) {
           venue_area: orNull(v.venue_area),
           match_type: v.match_type as MatchType,
           next_winner_match_id: orNull(v.next_winner_match_id),
-          next_winner_slot: orNull(v.next_winner_slot),
+          // No slot to choose: teams take the next match's first open slot. An existing
+          // slot is kept only while the destination stays the same.
+          next_winner_slot:
+            m && orNull(v.next_winner_match_id) === m.next_winner_match_id
+              ? m.next_winner_slot
+              : null,
           next_loser_match_id: orNull(v.next_loser_match_id),
-          next_loser_slot: orNull(v.next_loser_slot),
+          next_loser_slot:
+            m && orNull(v.next_loser_match_id) === m.next_loser_match_id ? m.next_loser_slot : null,
           public_visible: v.public_visible === 'on',
           auto_advance: v.auto_advance === 'on',
           decides_place: intOrNull(v.decides_place),
@@ -780,41 +821,27 @@ function MatchesTab({ event }: { event: EventRow }) {
           Automatically
         </label>
       </Field>
-      <Field label="Winner goes to" htmlFor="m-nw">
+      <Field
+        label="Winner goes to"
+        htmlFor="m-nw"
+        hint="The winner takes the first open slot in that match."
+      >
         <Select id="m-nw" name="next_winner_match_id" defaultValue={m?.next_winner_match_id ?? ''}>
-          <option value="">—</option>
+          <option value="">— (no next match)</option>
           {list
             .filter((x) => x.id !== m?.id)
             .map((x) => (
               <option key={x.id} value={x.id}>
                 {x.match_code}
+                {x.round_name ? ` · ${x.round_name}` : ''}
               </option>
             ))}
         </Select>
       </Field>
-      <Field label="Winner slot" htmlFor="m-nws">
-        <Input
-          id="m-nws"
-          name="next_winner_slot"
-          defaultValue={m?.next_winner_slot ?? ''}
-          placeholder="A / B / Lane 1"
-        />
-      </Field>
-      <Field label="Loser goes to (3rd place / consolation)" htmlFor="m-nl">
-        <Select id="m-nl" name="next_loser_match_id" defaultValue={m?.next_loser_match_id ?? ''}>
-          <option value="">—</option>
-          {list
-            .filter((x) => x.id !== m?.id)
-            .map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.match_code}
-              </option>
-            ))}
-        </Select>
-      </Field>
-      <Field label="Loser slot" htmlFor="m-nls">
-        <Input id="m-nls" name="next_loser_slot" defaultValue={m?.next_loser_slot ?? ''} />
-      </Field>
+      <LoserRouting
+        initial={m?.next_loser_match_id ?? null}
+        options={list.filter((x) => x.id !== m?.id)}
+      />
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
         <Button type="submit">{m ? 'Save match' : 'Add match'}</Button>
         {m && (

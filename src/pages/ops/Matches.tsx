@@ -445,10 +445,10 @@ function MatchDetail({
           {(match.next_winner_match_id || match.next_loser_match_id) && (
             <p className="mt-2 text-sm text-slate-700">
               {match.next_winner_match_id &&
-                `Winner goes to ${codeOf(match.next_winner_match_id)} (${match.next_winner_slot ?? '?'})`}
+                `Winner goes to ${codeOf(match.next_winner_match_id)}${match.next_winner_slot ? ` (${match.next_winner_slot})` : ''}`}
               {match.next_winner_match_id && match.next_loser_match_id && ' · '}
               {match.next_loser_match_id &&
-                `Loser goes to ${codeOf(match.next_loser_match_id)} (${match.next_loser_slot ?? '?'})`}
+                `Loser goes to ${codeOf(match.next_loser_match_id)}${match.next_loser_slot ? ` (${match.next_loser_slot})` : ''}`}
             </p>
           )}
           {canManage && (

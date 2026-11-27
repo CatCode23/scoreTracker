@@ -80,9 +80,10 @@ To add a team to an event, edit the team (pencil) and tick the event.
      and match code fill in automatically**, e.g. Basketball → Quarterfinal → match 3 →
      `BSK-QF3`, Final → `BSK-F`. Type in any of them to use your own;
    - type, date, time, area;
-   - **winner goes to** / **loser goes to**, with slots. When a result is saved, the
-     winner (and loser) are moved into those slots automatically. Untick **Move teams on:
-     Automatically** for a match if you want to place teams by hand.
+   - **Winner goes to:** the next match. When a result is saved, the winner moves into
+     that match's first open slot (A, then B). For semifinals and consolation games, tick
+     **Loser plays again** and choose where the loser goes (e.g. the 3rd place game).
+     Untick **Move teams on: Automatically** for a match if you want to place teams by hand.
    - **Decides places** for the Final, 3rd-place and other placement games (e.g. Final →
      1st/2nd). Saving their results fills in Placements (see section 10).
 3. **Assign** teams to slots (A/B, or Lane 1…n for heats).

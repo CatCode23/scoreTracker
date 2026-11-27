@@ -153,8 +153,8 @@ Use one of these two options.
 order. Each new migration is a new file; earlier files are never changed. For example, a
 project set up with files `…0001`–`…0004` needs `…0005_explicit_grants.sql`,
 `…0006_units_and_deletes.sql`, `…0007_fix_cascade_checks.sql` and
-`…0008_direct_results_and_edits.sql`, `…0009_auto_advance.sql` and
-`…0010_auto_placements.sql`, in that order.
+`…0008_direct_results_and_edits.sql`, `…0009_auto_advance.sql`,
+`…0010_auto_placements.sql` and `…0011_auto_slot.sql`, in that order.
 
 ### Sample data (optional, for trying the app)
 
