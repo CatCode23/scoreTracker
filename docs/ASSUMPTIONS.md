@@ -129,3 +129,8 @@ These assumptions were made where the specification left room for interpretation
     plus its matches. New matches use the event's venue for venue-scoped staff; if a sport
     is ever played at two venues at once, add a per-match venue field. The
     `event_sessions` table is kept unchanged.
+36. **No slot boxes in Match Setup.** "Winner goes to" / "Loser goes to" only name the next
+    match; the team takes that match's first open slot (an empty slot, else A then B, or
+    Lane n for heats). So if QF2 finishes before QF1, QF2's winner is listed as team A.
+    "Loser goes to" is hidden behind "Loser plays again (3rd place or consolation)".
+    Existing matches with a slot keep it; CSV import still accepts optional slot columns.

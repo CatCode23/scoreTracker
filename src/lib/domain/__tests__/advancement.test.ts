@@ -151,4 +151,19 @@ describe('describeAutoAdvance', () => {
       describeAutoAdvance({ ...routing, auto_advance: false }, 'w', 'l', [], code, team),
     ).toEqual([]);
   });
+
+  it('works when no slot is set (first open slot)', () => {
+    const noSlots = { ...routing, next_winner_slot: null, next_loser_slot: null };
+    const ok = describeAutoAdvance(
+      noSlots,
+      'w',
+      'l',
+      [{ match_id: 'F', participant_id: 'w', slot: 'B' }],
+      code,
+      team,
+    );
+    expect(ok[0]).toEqual({ tone: 'success', text: 'Winner Raptors moved to SOC-F (slot B).' });
+    expect(ok[1].tone).toBe('warn');
+    expect(ok[1].text).toMatch(/already full/);
+  });
 });

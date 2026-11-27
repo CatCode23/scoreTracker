@@ -134,6 +134,34 @@ reset role;
 select pg_temp.ok(pg_temp.slot('AU-F', 'A') = '92000000-0000-0000-0000-000000000001', 'edit swaps the corrected winner into the final');
 select pg_temp.ok(pg_temp.slot('AU-3RD', 'A') = '92000000-0000-0000-0000-000000000002', 'edit swaps the corrected loser into 3rd place');
 
+-- 7. No slot set: first open slot (A, then B); a full match is skipped; heats use Lane n
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into public.matches (event_id, stage_id, match_code, match_type)
+select '90000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', c, t
+from (values ('AU-N1', 'head_to_head'), ('AU-N2', 'head_to_head'), ('AU-N3', 'head_to_head'),
+             ('AU-NF', 'head_to_head'), ('AU-NH', 'heat')) v(c, t);
+update public.matches m set next_winner_match_id = (select id from public.matches where match_code = 'AU-NF'), next_winner_slot = null,
+  next_loser_match_id = (select id from public.matches where match_code = 'AU-NH'), next_loser_slot = null
+where m.match_code in ('AU-N1', 'AU-N2', 'AU-N3');
+insert into public.match_participants (match_id, participant_id, slot)
+select m.id, v.p::uuid, v.slot from public.matches m join (values
+  ('AU-N1', '92000000-0000-0000-0000-000000000001', 'A'), ('AU-N1', '92000000-0000-0000-0000-000000000002', 'B'),
+  ('AU-N2', '92000000-0000-0000-0000-000000000003', 'A'), ('AU-N2', '92000000-0000-0000-0000-000000000004', 'B'),
+  ('AU-N3', '92000000-0000-0000-0000-000000000005', 'A'), ('AU-N3', '92000000-0000-0000-0000-000000000006', 'B')
+) v(code, p, slot) on v.code = m.match_code;
+-- N2 finishes first, so its winner takes slot A
+select pg_temp.win('AU-N2', '92000000-0000-0000-0000-000000000004', '92000000-0000-0000-0000-000000000003');
+select pg_temp.win('AU-N1', '92000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000002');
+select pg_temp.win('AU-N3', '92000000-0000-0000-0000-000000000005', '92000000-0000-0000-0000-000000000006');
+reset role;
+select pg_temp.ok(pg_temp.slot('AU-NF', 'A') = '92000000-0000-0000-0000-000000000004', 'no slot set: first winner takes slot A');
+select pg_temp.ok(pg_temp.slot('AU-NF', 'B') = '92000000-0000-0000-0000-000000000001', 'no slot set: second winner takes slot B');
+select pg_temp.ok((select count(*) = 2 from public.match_participants mp join public.matches m on m.id = mp.match_id
+  where m.match_code = 'AU-NF'), 'a full head-to-head match is not given a third team');
+select pg_temp.ok(pg_temp.slot('AU-NH', 'Lane 1') = '92000000-0000-0000-0000-000000000003'
+  and pg_temp.slot('AU-NH', 'Lane 2') = '92000000-0000-0000-0000-000000000002'
+  and pg_temp.slot('AU-NH', 'Lane 3') = '92000000-0000-0000-0000-000000000006', 'losers fill a heat as Lane 1, 2, 3');
+
 -- Clean up
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 delete from public.events where id = '90000000-0000-0000-0000-000000000001';

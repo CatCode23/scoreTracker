@@ -102,7 +102,7 @@ export function describeAutoAdvance(
     slot: string | null,
     role: 'Winner' | 'Loser',
   ) => {
-    if (!who || !to || !slot) return;
+    if (!who || !to) return;
     const placed = downstream.find((d) => d.match_id === to && d.participant_id === who);
     if (placed) {
       notes.push({
@@ -112,7 +112,7 @@ export function describeAutoAdvance(
     } else {
       notes.push({
         tone: 'warn',
-        text: `${role} ${team(who)} was not moved to ${codeOf(to)}: slot ${slot} is already taken or that match already has a result. Use More → ${role === 'Winner' ? 'Advance winner' : 'Route loser'} on this match.`,
+        text: `${role} ${team(who)} was not moved to ${codeOf(to)}: ${slot ? `slot ${slot} is already taken` : 'that match is already full'} or it already has a result. Use More → ${role === 'Winner' ? 'Advance winner' : 'Route loser'} on this match.`,
       });
     }
   };
